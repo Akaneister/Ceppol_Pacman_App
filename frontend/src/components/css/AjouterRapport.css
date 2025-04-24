@@ -1,0 +1,532 @@
+/* AjouterRapport.css - Style professionnel et esthétique */
+
+:root {
+  --primary-color: #2563eb;
+  --primary-light: #3b82f6;
+  --primary-dark: #1d4ed8;
+  --secondary-color: #64748b;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --light-color: #f9fafb;
+  --dark-color: #1e293b;
+  --background-color: #f8fafc;
+  --text-color: #334155;
+  --text-light: #64748b;
+  --border-color: #e2e8f0;
+  --form-background: #ffffff;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --transition-speed: 0.25s;
+}
+
+.rapport-container {
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+
+/* En-tête élégant */
+.rapport-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.rapport-header h1 {
+  color: var(--dark-color);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+  position: relative;
+  display: inline-block;
+}
+
+.rapport-header h1::after {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 4px;
+  background: var(--primary-color);
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 4px;
+}
+
+.rapport-subtitle {
+  color: var(--text-light);
+  font-size: 16px;
+  margin-top: 24px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Conteneur principal du formulaire */
+.rapport-form {
+  background-color: var(--form-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 32px;
+  position: relative;
+  animation: fadeIn 0.5s ease-out;
+  border: 1px solid var(--border-color);
+}
+
+/* Sections de formulaire */
+.form-section {
+  margin-bottom: 36px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 24px;
+}
+
+.form-section h2 {
+  font-size: 20px;
+  color: var(--primary-dark);
+  margin-bottom: 24px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.form-section h2::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  background: var(--primary-color);
+  margin-right: 12px;
+  border-radius: 4px;
+}
+
+/* Structure des rangées et groupes */
+.form-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.form-row .form-group {
+  flex: 1;
+  min-width: 240px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+/* Labels et champs */
+.form-group label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: var(--dark-color);
+  font-size: 15px;
+}
+
+.tooltip-icon {
+  margin-left: 6px;
+  font-size: 14px;
+  cursor: help;
+  opacity: 0.7;
+  transition: opacity var(--transition-speed);
+  color: var(--primary-color);
+}
+
+.tooltip-icon:hover {
+  opacity: 1;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 15px;
+  transition: all var(--transition-speed);
+  color: var(--text-color);
+  background-color: #fff;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.form-control::placeholder {
+  color: #a0a0a0;
+  font-style: italic;
+}
+
+.form-control:disabled {
+  background-color: #f8fafc;
+  cursor: not-allowed;
+}
+
+/* Menus déroulants */
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8.825l-4.425-4.4 1.4-1.4L6 6.025l3.025-3L10.4 4.4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+/* Textarea avec style amélioré */
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+/* Grille de cases à cocher */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"] {
+  margin-right: 10px;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-color);
+}
+
+.checkbox-item label {
+  margin-bottom: 0;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+/* Inputs range avec style */
+.form-control-range {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  appearance: none;
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.form-control-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.form-control-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.form-control-range:focus {
+  outline: none;
+}
+
+/* Container de la carte */
+.map-container {
+  margin-top: 20px;
+
+  
+}
+
+.location-map {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.map-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  font-style: italic;
+  color: var(--text-light);
+  background-color: #f8fafc;
+}
+
+/* Boutons de localisation */
+.location-actions {
+  margin-bottom: 16px;
+}
+
+.btn-location {
+  background-color: var(--light-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 10px 16px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-location:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-location:before {
+  content: "📍";
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Boutons d'action */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 36px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(29, 78, 216, 0.2);
+}
+
+.btn-secondary {
+  background-color: #f1f5f9;
+  color: var(--secondary-color);
+}
+
+.btn-secondary:hover {
+  background-color: #e2e8f0;
+  color: var(--dark-color);
+}
+
+.btn-primary:active,
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+/* Effet ripple pour les boutons */
+.btn-primary::after,
+.btn-secondary::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transition: width 0.4s, height 0.4s;
+}
+
+.btn-primary:hover::after,
+.btn-secondary:hover::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* État de chargement du bouton */
+.btn-primary.loading {
+  background-color: var(--primary-light);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.btn-primary.loading::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+/* Messages de statut */
+.status-message {
+  padding: 16px;
+  border-radius: var(--border-radius);
+  margin-bottom: 24px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+  position: relative;
+  padding-left: 42px;
+}
+
+.status-message::before {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+}
+
+.status-message.success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+  border-left: 4px solid var(--success-color);
+}
+
+.status-message.success::before {
+  content: "✓";
+}
+
+.status-message.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger-color);
+  border-left: 4px solid var(--danger-color);
+}
+
+.status-message.error::before {
+  content: "×";
+}
+
+.status-message.info {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--primary-color);
+  border-left: 4px solid var(--primary-color);
+}
+
+.status-message.info::before {
+  content: "ℹ";
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Styles responsives */
+@media (max-width: 768px) {
+  .rapport-form {
+    padding: 24px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .form-row .form-group {
+    min-width: 100%;
+  }
+  
+  .checkbox-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rapport-container {
+    padding: 0 16px;
+    margin: 20px auto;
+  }
+  
+  .rapport-form {
+    padding: 20px 16px;
+  }
+  
+  .rapport-header h1 {
+    font-size: 24px;
+  }
+  
+  .rapport-subtitle {
+    font-size: 14px;
+  }
+  
+  .form-section h2 {
+    font-size: 18px;
+  }
+  
+  .form-section {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+  }
+  
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+}

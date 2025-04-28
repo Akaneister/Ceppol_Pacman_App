@@ -84,78 +84,96 @@ const AjouterRapport = () => {
 
   // Initialisation de la carte Leaflet
   useEffect(() => {
-    // Vérifier si Leaflet est déjà chargé
-    if (!window.L) {
-      // Si Leaflet n'est pas chargé, charger le script dynamiquement
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-      script.crossOrigin = '';
-      script.onload = initializeMap;
-      document.head.appendChild(script);
+    // S'assurer que la carte est initialisée une seule fois et correctement
+    if (mapRef.current && !mapInitialized && typeof window !== 'undefined') {
+      // S'assurer que Leaflet est disponible
+      if (!window.L) {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+        script.crossOrigin = '';
 
-      // Assurez-vous que le CSS est également chargé
-      if (!document.querySelector('link[href*="leaflet.css"]')) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-        link.crossOrigin = '';
-        document.head.appendChild(link);
+        // Ajouter la feuille de style Leaflet si elle n'est pas déjà présente
+        if (!document.querySelector('link[href*="leaflet.css"]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+          link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+          link.crossOrigin = '';
+          document.head.appendChild(link);
+        }
+
+        script.onload = initMap;
+        document.head.appendChild(script);
+      } else {
+        initMap();
       }
-    } else if (mapRef.current && !mapInitialized) {
-      initializeMap();
     }
 
-    function initializeMap() {
-      if (!mapRef.current || mapInitialized) return;
-
+    function initMap() {
       try {
-        // Nettoyer la carte existante si elle existe
+        console.log("🗺️ Initialisation de la carte...");
+
+        // Nettoyer la carte précédente si elle existe
         if (leafletMapRef.current) {
           leafletMapRef.current.remove();
         }
 
-        // Créer la nouvelle carte
-        leafletMapRef.current = window.L.map(mapRef.current).setView([43.2965, 5.3698], 10);
+        // Centre par défaut - Marseille
+        const defaultCenter = [43.2965, 5.3698];
 
+        // Créer la nouvelle carte
+        leafletMapRef.current = window.L.map(mapRef.current).setView(defaultCenter, 10);
+
+        // Ajouter la couche de tuiles OpenStreetMap
         window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(leafletMapRef.current);
 
-        // Ajouter un événement de clic pour définir la position
+        // Ajouter un gestionnaire de clic sur la carte
         leafletMapRef.current.on('click', function (e) {
           const { lat, lng } = e.latlng;
 
-          // Mettre à jour formData avec les nouvelles coordonnées
+          // Mettre à jour les champs de latitude et longitude dans le formulaire
           setFormData(prev => ({
             ...prev,
             latitude: lat.toFixed(6),
             longitude: lng.toFixed(6)
           }));
 
-          // Mettre à jour le marqueur
+          // Mettre à jour ou créer le marqueur
           if (marker) {
             marker.setLatLng([lat, lng]);
           } else {
             const newMarker = window.L.marker([lat, lng]).addTo(leafletMapRef.current);
             setMarker(newMarker);
           }
+
+          console.log(`Position sélectionnée: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
         });
 
+        // Force la mise à jour de la carte après l'initialisation
+        setTimeout(() => {
+          if (leafletMapRef.current) {
+            leafletMapRef.current.invalidateSize();
+          }
+        }, 200);
+
         setMapInitialized(true);
+        console.log("✅ Carte initialisée avec succès");
       } catch (error) {
         console.error('Erreur lors de l\'initialisation de la carte:', error);
       }
     }
 
-    // Nettoyage lors du démontage du composant
+    // Nettoyer la carte au démontage du composant
     return () => {
       if (leafletMapRef.current) {
         leafletMapRef.current.remove();
+        leafletMapRef.current = null;
       }
     };
-  }, [mapInitialized]);
+  }, []);
 
   // Mettre à jour la carte si les coordonnées sont modifiées manuellement
   useEffect(() => {
@@ -164,7 +182,7 @@ const AjouterRapport = () => {
       const lng = parseFloat(formData.longitude);
 
       if (!isNaN(lat) && !isNaN(lng)) {
-        // Centrer la carte sur les coordonnées
+        // Centrer la carte sur les coordonnées saisies manuellement
         leafletMapRef.current.setView([lat, lng], 12);
 
         // Mettre à jour ou créer le marqueur
@@ -176,7 +194,7 @@ const AjouterRapport = () => {
         }
       }
     }
-  }, [formData.latitude, formData.longitude, mapInitialized]);
+  }, [formData.latitude, formData.longitude, mapInitialized, marker]);
 
   // Filtrer les sous-types en fonction du type sélectionné
   useEffect(() => {
@@ -222,7 +240,7 @@ const AjouterRapport = () => {
     return true;
   };
 
-  // Fonction pour gérer l'envoi du formulaire  test
+  // Fonction pour gérer l'envoi du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -238,8 +256,8 @@ const AjouterRapport = () => {
       // Combiner la date et l'heure pour le backend
       const dateTimeString = `${formData.date_evenement}T${formData.heure_evenement}:00`;
 
-      // Préparation des données à envoyer
-      const rapportData = {
+      // Préparation des données à envoyer selon la structure attendue par le backend
+      const rapport = {
         titre: formData.titre,
         date_evenement: dateTimeString,
         description_globale: formData.description_globale,
@@ -250,45 +268,48 @@ const AjouterRapport = () => {
         id_origine_evenement: formData.id_origine_evenement ? parseInt(formData.id_origine_evenement) : null,
       };
 
-      // Données associées qui devront être insérées dans des tables connexes
+      // Données associées pour les tables connexes
       const metaData = {
         cible: {
-          id_cible: formData.id_cible ? parseInt(formData.id_cible) : null,
-          nom_cible: formData.nom_cible,
-          pavillon_cible: formData.pavillon_cible
+          id_cible: formData.id_cible || null,
+          nom_cible: formData.nom_cible || null,
+          pavillon_cible: formData.pavillon_cible || null,
         },
         localisation: {
           id_zone_geographique: formData.id_zone_geographique ? parseInt(formData.id_zone_geographique) : null,
-          details_lieu: formData.details_lieu,
+          details_lieu: formData.details_lieu || null,
           latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-          longitude: formData.longitude ? parseFloat(formData.longitude) : null
+          longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         },
         meteo: {
-          direction_vent: formData.direction_vent,
+          direction_vent: formData.direction_vent || null,
           force_vent: formData.force_vent ? parseInt(formData.force_vent) : null,
           etat_mer: formData.etat_mer ? parseInt(formData.etat_mer) : null,
-          nebulosite: formData.nebulosite ? parseInt(formData.nebulosite) : null
+          nebulosite: formData.nebulosite ? parseInt(formData.nebulosite) : null,
         },
         alertes: {
-          cedre_alerte: formData.cedre_alerte,
-          cross_alerte: formData.cross_alerte,
-          photo: formData.photo,
-          polrep: formData.polrep,
-          derive_mothy: formData.derive_mothy,
-          polmar_terre: formData.polmar_terre,
-          smp: formData.smp,
-          bsaa: formData.bsaa,
-          delai_appareillage: formData.delai_appareillage
+          cedre_alerte: formData.cedre_alerte ? 1 : 0,
+          cross_alerte: formData.cross_alerte ? 1 : 0,
+          photo: formData.photo ? 1 : 0,
+          polrep: formData.polrep ? 1 : 0,
+          derive_mothy: formData.derive_mothy ? 1 : 0,
+          polmar_terre: formData.polmar_terre ? 1 : 0,
+          smp: formData.smp ? 1 : 0,
+          bsaa: formData.bsaa ? 1 : 0,
+          delai_appareillage: formData.delai_appareillage || null,
         }
       };
-      console.log("authData envoyé:", authData);
-      console.log("rapportData construit:", rapportData);
+
+      console.log("Données envoyées au backend:", { rapport, metaData });
 
       // Envoi des données au backend
       const response = await axios.post(`${API}/rapports`, {
-        rapport: rapportData,
-        metaData: metaData
+        rapport,
+        metaData
       });
+
+     
+
 
       console.log('Rapport créé avec succès:', response.data);
       setSubmitStatus({ type: 'success', message: 'Rapport enregistré avec succès!' });
@@ -345,9 +366,9 @@ const AjouterRapport = () => {
       delai_appareillage: ''
     });
 
-    // Réinitialiser le marqueur sur la carte
-    if (marker) {
-      marker.remove();
+    // Supprimer le marqueur de la carte
+    if (marker && leafletMapRef.current) {
+      leafletMapRef.current.removeLayer(marker);
       setMarker(null);
     }
 
@@ -357,8 +378,11 @@ const AjouterRapport = () => {
     }
   };
 
+  // Reste du code (rendu du formulaire)...
   return (
     <div className="rapport-container">
+
+      {/* Le reste du JSX reste inchangé */}
       <div className="rapport-header">
         <h1>Nouveau Rapport d'Événement</h1>
         <p className="rapport-subtitle">
@@ -366,11 +390,7 @@ const AjouterRapport = () => {
         </p>
       </div>
 
-      {submitStatus && (
-        <div className={`status-message ${submitStatus.type}`}>
-          {submitStatus.message}
-        </div>
-      )}
+      
 
       <form className="rapport-form" onSubmit={handleSubmit}>
         {/* Section Informations Générales */}
@@ -488,19 +508,18 @@ const AjouterRapport = () => {
             <select
               id="id_origine_evenement"
               name="id_origine_evenement"
-              value={formData.id_origine_evenement}  // C'est l'ID de l'origine sélectionnée
-              onChange={handleChange}  // Lorsqu'une option est sélectionnée, on met à jour formData
+              value={formData.id_origine_evenement}
+              onChange={handleChange}
               className="form-control"
             >
               <option value="">-- Sélectionner --</option>
               {originesEvenement.map(origine => (
                 <option key={origine.id_origine_evenement} value={origine.id_origine_evenement}>
-                  {origine.libelle}  {/* Affiche le libellé de l'origine dans la liste déroulante */}
+                  {origine.libelle}
                 </option>
               ))}
             </select>
           </div>
-
         </div>
 
         {/* Section pour la cible */}
@@ -521,7 +540,7 @@ const AjouterRapport = () => {
             >
               <option value="">-- Sélectionner --</option>
               {typesCible.map(type => (
-                <option key={type.id_cible} value={type.id_cible}>
+                <option key={type.id_type_cible} value={type.id_type_cible}>
                   {type.libelle}
                 </option>
               ))}
@@ -935,7 +954,14 @@ const AjouterRapport = () => {
           </button>
         </div>
       </form>
+      <br></br>
+      {submitStatus && (
+        <div className={`status-message ${submitStatus.type}`}>
+          {submitStatus.message}
+        </div>
+      )}
     </div>
+    
   );
 };
 

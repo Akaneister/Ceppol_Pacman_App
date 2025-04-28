@@ -55,24 +55,17 @@ const getZoneGeographique = async (req, res) => {
 };
 
 //==================== Requête POST ===================//
+
+
 const createRapport = async (req, res) => {
   console.log('Requête reçue pour créer un rapport'); // Log de début
   console.log('Requête reçue:', req.body);
 
-  const {
-    titre,
-    date_evenement,
-    description_globale,
-    id_operateur,
-    id_type_evenement,
-    id_sous_type_evenement,
-    id_origine_evenement,
-    alerte,
-    lieu,
-    meteo
-  } = req.body;
+  // Extraire les données du corps de la requête
+  const { rapport, metaData } = req.body;
 
-  if (!titre || !date_evenement || !id_operateur || !id_type_evenement) {
+  // Vérification des champs obligatoires
+  if (!rapport.titre || !rapport.date_evenement || !rapport.id_operateur || !rapport.id_type_evenement) {
     console.log('Champs requis manquants');
     return res.status(400).json({ error: "Champs requis manquants" });
   }
@@ -87,74 +80,107 @@ const createRapport = async (req, res) => {
     const [rapportResult] = await connection.query(
       `INSERT INTO Rapport (titre, date_evenement, description_globale, id_operateur, id_type_evenement, id_sous_type_evenement, id_origine_evenement)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+
       [
-        titre,
-        new Date(date_evenement),
-        description_globale || null,
-        id_operateur,
-        id_type_evenement,
-        id_sous_type_evenement || null,
-        id_origine_evenement || null
+        rapport.titre,
+        new Date(rapport.date_evenement), // Conversion en objet Date
+        rapport.description_globale || null,
+        rapport.id_operateur,
+        rapport.id_type_evenement,
+        rapport.id_sous_type_evenement || null,
+        rapport.id_origine_evenement || null,
       ]
     );
     console.log('Rapport inséré avec succès:', rapportResult);
 
     const id_rapport = rapportResult.insertId;
-    console.log('ID du rapport:', id_rapport);
 
-    if (alerte) {
-      console.log('Insertion dans la table Alerte');
+    // Insertion dans la table Cible si des données sont présentes
+    if (metaData.cible && (metaData.cible.nom_cible || metaData.cible.id_cible)) {
+      console.log('Insertion dans la table Cible');
       await connection.query(
-        `INSERT INTO Alerte (id_rapport, cedre, cross_contact, spm, bsaa, delai_appareillage_bsaa, polrep, message_polrep, photo, derive_mothym, pne)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO Cible (id_rapport, nom, pavillon, id_type_cible)
+         VALUES (?, ?, ?, ?)`,
         [
           id_rapport,
-          alerte.cedre || null,
-          alerte.cross_contact || null,
-          alerte.spm || null,
-          alerte.bsaa || null,
-          alerte.delai_appareillage_bsaa || null,
-          alerte.polrep || null,
-          alerte.message_polrep || null,
-          alerte.photo || null,
-          alerte.derive_mothym || null,
-          alerte.pne || null
+          metaData.cible.nom_cible || null,
+          metaData.cible.pavillon_cible || null,
+          metaData.cible.id_cible || null,
         ]
       );
-      console.log('Alerte insérée avec succès');
+      console.log('Cible insérée avec succès');
     }
 
-    if (lieu) {
+    // Insertion dans la table Lieu si des données sont présentes
+    if (metaData.localisation) {
       console.log('Insertion dans la table Lieu');
       await connection.query(
         `INSERT INTO Lieu (id_rapport, details_lieu, latitude, longitude, id_zone)
          VALUES (?, ?, ?, ?, ?)`,
         [
           id_rapport,
-          lieu.details_lieu || null,
-          lieu.latitude || null,
-          lieu.longitude || null,
-          lieu.id_zone || null
+          metaData.localisation.details_lieu || null,
+          metaData.localisation.latitude || null,
+          metaData.localisation.longitude || null,
+          metaData.localisation.id_zone_geographique || null,
         ]
       );
       console.log('Lieu inséré avec succès');
     }
 
-    if (meteo) {
+    // Insertion dans la table Meteo si des données sont présentes
+    if (metaData.meteo) {
       console.log('Insertion dans la table Meteo');
       await connection.query(
         `INSERT INTO Meteo (id_rapport, direction_vent, force_vent, etat_mer, nebulosite)
          VALUES (?, ?, ?, ?, ?)`,
         [
           id_rapport,
-          meteo.direction_vent || null,
-          meteo.force_vent || null,
-          meteo.etat_mer || null,
-          meteo.nebulosite || null
+          metaData.meteo.direction_vent || null,
+          metaData.meteo.force_vent || null,
+          metaData.meteo.etat_mer || null,
+          metaData.meteo.nebulosite || null,
         ]
       );
       console.log('Météo insérée avec succès');
     }
+
+    // Insertion dans la table Alerte si des données sont présentes
+    if (metaData.alertes) {
+      const alertes = metaData.alertes;
+      console.log('Insertion dans la table Alerte');
+      await connection.query(
+        `INSERT INTO Alerte (id_rapport, cedre, cross_contact, smp, bsaa, delai_appareillage_bsaa, polrep, message_polrep, photo, derive_mothym, pne)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id_rapport,
+          alertes.cedre_alerte ? 1 : 0,
+          alertes.cross_alerte ? 1 : 0,
+          alertes.smp ? 1 : 0,
+          alertes.bsaa ? 1 : 0,
+          alertes.delai_appareillage ? new Date(alertes.delai_appareillage) : null,
+          alertes.polrep ? 1 : 0,
+          null, // message_polrep n'est pas fourni dans les données
+          alertes.photo ? 1 : 0,
+          alertes.derive_mothy ? 1 : 0,
+          alertes.polmar_terre ? 1 : 0,
+        ]
+      );
+      console.log('Alerte insérée avec succès');
+    }
+
+    // Ajout de l'accès pour l'opérateur dans la table AccesRapport
+    console.log('Insertion dans la table AccesRapport');
+    await connection.query(
+      `INSERT INTO AccesRapport (id_rapport, id_operateur, peut_modifier, date_attribution)
+       VALUES (?, ?, ?, NOW())`,
+      [
+        id_rapport,
+        rapport.id_operateur,
+        true, // L'opérateur a le droit de modifier
+      ]
+    );
+    console.log('Accès ajouté avec succès');
 
     console.log('Commit des changements');
     await connection.commit();
@@ -169,6 +195,7 @@ const createRapport = async (req, res) => {
     console.log('Connexion libérée');
   }
 };
+
 
 
 

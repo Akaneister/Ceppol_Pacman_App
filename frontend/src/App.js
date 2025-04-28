@@ -5,6 +5,7 @@ import AuthPage from './components/pages/AuthPage';
 import HomePage from './components/pages/Home';
 import Navbar from './components/layout/Navbar';
 import AjouterRapport from './components/pages/AjouterRapport'; // Importer la page "Ajouter un rapport"
+import ListeRapport from './components/pages/ListeRapport'; // Importer la page "Liste des rapports"
 
 const App = () => {
   return (
@@ -35,6 +36,11 @@ const AppContent = () => {
             <AjouterRapport />
           </PrivateRoute>
         } /> {/* Nouvelle route pour la page "Ajouter un rapport" */}
+        <Route path="/liste-rapports" element={
+          <PrivateRoute>
+            <ListeRapport />
+          </PrivateRoute>
+        } />
       </Routes>
     </>
   );

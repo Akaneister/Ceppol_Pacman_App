@@ -4,12 +4,15 @@ exports.testAPI = (req, res) => {
   res.send('✅ API rapport OK');
 };
 
-exports.getAllRapports = (req, res) => {
-  db.query('SELECT * FROM Rapport', (err, results) => {
-    if (err) return res.status(500).json(err);
+exports.getAllRapports = async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM Rapport');
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json(err);
+  }
 };
+
 
 exports.createRapport = (req, res) => {
   const { titre, date_rapport, description, id_operateur } = req.body;

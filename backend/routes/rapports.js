@@ -14,6 +14,7 @@ const {
   createRapport
 } = require('../controller/ajouterRapportController');
 
+const { getRapportInfo } = require('../controller/rapportDetailsController');
 
 // import depuis listeRapportController.js
 const { 
@@ -39,6 +40,7 @@ router.get('/origine-evenement', getOrigineEvenement);
 router.get('/type-cible', getTypeCible);
 router.get('/zone-geographique', getZoneGeographique);
 router.get('/operateurs', getOperateurs); // Route pour obtenir les opérateurs
+router.get('/:id',getRapportInfo); // Route pour obtenir les détails d'un rapport)
 
 // Routes POST
 router.post('/', createRapport); 

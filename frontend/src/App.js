@@ -6,6 +6,8 @@ import HomePage from './components/pages/Home';
 import Navbar from './components/layout/Navbar';
 import AjouterRapport from './components/pages/AjouterRapport'; // Importer la page "Ajouter un rapport"
 import ListeRapport from './components/pages/ListeRapport'; // Importer la page "Liste des rapports"
+import ModifierRapport from './components/pages/ModifierRapport'; // Import
+import Carte from './components/pages/carte.js'; // Importer la page "Carte"
 
 const App = () => {
   return (
@@ -41,6 +43,16 @@ const AppContent = () => {
             <ListeRapport />
           </PrivateRoute>
         } />
+        <Route path="/modifier-rapport/:id" element={
+          <PrivateRoute>
+            <ModifierRapport />
+          </PrivateRoute>
+        } /> {/* Nouvelle route pour la page "Modifier un rapport" */}
+        <Route path="/carte" element={
+          <PrivateRoute>
+            <Carte />
+          </PrivateRoute>
+        } /> {/* Nouvelle route pour la page "Carte" */}
       </Routes>
     </>
   );

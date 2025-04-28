@@ -15,10 +15,13 @@ app.use(express.json());
 // Importation des routes
 const rapportRoutes = require('./routes/rapports');
 const authRoutes = require('./routes/auth');
+const carteRoutes = require('./routes/carte'); // Importation de la route pour la carte
 
 // Définition des routes
 // Routes d'authentification
 app.use('/api/auth', authRoutes);
+
+app.use('/api/lieu', carteRoutes ); // Route pour obtenir les lieux
 
 // Routes des rapports
 app.use('/api/rapports', rapportRoutes);

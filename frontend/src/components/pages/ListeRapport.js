@@ -40,7 +40,7 @@ const ListeRapport = () => {
   const fetchRapports = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/rapports/liste-rapports`);
+      const response = await axios.get(`${API_BASE_URL}/rapports`);
       setRapports(response.data);
     } catch (err) {
       console.error("Erreur lors de la récupération des rapports:", err);
@@ -57,7 +57,7 @@ const ListeRapport = () => {
         setLoading(true);
 
         // Récupérer tous les rapports
-        const rapportsResponse = await axios.get(`${API_BASE_URL}/rapports/liste-rapports`);
+        const rapportsResponse = await axios.get(`${API_BASE_URL}/rapports`);
 
         // Récupérer les données pour les filtres
         const typeEvenementsResponse = await axios.get(`${API_BASE_URL}/rapports/type-evenement`);
@@ -162,7 +162,7 @@ const ListeRapport = () => {
       if (filtres.dateFin) params.append('date_fin', filtres.dateFin);
 
       // Appel à l'API avec les filtres
-      const response = await axios.get(`${API_BASE_URL}/rapports/liste-rapports?${params}`);
+      const response = await axios.get(`${API_BASE_URL}/rapports?${params}`);
       setRapports(response.data);
     } catch (err) {
       console.error("Erreur lors de l'application des filtres:", err);

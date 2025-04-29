@@ -3,24 +3,63 @@ const db = require('../db');
 //permet de voir les details d'un rapport grace a son id
 
 const getRapportInfo = async (req, res) => {
-  const id_rapport = req.params.id;  // Utiliser 'id' et non 'id_rapport'
-  console.log('ID du rapport:', id_rapport);  // Log l'ID du rapport pour le débogage
+  const id_rapport = req.params.id;
 
   if (!id_rapport) {
     return res.status(400).json({ error: "L'ID du rapport est manquant dans l'URL" });
   }
 
   try {
-    const [result] = await db.query('SELECT * FROM Rapport WHERE id_rapport = ?', [id_rapport]);
-    if (result.length === 0) {
+    // Connexion DB
+    const connection = await db.getConnection();
+
+    const [rapport] = await connection.query(
+      `SELECT * FROM Rapport WHERE id_rapport = ?`, [id_rapport]
+    );
+    if (rapport.length === 0) {
+      connection.release();
       return res.status(404).json({ error: 'Rapport non trouvé' });
     }
-    res.json(result[0]);  // Retourne le rapport trouvé
+
+    const [cible] = await connection.query(
+      `SELECT * FROM Cible WHERE id_rapport = ?`, [id_rapport]
+    );
+
+    const [lieu] = await connection.query(
+      `SELECT * FROM Lieu WHERE id_rapport = ?`, [id_rapport]
+    );
+
+    const [meteo] = await connection.query(
+      `SELECT * FROM Meteo WHERE id_rapport = ?`, [id_rapport]
+    );
+
+    const [alerte] = await connection.query(
+      `SELECT * FROM Alerte WHERE id_rapport = ?`, [id_rapport]
+    );
+
+    const [acces] = await connection.query(
+      `SELECT * FROM AccesRapport WHERE id_rapport = ?`, [id_rapport]
+    );
+
+    connection.release();
+
+    res.json({
+      rapport: rapport[0],
+      metaData: {
+        cible: cible[0] || null,
+        localisation: lieu[0] || null,
+        meteo: meteo[0] || null,
+        alertes: alerte[0] || null,
+        acces: acces || []
+      }
+    });
+
   } catch (err) {
-    console.error('Erreur dans getRapport:', err);
+    console.error('Erreur lors de la récupération du rapport:', err);
     return res.status(500).json({ error: 'Erreur serveur' });
   }
 };
+
 
 
 module.exports = {

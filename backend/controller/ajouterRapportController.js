@@ -122,7 +122,7 @@ const createRapport = async (req, res) => {
           metaData.localisation.details_lieu || null,
           metaData.localisation.latitude || null,
           metaData.localisation.longitude || null,
-          metaData.localisation.id_zone_geographique || null,
+          metaData.localisation.id_zone || null,
         ]
       );
       console.log('Lieu inséré avec succès');

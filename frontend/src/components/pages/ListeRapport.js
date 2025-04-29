@@ -29,6 +29,8 @@ const ListeRapport = () => {
   const [afficherGestionAcces, setAfficherGestionAcces] = useState(false);
   const [operateursAvecAcces, setOperateursAvecAcces] = useState([]);
   const [nouvelOperateurAcces, setNouvelOperateurAcces] = useState('');
+  // Ajout d'un état pour stocker les droits d'accès
+  const [droitsAcces, setDroitsAcces] = useState({});
 
   const { authData } = useAuth();
 
@@ -42,11 +44,35 @@ const ListeRapport = () => {
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/rapports`);
       setRapports(response.data);
+      
+      // Charger les droits d'accès pour tous les rapports
+      await fetchDroitsAcces();
     } catch (err) {
       console.error("Erreur lors de la récupération des rapports:", err);
       setError("Une erreur est survenue lors du chargement des rapports.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Nouvelle fonction pour charger les droits d'accès
+  const fetchDroitsAcces = async () => {
+    try {
+      // Récupérer tous les droits d'accès (ou filtrer par utilisateur si nécessaire)
+      const response = await axios.get(`${API_BASE_URL}/rapports/acces/all`);
+      
+      // Organiser les droits d'accès par rapport
+      const droits = {};
+      response.data.forEach(droit => {
+        if (!droits[droit.id_rapport]) {
+          droits[droit.id_rapport] = [];
+        }
+        droits[droit.id_rapport].push(droit.id_operateur);
+      });
+      
+      setDroitsAcces(droits);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des droits d'accès:", err);
     }
   };
 
@@ -72,6 +98,9 @@ const ListeRapport = () => {
         setOrigineEvenements(origineEvenementsResponse.data);
         setZones(zonesResponse.data);
         setOperateurs(operateursResponse.data);
+        
+        // Charger les droits d'accès
+        await fetchDroitsAcces();
       } catch (err) {
         console.error("Erreur lors de la récupération des données:", err);
         setError("Une erreur est survenue lors du chargement des données.");
@@ -111,20 +140,20 @@ const ListeRapport = () => {
   
   // Vérifier si l'utilisateur actuel a accès à la modification d'un rapport
   const userPeutModifier = (rapport) => {
-    console.log('Vérification des droits de modification:', {
-      id_operateur_rapport: rapport.id_operateur,
-      operateurs_acces: rapport.operateurs_acces,
-      id_operateur_user: authData.Opid // Utilisez user.id_operateur, pas authData.Opid
-    });
-
-    // Vérifiez que user existe et utilisez user.id_operateur
-    return authData && (
-      rapport.id_operateur === authData.Opid ||
-      rapport.operateurs_acces?.includes(authData.Opid)
-    );
+    if (!authData || !rapport) return false;
+    
+    const userId = authData.Opid;
+    
+    // Vérifier si l'utilisateur est le créateur du rapport
+    if (rapport.id_operateur === userId) {
+      return true;
+    }
+    
+    // Vérifier si l'utilisateur a des droits d'accès sur ce rapport
+    const operateursAvecAccesAuRapport = droitsAcces[rapport.id_rapport] || [];
+    
+    return operateursAvecAccesAuRapport.includes(userId);
   };
-
-
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -164,6 +193,9 @@ const ListeRapport = () => {
       // Appel à l'API avec les filtres
       const response = await axios.get(`${API_BASE_URL}/rapports?${params}`);
       setRapports(response.data);
+      
+      // Charger les droits d'accès
+      await fetchDroitsAcces();
     } catch (err) {
       console.error("Erreur lors de l'application des filtres:", err);
       setError("Une erreur est survenue lors de l'application des filtres.");
@@ -254,12 +286,15 @@ const ListeRapport = () => {
     try {
       await axios.post(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`, {
         id_operateur: nouvelOperateurAcces,
-        peut_modifier: false   // ← ajoute ce champ obligatoire
+        peut_modifier: true  // Définir à true pour permettre la modification
       });
   
       // Rafraîchir la liste des opérateurs avec accès
       const response = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
       setOperateursAvecAcces(response.data);
+      
+      // Mettre à jour les droits d'accès globaux
+      await fetchDroitsAcces();
   
       setNouvelOperateurAcces('');
     } catch (err) {
@@ -276,6 +311,9 @@ const ListeRapport = () => {
       // Rafraîchir la liste des opérateurs avec accès
       const response = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
       setOperateursAvecAcces(response.data);
+      
+      // Mettre à jour les droits d'accès globaux
+      await fetchDroitsAcces();
     } catch (err) {
       console.error("Erreur lors du retrait d'accès:", err);
       setError("Une erreur est survenue lors du retrait d'accès.");
@@ -594,6 +632,7 @@ const ListeRapport = () => {
                       <thead>
                         <tr>
                           <th>Opérateur</th>
+                          <th>Niveau d'accès</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -601,6 +640,7 @@ const ListeRapport = () => {
                         {operateursAvecAcces.map(op => (
                           <tr key={op.id_operateur}>
                             <td>{op.prenom} {op.nom}</td>
+                            <td>{op.peut_modifier ? 'Modification' : 'Lecture seule'}</td>
                             <td>
                               <button
                                 className="btn btn-danger btn-sm"

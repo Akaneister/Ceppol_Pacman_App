@@ -28,7 +28,7 @@ const AjouterRapport = () => {
     nom_cible: '',
     pavillon_cible: '',
     // Champs pour la localisation
-    id_zone_geographique: '',
+    id_zone: '',
     details_lieu: '',
     latitude: '',
     longitude: '',
@@ -230,7 +230,7 @@ const AjouterRapport = () => {
   const validateForm = () => {
     // Vérifier les champs obligatoires
     if (!formData.titre || !formData.date_evenement || !formData.heure_evenement ||
-      !formData.id_type_evenement || !formData.description_globale || !formData.id_zone_geographique) {
+      !formData.id_type_evenement || !formData.description_globale || !formData.id_zone) {
       setSubmitStatus({
         type: 'error',
         message: 'Veuillez remplir tous les champs obligatoires (marqués par *).'
@@ -276,7 +276,7 @@ const AjouterRapport = () => {
           pavillon_cible: formData.pavillon_cible || null,
         },
         localisation: {
-          id_zone_geographique: formData.id_zone_geographique ? parseInt(formData.id_zone_geographique) : null,
+          id_zone: formData.id_zone ? parseInt(formData.id_zone) : null,
           details_lieu: formData.details_lieu || null,
           latitude: formData.latitude ? parseFloat(formData.latitude) : null,
           longitude: formData.longitude ? parseFloat(formData.longitude) : null,
@@ -347,7 +347,7 @@ const AjouterRapport = () => {
       id_cible: '',
       nom_cible: '',
       pavillon_cible: '',
-      id_zone_geographique: '',
+      id_zone: '',
       details_lieu: '',
       latitude: '',
       longitude: '',
@@ -587,21 +587,21 @@ const AjouterRapport = () => {
           <h2>Localisation de l'Événement</h2>
 
           <div className="form-group">
-            <label htmlFor="id_zone_geographique">
+            <label htmlFor="id_zone">
               Zone géographique *
               <span className="tooltip-icon" title="Mer ou zone maritime où s'est produit l'événement">ℹ️</span>
             </label>
             <select
-              id="id_zone_geographique"
-              name="id_zone_geographique"
-              value={formData.id_zone_geographique}
+              id="id_zone"
+              name="id_zone"
+              value={formData.id_zone}
               onChange={handleChange}
               className="form-control"
               required
             >
               <option value="">-- Sélectionner une zone --</option>
               {zonesGeographiques.map(zone => (
-                <option key={zone.id_zone_geographique} value={zone.id_zone_geographique}>
+                <option key={zone.id_zone} value={zone.id_zone}>
                   {zone.nom_zone}
                 </option>
               ))}
@@ -785,16 +785,7 @@ const AjouterRapport = () => {
               <label htmlFor="cross_alerte">CROSS alerté</label>
             </div>
 
-            <div className="checkbox-item">
-              <input
-                id="cross_alerte"
-                type="checkbox"
-                name="cross_alerte"
-                checked={formData.cross_alerte}
-                onChange={handleChange}
-              />
-              <label htmlFor="cross_alerte">CROSS alerté</label>
-            </div>
+         
 
             <div className="checkbox-item">
               <input
@@ -922,7 +913,7 @@ const AjouterRapport = () => {
                 id_cible: '',
                 nom_cible: '',
                 pavillon_cible: '',
-                id_zone_geographique: '',
+                id_zone: '',
                 details_lieu: '',
                 latitude: '',
                 longitude: '',

@@ -93,6 +93,18 @@ const getRapport = async (req, res) => {
 }
   
 
+// Fonction pour recupere tout les droits
+const getDroit = async (req, res) => {
+    try {
+        const [result] = await db.query('SELECT * FROM AccesRapport');
+        res.json(result);
+    } catch (err) {
+
+        console.error('Erreur dans getDroit:', err);  // Log l'erreur détaillée
+        return res.status(500).json({ error: 'Erreur serveur' });
+    }
+}
+
 
 
 //Ajouter les info de modification
@@ -399,4 +411,5 @@ const supprimerAccesOperateur = async (req, res) => {
     ajouterAccesOperateur,
     supprimerAccesOperateur,
     getOperateurs,
+    getDroit,
   };

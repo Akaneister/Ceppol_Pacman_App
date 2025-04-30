@@ -16,6 +16,7 @@ app.use(express.json());
 const rapportRoutes = require('./routes/rapports');
 const authRoutes = require('./routes/auth');
 const carteRoutes = require('./routes/carte'); // Importation de la route pour la carte
+const ressourceRoutes = require('./routes/home'); // Importation de la route pour les ressources
 
 // Définition des routes
 // Routes d'authentification
@@ -25,6 +26,12 @@ app.use('/api/lieu', carteRoutes ); // Route pour obtenir les lieux
 
 // Routes des rapports
 app.use('/api/rapports', rapportRoutes);
+
+app.use('/api/ressources', ressourceRoutes); // Route pour obtenir les ressources
+
+
+app.use('/api/viewressources', express.static('ressources'));
+
 
 // Route de test pour la connexion à la base de données
 app.get('/api/test-db', (req, res) => {

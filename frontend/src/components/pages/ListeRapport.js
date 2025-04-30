@@ -632,7 +632,7 @@ const ListeRapport = () => {
                       <thead>
                         <tr>
                           <th>Opérateur</th>
-                          <th>Niveau d'accès</th>
+                          
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -640,7 +640,7 @@ const ListeRapport = () => {
                         {operateursAvecAcces.map(op => (
                           <tr key={op.id_operateur}>
                             <td>{op.prenom} {op.nom}</td>
-                            <td>{op.peut_modifier ? 'Modification' : 'Lecture seule'}</td>
+                            
                             <td>
                               <button
                                 className="btn btn-danger btn-sm"

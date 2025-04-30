@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import '../css/Navbar.css'; 
+import '../css/Navbar.css';
 
 
 const Navbar = () => {
@@ -48,8 +48,8 @@ const Navbar = () => {
       <div className="navbar">
 
         {/* Bouton menu burger pour mobile */}
-        <button 
-          className={`mobile-menu-toggle ${mobileMenuOpen ? 'active' : ''}`} 
+        <button
+          className={`mobile-menu-toggle ${mobileMenuOpen ? 'active' : ''}`}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Menu"
         >
@@ -67,7 +67,7 @@ const Navbar = () => {
                 <span className="link-text">Accueil</span>
               </Link>
             </li>
-            
+
             {/* Les liens suivants sont visibles uniquement si l'utilisateur est authentifié */}
             {authData.isAuthenticated && (
               <>
@@ -92,13 +92,15 @@ const Navbar = () => {
               </>
             )}
           </ul>
-          
+
           {/* Partie droite de la navbar avec connexion/déconnexion */}
           <div className="navbar-auth">
             {authData.isAuthenticated ? (
               <div className="user-menu">
                 <div className="user-info">
-                  <span className="user-avatar">{authData.selectedOperateur ? authData.selectedOperateur.charAt(0) : 'U'}</span>
+                  <span className="user-avatar" style={{ color: 'white' }}>
+                    {authData.selectedOperateur ? authData.selectedOperateur.charAt(0) : 'U'}
+                  </span>
                   <span className="user-name">{authData.selectedOperateur || 'Utilisateur'}</span>
                 </div>
                 <button className="logout-button" onClick={handleLogout}>

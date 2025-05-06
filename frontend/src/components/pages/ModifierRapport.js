@@ -380,6 +380,18 @@ const ModifierRapport = () => {
         metaData
       });
 
+      const modifiedFields = Object.keys(formData).filter(key => {
+        return formData[key] !== '' && formData[key] !== null;
+      }).join(', ');
+
+      await axios.post(`${API}/rapports/historique`, {
+        id_rapport: id,
+        id_operateur: authData.Opid,
+        type_action: 'Modification Rapport',
+        date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        detail_action: `Champs modifiés ou ajoutés : ${modifiedFields}`
+      });
+
       console.log('Rapport mis à jour avec succès:', response.data);
       setSubmitStatus({ type: 'success', message: 'Rapport mis à jour avec succès!' });
 

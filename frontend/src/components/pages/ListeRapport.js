@@ -29,6 +29,7 @@ const ListeRapport = () => {
   const [afficherGestionAcces, setAfficherGestionAcces] = useState(false);
   const [operateursAvecAcces, setOperateursAvecAcces] = useState([]);
   const [nouvelOperateurAcces, setNouvelOperateurAcces] = useState('');
+  const [historiqueData, setHistoriqueData] = useState(null);
   // Ajout d'un état pour stocker les droits d'accès
   const [droitsAcces, setDroitsAcces] = useState({});
 
@@ -44,7 +45,7 @@ const ListeRapport = () => {
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/rapports`);
       setRapports(response.data);
-      
+
       // Charger les droits d'accès pour tous les rapports
       await fetchDroitsAcces();
     } catch (err) {
@@ -55,12 +56,23 @@ const ListeRapport = () => {
     }
   };
 
+  const fetchHistorique = async (idRapport) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/rapports/historique/${idRapport}`);
+      return response.data;
+    } catch (err) {
+      console.error("Erreur lors de la récupération de l'historique:", err);
+      setError("Une erreur est survenue lors du chargement de l'historique.");
+      return []; // Retourner un tableau vide en cas d'erreur
+    }
+  };
+
   // Nouvelle fonction pour charger les droits d'accès
   const fetchDroitsAcces = async () => {
     try {
       // Récupérer tous les droits d'accès (ou filtrer par utilisateur si nécessaire)
       const response = await axios.get(`${API_BASE_URL}/rapports/acces/all`);
-      
+
       // Organiser les droits d'accès par rapport
       const droits = {};
       response.data.forEach(droit => {
@@ -69,7 +81,7 @@ const ListeRapport = () => {
         }
         droits[droit.id_rapport].push(droit.id_operateur);
       });
-      
+
       setDroitsAcces(droits);
     } catch (err) {
       console.error("Erreur lors de la récupération des droits d'accès:", err);
@@ -98,7 +110,7 @@ const ListeRapport = () => {
         setOrigineEvenements(origineEvenementsResponse.data);
         setZones(zonesResponse.data);
         setOperateurs(operateursResponse.data);
-        
+
         // Charger les droits d'accès
         await fetchDroitsAcces();
       } catch (err) {
@@ -137,22 +149,22 @@ const ListeRapport = () => {
     const operateur = operateurs.find(o => o.id_operateur === id);
     return operateur ? `${operateur.prenom} ${operateur.nom}` : `Opérateur ID ${id}`;
   };
-  
+
   // Vérifier si l'utilisateur actuel a accès à la modification d'un rapport
   const userPeutModifier = (rapport) => {
     if (!authData || !rapport) return false;
-    
+
     const userId = authData.Opid;
-    
+
     // Vérifier si l'utilisateur est le créateur du rapport
-    if (rapport.id_operateur === userId) {
+    if (rapport.id_operateur === rapport.id_operateur) {
       return true;
     }
-    
+
     // Vérifier si l'utilisateur a des droits d'accès sur ce rapport
     const operateursAvecAccesAuRapport = droitsAcces[rapport.id_rapport] || [];
-    
-    return operateursAvecAccesAuRapport.includes(userId);
+
+    return operateursAvecAccesAuRapport.includes(rapport.id_operateur);
   };
 
   const formatDate = (dateString) => {
@@ -193,7 +205,7 @@ const ListeRapport = () => {
       // Appel à l'API avec les filtres
       const response = await axios.get(`${API_BASE_URL}/rapports?${params}`);
       setRapports(response.data);
-      
+
       // Charger les droits d'accès
       await fetchDroitsAcces();
     } catch (err) {
@@ -231,10 +243,19 @@ const ListeRapport = () => {
     }
   };
 
-  const voirHistorique = (rapport) => {
+  // Modifier la fonction voirHistorique pour charger immédiatement l'historique
+  const voirHistorique = async (rapport) => {
     setRapportSelectionne(rapport);
     setAfficherHistorique(true);
     setAfficherGestionAcces(false);
+
+    try {
+      // Charger l'historique dès qu'on clique sur le bouton
+      const historique = await fetchHistorique(rapport.id_rapport);
+      setHistoriqueData(historique);
+    } catch (err) {
+      console.error("Erreur lors du chargement de l'historique:", err);
+    }
 
     // Ouvrir la modal
     if (modalRef.current) {
@@ -282,27 +303,36 @@ const ListeRapport = () => {
 
   const ajouterAccesOperateur = async () => {
     if (!nouvelOperateurAcces || !rapportSelectionne) return;
-  
+
     try {
       await axios.post(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`, {
         id_operateur: nouvelOperateurAcces,
         peut_modifier: true  // Définir à true pour permettre la modification
       });
-  
+
+      // Ajouter une entrée dans l'historique
+      await axios.post(`${API_BASE_URL}/rapports/historique`, {
+        id_rapport: rapportSelectionne.id_rapport,
+        id_operateur: nouvelOperateurAcces,
+        type_action: 'AJOUT_D_ACCES',
+        date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        detail_action: ''
+      });
+
+
       // Rafraîchir la liste des opérateurs avec accès
       const response = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
       setOperateursAvecAcces(response.data);
-      
+
       // Mettre à jour les droits d'accès globaux
       await fetchDroitsAcces();
-  
+
       setNouvelOperateurAcces('');
     } catch (err) {
       console.error("Erreur lors de l'ajout d'accès:", err);
       setError("Une erreur est survenue lors de l'ajout d'accès.");
     }
   };
-  
 
   const retirerAccesOperateur = async (idOperateur) => {
     try {
@@ -311,7 +341,17 @@ const ListeRapport = () => {
       // Rafraîchir la liste des opérateurs avec accès
       const response = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
       setOperateursAvecAcces(response.data);
-      
+
+      // Ajouter une entrée dans l'historique
+      await axios.post(`${API_BASE_URL}/rapports/historique`, {
+        id_rapport: rapportSelectionne.id_rapport,
+        id_operateur: idOperateur,
+        type_action: 'RETRAIT_D_ACCES',
+        date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        detail_action: ''
+      });
+
+
       // Mettre à jour les droits d'accès globaux
       await fetchDroitsAcces();
     } catch (err) {
@@ -333,6 +373,8 @@ const ListeRapport = () => {
       getSousTypeEvenementLibelle(rapport.id_sous_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
       getOrigineEvenementLibelle(rapport.id_origine_evenement).toLowerCase().includes(searchTerm.toLowerCase());
   });
+
+
 
   return (
     <div className="liste-rapport-container">
@@ -522,29 +564,116 @@ const ListeRapport = () => {
             {rapportSelectionne && (
               afficherHistorique ? (
                 <div className="historique-rapport">
-                  <div className="historique-item">
-                    <p><strong>Création:</strong> {formatDate(rapportSelectionne.date_creation)}</p>
-                    <p><strong>Par:</strong> {getOperateurNom(rapportSelectionne.id_operateur)}</p>
-                  </div>
-                  <div className="historique-item">
-                    <p><strong>Dernière modification:</strong> {formatDate(rapportSelectionne.date_modification)}</p>
-                    <p><strong>Par:</strong> {getOperateurNom(rapportSelectionne.id_operateur_modification || rapportSelectionne.id_operateur)}</p>
-                  </div>
+                  <h3>Historique des actions</h3>
+                  {historiqueData ? (
+                    historiqueData.map((action, index) => (
+                      <div key={index} className="historique-item">
+                        <p><strong>Action:</strong> {action.type_action}</p>
+                        <p><strong>Détails:</strong> {action.detail_action}</p>
+                        <p><strong>Opérateur:</strong> {getOperateurNom(action.id_operateur)}</p>
+                        <p><strong>Date:</strong> {formatDate(action.date_action)}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p>Chargement de l'historique...</p>
+                  )}
                 </div>
               ) : (
                 <div className="details-rapport">
-                  <div className="rapport-info">
-                    <p><strong>ID:</strong> {rapportSelectionne.id_rapport}</p>
-                    <p><strong>Titre:</strong> {rapportSelectionne.titre}</p>
-                    <p><strong>Date de l'événement:</strong> {formatDate(rapportSelectionne.date_evenement)}</p>
-                    <p><strong>Type:</strong> {getTypeEvenementLibelle(rapportSelectionne.id_type_evenement)}</p>
-                    <p><strong>Sous-type:</strong> {getSousTypeEvenementLibelle(rapportSelectionne.id_sous_type_evenement)}</p>
-                    <p><strong>Origine:</strong> {getOrigineEvenementLibelle(rapportSelectionne.id_origine_evenement)}</p>
-                    <p><strong>Description:</strong> {rapportSelectionne.description_globale}</p>
-                    {rapportSelectionne.id_zone && (
-                      <p><strong>Zone:</strong> {getZoneNom(rapportSelectionne.id_zone)}</p>
+                  <div className="rapport-header">
+                    <h3>{rapportSelectionne.titre}</h3>
+                    <span className="rapport-id">ID: {rapportSelectionne.id_rapport}</span>
+                  </div>
+
+                  <div className="rapport-sections">
+                    <div className="rapport-section infos-principales">
+                      <h4>Informations principales</h4>
+                      <div className="info-grid">
+                        <div className="info-item">
+                          <span className="info-label">Date de l'événement:</span>
+                          <span className="info-value">{formatDate(rapportSelectionne.date_evenement)}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Type:</span>
+                          <span className="info-value info-tag type">{getTypeEvenementLibelle(rapportSelectionne.id_type_evenement)}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Sous-type:</span>
+                          <span className="info-value info-tag sous-type">{getSousTypeEvenementLibelle(rapportSelectionne.id_sous_type_evenement)}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Origine:</span>
+                          <span className="info-value info-tag origine">{getOrigineEvenementLibelle(rapportSelectionne.id_origine_evenement)}</span>
+                        </div>
+                        {rapportSelectionne.id_zone && (
+                          <div className="info-item">
+                            <span className="info-label">Zone géographique:</span>
+                            <span className="info-value info-tag zone">{getZoneNom(rapportSelectionne.id_zone)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rapport-section description">
+                      <h4>Description globale</h4>
+                      <div className="description-content">
+                        {rapportSelectionne.description_globale}
+                      </div>
+                    </div>
+
+                    <div className="rapport-section responsable">
+                      <h4>Responsable</h4>
+                      <div className="responsable-info">
+                        <div className="avatar">
+                          {getOperateurNom(rapportSelectionne.id_operateur).substring(0, 1).toUpperCase()}
+                        </div>
+                        <div className="responsable-details">
+                          <div className="responsable-nom">{getOperateurNom(rapportSelectionne.id_operateur)}</div>
+                          <div className="responsable-date">Créé le {formatDate(rapportSelectionne.date_creation)}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {rapportSelectionne.operateurs_acces && rapportSelectionne.operateurs_acces.length > 0 && (
+                      <div className="rapport-section acces">
+                        <h4>Accès partagés</h4>
+                        <div className="acces-liste">
+                          {rapportSelectionne.operateurs_acces.map(opId => (
+                            <div key={opId} className="acces-item">
+                              <span className="acces-avatar">{getOperateurNom(opId).substring(0, 1).toUpperCase()}</span>
+                              <span className="acces-nom">{getOperateurNom(opId)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                    <p><strong>Opérateur responsable:</strong> {getOperateurNom(rapportSelectionne.id_operateur)}</p>
+
+                    {/* Ajout d'une section pour les coordonnées géographiques si disponibles */}
+                    {rapportSelectionne.latitude && rapportSelectionne.longitude && (
+                      <div className="rapport-section coords">
+                        <h4>Coordonnées géographiques</h4>
+                        <div className="coords-info">
+                          <div className="coord-item">
+                            <span className="coord-label">Latitude:</span>
+                            <span className="coord-value">{rapportSelectionne.latitude}</span>
+                          </div>
+                          <div className="coord-item">
+                            <span className="coord-label">Longitude:</span>
+                            <span className="coord-value">{rapportSelectionne.longitude}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ajout d'une section pour les informations supplémentaires si disponibles */}
+                    {rapportSelectionne.informations_supplementaires && (
+                      <div className="rapport-section infos-supp">
+                        <h4>Informations supplémentaires</h4>
+                        <div className="infos-supp-content">
+                          {rapportSelectionne.informations_supplementaires}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -554,7 +683,11 @@ const ListeRapport = () => {
             {rapportSelectionne && !afficherHistorique && (
               <button
                 className="btn btn-secondary"
-                onClick={() => setAfficherHistorique(true)}
+                onClick={async () => {
+                  setAfficherHistorique(true);
+                  const historique = await fetchHistorique(rapportSelectionne.id_rapport);
+                  setHistoriqueData(historique);
+                }}
               >
                 Voir l'historique
               </button>
@@ -632,29 +765,30 @@ const ListeRapport = () => {
                       <thead>
                         <tr>
                           <th>Opérateur</th>
-                          
                           <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {operateursAvecAcces.map(op => (
-                          <tr key={op.id_operateur}>
-                            <td>{op.prenom} {op.nom}</td>
-                            
-                            <td>
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => retirerAccesOperateur(op.id_operateur)}
-                              >
-                                Retirer
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {operateursAvecAcces
+                          .filter(op => op.id_operateur !== rapportSelectionne.id_operateur) // Filtrer l'utilisateur connecté
+                          .map(op => (
+                            <tr key={op.id_operateur}>
+                              <td>{op.prenom} {op.nom}</td>
+                              <td>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => retirerAccesOperateur(op.id_operateur)}
+                                >
+                                  Retirer
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
                   )}
                 </div>
+
               </div>
             )}
           </div>

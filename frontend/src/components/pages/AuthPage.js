@@ -99,10 +99,21 @@ const AuthPage = () => {
                             height: '150px',
                             borderRadius: '50%',
                             objectFit: 'cover',
-                            border: '2px solid #ccc'
+                            border: '2px solid #ccc',
+                            animation: 'coinFlip 3s infinite linear',
+                            transformStyle: 'preserve-3d',
+                            transform: 'perspective(1000px)'
                         }}
                     />
                 </div>
+
+                <style jsx>{`
+                    @keyframes coinFlip {
+                        0% { transform: perspective(1000px) rotateY(0deg); }
+                        50% { transform: perspective(1000px) rotateY(180deg); }
+                        100% { transform: perspective(1000px) rotateX(360deg); }
+                    }
+                `}</style>
 
                 <div className="auth-card">
                     {step === 1 && (

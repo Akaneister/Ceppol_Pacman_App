@@ -1,5 +1,6 @@
 /* AjouterRapport.css - Style professionnel et corporate */
 
+/* Root Variables */
 :root {
   --primary-color: #0f4c81; /* Bleu plus professionnel et mature */
   --primary-light: #1e73be;
@@ -20,6 +21,7 @@
   --transition-speed: 0.2s;
 }
 
+/* Rapport Container */
 .rapport-container {
   max-width: 960px;
   margin: 40px auto;
@@ -27,45 +29,37 @@
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* En-tête élégant et professionnel */
+/* Rapport Header */
 .rapport-header {
   margin-bottom: 36px;
   text-align: center;
 }
-
 .rapport-header h1 {
   color: var(--dark-color);
   font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.3px;
   margin-bottom: 12px;
-  position: relative;
-  display: inline-block;
-}
-
-.rapport-header h1::after {
-  content: '';
   position: absolute;
-  width: 60px;
-  height: 3px;
-  background: var(--primary-color);
-  bottom: -10px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  border-radius: 2px;
+  display: inline-block;
 }
 
 .rapport-subtitle {
   color: var(--text-light);
   font-size: 15px;
-  margin-top: 24px;
+  margin-top: 12px;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
+  display: block;
+  text-align: center;
 }
 
-/* Conteneur principal du formulaire */
+/* Rapport Form */
 .rapport-form {
   background-color: var(--form-background);
   border-radius: var(--border-radius);
@@ -76,7 +70,7 @@
   border: 1px solid var(--border-color);
 }
 
-/* Sections de formulaire */
+/* Form Sections */
 .form-section {
   margin-bottom: 32px;
   padding-bottom: 22px;
@@ -108,7 +102,7 @@
   border-radius: 2px;
 }
 
-/* Structure des rangées et groupes */
+/* Form Rows and Groups */
 .form-row {
   display: flex;
   gap: 20px;
@@ -124,7 +118,7 @@
   margin-bottom: 22px;
 }
 
-/* Labels et champs */
+/* Labels and Inputs */
 .form-group label {
   display: flex;
   align-items: center;
@@ -175,7 +169,7 @@
   cursor: not-allowed;
 }
 
-/* Menus déroulants */
+/* Dropdown Menus */
 select.form-control {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 8.825l-4.425-4.4 1.4-1.4L6 6.025l3.025-3L10.4 4.4z'/%3E%3C/svg%3E");
@@ -184,14 +178,14 @@ select.form-control {
   padding-right: 36px;
 }
 
-/* Textarea avec style amélioré */
+/* Textarea */
 textarea.form-control {
   resize: vertical;
   min-height: 100px;
   line-height: 1.5;
 }
 
-/* Grille de cases à cocher */
+/* Checkbox Grid */
 .checkbox-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -221,7 +215,7 @@ textarea.form-control {
   font-size: 14px;
 }
 
-/* Inputs range avec style professionnel */
+/* Range Inputs */
 .form-control-range {
   width: 100%;
   height: 6px;
@@ -254,7 +248,7 @@ textarea.form-control {
   outline: none;
 }
 
-/* Container de la carte */
+/* Map Container */
 .map-container {
   margin-top: 20px;
 }
@@ -275,7 +269,7 @@ textarea.form-control {
   background-color: #f8fafc;
 }
 
-/* Boutons de localisation */
+/* Location Buttons */
 .location-actions {
   margin-bottom: 16px;
 }
@@ -304,7 +298,7 @@ textarea.form-control {
   font-size: 15px;
 }
 
-/* Boutons d'action */
+/* Form Actions */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -352,7 +346,7 @@ textarea.form-control {
   transform: translateY(0);
 }
 
-/* État de chargement du bouton */
+/* Button Loading State */
 .btn-primary.loading {
   background-color: var(--primary-light);
   cursor: not-allowed;
@@ -372,7 +366,7 @@ textarea.form-control {
   vertical-align: middle;
 }
 
-/* Messages de statut */
+/* Status Messages */
 .status-message {
   padding: 14px;
   border-radius: var(--border-radius);
@@ -422,7 +416,7 @@ textarea.form-control {
   content: "ℹ";
 }
 
-/* Animations subtiles */
+/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -454,7 +448,7 @@ textarea.form-control {
   }
 }
 
-/* Styles responsives optimisés */
+/* Responsive Styles */
 @media (max-width: 768px) {
   .rapport-form {
     padding: 22px;

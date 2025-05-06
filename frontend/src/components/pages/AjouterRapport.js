@@ -15,38 +15,51 @@ const AjouterRapport = () => {
   const [mapInitialized, setMapInitialized] = useState(false);
   const [marker, setMarker] = useState(null);
 
-  const [formData, setFormData] = useState({
-    titre: '',
-    date_evenement: new Date().toISOString().split('T')[0],
-    heure_evenement: new Date().toISOString().split('T')[1].substring(0, 5),
-    description_globale: '',
-    id_type_evenement: '',
-    id_sous_type_evenement: '',
-    id_origine_evenement: '',
-    // Champs pour la cible de l'événement
-    id_cible: '',
-    nom_cible: '',
-    pavillon_cible: '',
-    // Champs pour la localisation
-    id_zone: '',
-    details_lieu: '',
-    latitude: '',
-    longitude: '',
-    // Conditions météorologiques
-    direction_vent: '',
-    force_vent: '',
-    etat_mer: '',
-    nebulosite: '',
-    // Contacts et alertes
-    cedre_alerte: false,
-    cross_alerte: false,
-    photo: false,
-    polrep: false,
-    derive_mothy: false,
-    polmar_terre: false,
-    smp: false,
-    bsaa: false,
-    delai_appareillage: ''
+  const [formData, setFormData] = useState(() => {
+    // Get current date and time in local timezone
+    const now = new Date();
+    
+    // Format date as YYYY-MM-DD for the date input
+    const formattedDate = now.toISOString().split('T')[0];
+    
+    // Format time as HH:MM in local timezone for the time input
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const formattedTime = `${hours}:${minutes}`;
+    
+    return {
+      titre: '',
+      date_evenement: formattedDate,
+      heure_evenement: formattedTime,
+      description_globale: '',
+      id_type_evenement: '',
+      id_sous_type_evenement: '',
+      id_origine_evenement: '',
+      // Champs pour la cible de l'événement
+      id_cible: '',
+      nom_cible: '',
+      pavillon_cible: '',
+      // Champs pour la localisation
+      id_zone: '',
+      details_lieu: '',
+      latitude: '',
+      longitude: '',
+      // Conditions météorologiques
+      direction_vent: '',
+      force_vent: '',
+      etat_mer: '',
+      nebulosite: '',
+      // Contacts et alertes
+      cedre_alerte: false,
+      cross_alerte: false,
+      photo: false,
+      polrep: false,
+      derive_mothy: false,
+      polmar_terre: false,
+      smp: false,
+      bsaa: false,
+      delai_appareillage: ''
+    };
   });
 
   // États pour les listes déroulantes
@@ -382,18 +395,18 @@ const AjouterRapport = () => {
   return (
     <div className="rapport-container">
 
-      {/* Le reste du JSX reste inchangé */}
-      <div className="rapport-header">
-        <h1>Nouveau Rapport d'Événement</h1>
-        <p className="rapport-subtitle">
-          Complétez tous les champs obligatoires (*) pour soumettre un nouveau rapport
-        </p>
-      </div>
-
       
+        <div className="rapport-header">
+          <h1 >Nouveau Rapport d'Événement</h1>
+          <p className="rapport-subtitle" style={{ fontSize: '0.9em', fontStyle: 'italic' }}>
+            Complétez tous les champs obligatoires (*) pour soumettre un nouveau rapport
+          </p>
+        </div>
 
-      <form className="rapport-form" onSubmit={handleSubmit}>
-        {/* Section Informations Générales */}
+        
+
+        <form className="rapport-form" onSubmit={handleSubmit}>
+          {/* Section Informations Générales */}
         <div className="form-section">
           <h2>Informations Générales</h2>
 

@@ -1,8 +1,29 @@
+/*
+ajouterRapportController.js
+==================== Description ==================//
+
+Description Global : Ce fichier contient les contrôleurs pour gérer les requêtes liées à l'ajout de rapports dans la base de données.
+Il inclut :
+- Recuperation des type d'evenement.
+- Recuperation des sous type d'evenement.
+- Recuperation des origine d'evenement.
+- Recuperation des type de cible.
+- Recuperation des zones geographiques.
+- Creation d'un rapport.
+
+
+Ce controller va etre tres utile pour la page d'ajout de rapport et grace a des apelle de l'api va permettre 
+de recupere les info pour les selectionner dans les menu deroulant mais aussi valider et creer un rapport 
+*/
+
+
 const db = require('../db');
 
 //=================== Requêtes GET ===================//
 // Utilise async/await pour la gestion des requêtes
 
+
+// Récupération des types d'événements 
 const getTypeEvenement = async (req, res) => {
   try {
     const [result] = await db.query('SELECT * FROM TypeEvenement');
@@ -13,7 +34,7 @@ const getTypeEvenement = async (req, res) => {
   }
 };
 
-
+// Récupération des sous-types de pollution
 const getSousTypePollution = async (req, res) => {
   try {
     const [result] = await db.query('SELECT * FROM SousTypeEvenement');
@@ -24,6 +45,7 @@ const getSousTypePollution = async (req, res) => {
   }
 };
 
+// Récupération des origines d'événements
 const getOrigineEvenement = async (req, res) => {
   try {
     const [result] = await db.query('SELECT * FROM OrigineEvenement');
@@ -34,6 +56,7 @@ const getOrigineEvenement = async (req, res) => {
   }
 };
 
+// Récupération des types de cibles
 const getTypeCible = async (req, res) => {
   try {
     const [result] = await db.query('SELECT * FROM TypeCible');
@@ -44,6 +67,7 @@ const getTypeCible = async (req, res) => {
   }
 };
 
+// Récupération des zones géographiques
 const getZoneGeographique = async (req, res) => {
   try {
     const [result] = await db.query('SELECT * FROM ZoneGeographique');
@@ -56,7 +80,7 @@ const getZoneGeographique = async (req, res) => {
 
 //==================== Requête POST ===================//
 
-
+// Création d'un rapport
 const createRapport = async (req, res) => {
   console.log('Requête reçue pour créer un rapport'); // Log de début
   console.log('Requête reçue:', req.body);
@@ -195,10 +219,6 @@ const createRapport = async (req, res) => {
     console.log('Connexion libérée');
   }
 };
-
-
-
-
 
 
 //==================== Exports ===================//

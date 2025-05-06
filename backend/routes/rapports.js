@@ -27,6 +27,7 @@ const {
   supprimerAccesOperateur,
   getOperateurs,
   getDroit,
+  ajouterEvenementHistorique,
 } = require('../controller/listeRapportController');
 
 
@@ -61,6 +62,10 @@ router.get('/liste-rapports', getRapport);
 router.get('/:id/acces',  getOperateursAvecAcces);
 router.post('/:id/acces', ajouterAccesOperateur);
 router.delete('/:id/acces/:idOperateur',  supprimerAccesOperateur);
+
+router.post('/historique', ajouterEvenementHistorique);
+router.get('/historique/:id', getHistoriqueRapport);
+
 
 
 // EXPORT FINAL : seulement router !!

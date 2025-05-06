@@ -1,3 +1,17 @@
+/*
+rapportController.js
+==================== Description ==================//
+
+Description global :ce contient des fonction basique pour la gestion des rapports et aussi un test pour voir si l'API fonctionne
+
+elle inclut :
+- testAPI : un test pour voir si l'API fonctionne
+- getAllRapports : pour recuperer tous les rapports
+- createRapport : pour creer un rapport
+
+*/
+
+
 const db = require('../db');
 
 exports.testAPI = (req, res) => {

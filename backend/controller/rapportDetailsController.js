@@ -1,3 +1,16 @@
+/*
+rapportDetailsController.js
+
+==================== Description ==================//
+Description global : Ce fichier contient le controller pour la route de details d'un rapport.
+
+il inclut :
+- getRapportInfo : permet de voir les details d'un rapport grace a son id
+
+
+Permet de recupere les details d'un rapport specifique grace a son id 
+*/
+
 const db = require('../db');
 
 //permet de voir les details d'un rapport grace a son id

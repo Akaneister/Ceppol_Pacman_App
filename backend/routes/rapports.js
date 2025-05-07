@@ -28,6 +28,7 @@ const {
   getOperateurs,
   getDroit,
   ajouterEvenementHistorique,
+  ajouterManuelHistorique,
 } = require('../controller/listeRapportController');
 
 
@@ -66,6 +67,7 @@ router.delete('/:id/acces/:idOperateur',  supprimerAccesOperateur);
 router.post('/historique', ajouterEvenementHistorique);
 router.get('/historique/:id', getHistoriqueRapport);
 
+router.post('/historique-manuel', ajouterManuelHistorique);
 
 
 // EXPORT FINAL : seulement router !!

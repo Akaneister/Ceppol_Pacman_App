@@ -28,6 +28,41 @@ const ModifierRapport = () => {
   const [zonesGeographiques, setZonesGeographiques] = useState([]);
   const [filteredSousTypes, setFilteredSousTypes] = useState([]);
 
+
+  const [ancienRapport, setAncienRapport] = useState({
+    titre: '',
+    date_evenement: '',
+    heure_evenement: '',
+    description_globale: '',
+    id_type_evenement: '',
+    id_sous_type_evenement: '',
+    id_origine_evenement: '',
+    // Champs pour la cible de l'événement
+    id_cible: '',
+    nom_cible: '',
+    pavillon_cible: '',
+    // Champs pour la localisation
+    id_zone: '',
+    details_lieu: '',
+    latitude: '',
+    longitude: '',
+    // Conditions météorologiques
+    direction_vent: '',
+    force_vent: '',
+    etat_mer: '',
+    nebulosite: '',
+    // Contacts et alertes
+    cedre_alerte: false,
+    cross_alerte: false,
+    photo: false,
+    polrep: false,
+    derive_mothy: false,
+    polmar_terre: false,
+    smp: false,
+    bsaa: false,
+    delai_appareillage: ''
+  });
+
   const [formData, setFormData] = useState({
     titre: '',
     date_evenement: '',
@@ -62,12 +97,30 @@ const ModifierRapport = () => {
     delai_appareillage: ''
   });
 
+
+  useEffect(() => {
+    const chargerRapport = async () => {
+      try {
+        const res = await axios.get(`${API}/rapports/${id}`);
+        console.log('Données du rapport:', res.data);
+        setFormData(res.data);
+        setAncienRapport(res.data); // Copie pour comparaison
+      } catch (err) {
+        console.error("Erreur lors du chargement du rapport :", err);
+      }
+
+    };
+
+    chargerRapport();
+  }, [id]);
+
+
   // Récupération des données pour les listes déroulantes et du rapport
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-  
+
         // Récupération des données des listes déroulantes + du rapport
         const [
           typesRes,
@@ -84,27 +137,27 @@ const ModifierRapport = () => {
           axios.get(`${API}/rapports/type-cible`),
           axios.get(`${API}/rapports/${id}`)
         ]);
-  
+
         console.log('Données du rapport:', rapportRes.data);
-  
+
         setTypesEvenement(typesRes.data);
         setSousTypesEvenement(sousTypesRes.data);
         setOriginesEvenement(originesRes.data);
         setZonesGeographiques(zonesRes.data);
         setTypesCible(typesCibleRes.data);
-  
+
         const rapportData = rapportRes.data.rapport;
         const metaData = rapportRes.data.metaData;
-  
+
         let dateEvenement = '';
         let heureEvenement = '';
-  
+
         if (rapportData.date_evenement) {
           const dateTime = new Date(rapportData.date_evenement);
           dateEvenement = dateTime.toISOString().split('T')[0];
           heureEvenement = dateTime.toTimeString().substring(0, 5);
         }
-  
+
         const newFormData = {
           titre: rapportData.titre || '',
           date_evenement: dateEvenement,
@@ -113,24 +166,24 @@ const ModifierRapport = () => {
           id_type_evenement: rapportData.id_type_evenement?.toString() || '',
           id_sous_type_evenement: rapportData.id_sous_type_evenement?.toString() || '',
           id_origine_evenement: rapportData.id_origine_evenement?.toString() || '',
-  
+
           // Cible
           id_cible: metaData.cible?.id_type_cible?.toString() || '',
           nom_cible: metaData.cible?.nom || '',
           pavillon_cible: metaData.cible?.pavillon || '',
-  
+
           // Localisation
           id_zone: metaData.localisation?.id_zone?.toString() || '',
           details_lieu: metaData.localisation?.details_lieu || '',
           latitude: metaData.localisation?.latitude?.toString() || '',
           longitude: metaData.localisation?.longitude?.toString() || '',
-  
+
           // Météo
           direction_vent: metaData.meteo?.direction_vent || '',
           force_vent: metaData.meteo?.force_vent?.toString() || '',
           etat_mer: metaData.meteo?.etat_mer?.toString() || '',
           nebulosite: metaData.meteo?.nebulosite?.toString() || '',
-  
+
           // Alertes
           cedre_alerte: metaData.alertes?.cedre === 1,
           cross_alerte: metaData.alertes?.cross_contact === 1,
@@ -142,8 +195,9 @@ const ModifierRapport = () => {
           bsaa: metaData.alertes?.bsaa === 1,
           delai_appareillage: metaData.alertes?.delai_appareillage_bsaa || ''
         };
-  
+
         setFormData(newFormData);
+        setAncienRapport(newFormData); // Copie pour comparaison
         setLoading(false);
       } catch (err) {
         console.error("Erreur lors du chargement des données:", err);
@@ -151,10 +205,10 @@ const ModifierRapport = () => {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, [id]);
-  
+
 
   // Filtrer les sous-types en fonction du type sélectionné
   useEffect(() => {
@@ -167,6 +221,7 @@ const ModifierRapport = () => {
       setFilteredSousTypes([]);
     }
   }, [formData.id_type_evenement, sousTypesEvenement]);
+
 
   // Initialisation de la carte Leaflet
   useEffect(() => {
@@ -195,6 +250,12 @@ const ModifierRapport = () => {
         initMap();
       }
     }
+
+
+
+
+
+
 
     function initMap() {
       try {
@@ -316,31 +377,24 @@ const ModifierRapport = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Valider le formulaire
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     setSubmitStatus(null);
 
     try {
-      // Combiner la date et l'heure pour le backend
       const dateTimeString = `${formData.date_evenement}T${formData.heure_evenement}:00`;
 
-      // Préparation des données à envoyer selon la structure attendue par le backend
       const rapport = {
         titre: formData.titre,
         date_evenement: dateTimeString,
         description_globale: formData.description_globale,
         id_operateur: authData.Opid,
-        // Convertir les ID en nombres
         id_type_evenement: formData.id_type_evenement ? parseInt(formData.id_type_evenement) : null,
         id_sous_type_evenement: formData.id_sous_type_evenement ? parseInt(formData.id_sous_type_evenement) : null,
         id_origine_evenement: formData.id_origine_evenement ? parseInt(formData.id_origine_evenement) : null,
       };
 
-      // Données associées pour les tables connexes
       const metaData = {
         cible: {
           id_cible: formData.id_cible || null,
@@ -348,7 +402,7 @@ const ModifierRapport = () => {
           pavillon_cible: formData.pavillon_cible || null,
         },
         localisation: {
-          id_zone: formData.id_zone? parseInt(formData.id_zone) : null,
+          id_zone: formData.id_zone ? parseInt(formData.id_zone) : null,
           details_lieu: formData.details_lieu || null,
           latitude: formData.latitude ? parseFloat(formData.latitude) : null,
           longitude: formData.longitude ? parseFloat(formData.longitude) : null,
@@ -372,30 +426,72 @@ const ModifierRapport = () => {
         }
       };
 
-      console.log("Données envoyées au backend pour mise à jour:", { rapport, metaData });
-
-      // Envoi des données au backend pour mise à jour
+      // Envoi du PUT vers l'API
       const response = await axios.put(`${API}/rapports/${id}/after`, {
         rapport,
         metaData
       });
 
-      const modifiedFields = Object.keys(formData).filter(key => {
-        return formData[key] !== '' && formData[key] !== null;
-      }).join(', ');
+  
+      function genererDetailAction(ancien, nouveau) {
+        console.log('Ancien rapport:', ancien);
+        
+        const modifications = [];
+      
+        // Parcours des champs du nouveau rapport
+        for (const champ in nouveau) {
+          const ancienVal = ancien[champ];
+          const nouveauVal = nouveau[champ];
+      
+          // Si les valeurs sont différentes, on les ajoute aux modifications
+          if (ancienVal !== nouveauVal) {
+            modifications.push(`${champ} : "${ancienVal}" → "${nouveauVal}"`);
+          }
+        }
+      
+        // Retourne un message selon qu'il y ait des modifications ou non
+        return modifications.length > 0
+          ? `Champs modifiés :\n- ${modifications.join('\n- ')}`
+          : 'Aucune modification détectée';
+      }
+      
+      // Fonction pour formater la valeur (en tenant compte des valeurs null/undefined et autres types)
+      function formatValeur(val) {
+        if (val === null || val === undefined) {
+          return ''; // Retourne une chaîne vide si la valeur est null ou undefined
+        }
+      
+        // Si la valeur est un booléen, on la transforme en chaîne de caractères
+        if (typeof val === 'boolean') {
+          return val ? 'Oui' : 'Non';
+        }
+      
+        // Si la valeur est un nombre, on retourne son formatage
+        if (typeof val === 'number') {
+          return val.toString();
+        }
+      
+        // Pour les autres types de valeurs (chaînes, objets, tableaux, etc.), on retourne la valeur sous forme de chaîne
+        return val.toString();
+      }
+      
 
+      
+      // GÉNÉRATION DU DETAIL_ACTION AVANCÉ
+      const detail_action = genererDetailAction(ancienRapport, formData);
+
+      console.log('detail_action:', detail_action);
       await axios.post(`${API}/rapports/historique`, {
         id_rapport: id,
         id_operateur: authData.Opid,
         type_action: 'Modification Rapport',
         date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
-        detail_action: `Champs modifiés ou ajoutés : ${modifiedFields}`
+        detail_action
       });
 
       console.log('Rapport mis à jour avec succès:', response.data);
       setSubmitStatus({ type: 'success', message: 'Rapport mis à jour avec succès!' });
 
-      // Redirection après quelques secondes
       setTimeout(() => {
         navigate('/liste-rapports');
       }, 2000);
@@ -409,6 +505,7 @@ const ModifierRapport = () => {
       setIsSubmitting(false);
     }
   };
+
 
   if (loading) return (
     <div className="loading-container">

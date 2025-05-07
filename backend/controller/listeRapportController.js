@@ -388,6 +388,34 @@ const ajouterAccesOperateur = async (req, res) => {
 };
 
 
+// a faire  
+
+const ajouterManuelHistorique = async (req, res) => {
+  const { id_rapport, id_operateur, type_action, detail_action } = req.body;
+
+  // Vérifier que l'opérateur et le rapport sont définis
+  if (!id_operateur || !id_rapport) {
+    console.log("Erreur : Opérateur ou rapport non spécifié");
+    return res.status(400).json({ error: "Opérateur ou rapport non spécifié" });
+  }
+
+  try {
+    // Requête d'insertion dans l'historique
+    await db.query(
+      `INSERT INTO Historique (id_rapport, id_operateur, type_action, detail_action, date_action)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [id_rapport, id_operateur, type_action, detail_action]
+    );
+
+    res.status(201).json({ message: "Événement ajouté à l'historique avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de l'ajout dans l'historique:", err);
+    res.status(500).json({ error: "Erreur serveur lors de l'ajout à l'historique" });
+  }
+}
+
+
+
 // Fonction pour ajouter un événement dans l'historique
 const ajouterEvenementHistorique = async (req, res) => {
   const { id_rapport, type_action, detail_action, date_action, id_operateur } = req.body;
@@ -469,4 +497,5 @@ module.exports = {
   getOperateurs,
   getDroit,
   ajouterEvenementHistorique,
+  ajouterManuelHistorique,
 };

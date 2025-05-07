@@ -80,73 +80,81 @@ h3 {
   background-color: #0e2a5a;
 }
 
+/* Ensure all .btn-sm buttons have the same min-width for uniform size */
+.btn-sm {
+  min-width: 110px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
 .search-icon {
   font-style: normal;
 }
-
 /* ==========================================
-  FILTERS
+  FILTERS - UPDATED FOR BETTER FIT
   ========================================== */
-.filtres-section {
-  background-color: #ffffff;
-  padding: 25px;
-  border-radius: 10px;
-  margin-bottom: 35px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
-}
-
-.filtres-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-  gap: 20px;
-  margin-bottom: 25px;
-}
-
-.filtre-groupe {
-  display: flex;
-  flex-direction: column;
-}
-
-.filtre-groupe label {
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #4a5568;
-  font-size: 0.9rem;
-}
-
-.filtre-groupe select,
-.filtre-groupe input {
-  padding: 12px 15px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 15px;
-  background-color: #f8fafc;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.filtre-groupe select:focus,
-.filtre-groupe input:focus {
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-  outline: none;
-}
-
-.filtres-actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.filtres-actifs {
-  background-color: #ebf5eb;
-  color: #2c7a2c;
-  padding: 10px 16px;
-  border-radius: 6px;
-  margin-top: 20px;
-  display: inline-block;
-  font-weight: 500;
-  border-left: 4px solid #2c7a2c;
-}
+  .filtres-section {
+    background-color: #ffffff;
+    padding: 18px; /* Reduced from 25px */
+    border-radius: 8px; /* Reduced from 10px */
+    margin-bottom: 25px; /* Reduced from 35px */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Lighter shadow */
+  }
+  
+  .filtres-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Smaller minimum width */
+    gap: 15px; /* Reduced from 20px */
+    margin-bottom: 20px; /* Reduced from 25px */
+  }
+  
+  .filtre-groupe {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .filtre-groupe label {
+    margin-bottom: 6px; /* Reduced from 8px */
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 0.85rem; /* Reduced from 0.9rem */
+  }
+  
+  .filtre-groupe select,
+  .filtre-groupe input {
+    padding: 8px 12px; /* Reduced from 12px 15px */
+    border: 1px solid #e2e8f0;
+    border-radius: 5px; /* Reduced from 6px */
+    font-size: 14px; /* Reduced from 15px */
+    background-color: #f8fafc;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .filtre-groupe select:focus,
+  .filtre-groupe input:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 1px rgba(74, 144, 226, 0.2); /* Reduced shadow size */
+    outline: none;
+  }
+  
+  .filtres-actions {
+    display: flex;
+    gap: 12px; /* Reduced from 15px */
+    margin-top: 12px; /* Reduced from 15px */
+  }
+  
+  .filtres-actifs {
+    background-color: #ebf5eb;
+    color: #2c7a2c;
+    padding: 8px 12px; /* Reduced from 10px 16px */
+    border-radius: 5px; /* Reduced from 6px */
+    margin-top: 15px; /* Reduced from 20px */
+    display: inline-block;
+    font-weight: 500;
+    border-left: 3px solid #2c7a2c; /* Reduced from 4px */
+    font-size: 0.9rem; /* Added smaller font size */
+  }
+  
 
 /* ==========================================
   BUTTONS

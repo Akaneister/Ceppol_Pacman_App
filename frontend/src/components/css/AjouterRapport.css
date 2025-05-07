@@ -1,108 +1,132 @@
-/* AjouterRapport.css - Style professionnel et corporate */
+/* AjouterRapport.css - Professional and corporate style */
 
-/* Root Variables */
+/* ----------------------------------------------------
+  ROOT VARIABLES - Color scheme and global settings
+  ---------------------------------------------------- */
 :root {
-  --primary-color: #0f4c81; /* Bleu plus professionnel et mature */
-  --primary-light: #1e73be;
-  --primary-dark: #083761;
+  /* Color palette - refined corporate colors */
+  --primary-color: #1a73e8; /* Modern blue - Google-inspired */
+  --primary-light: #4285f4;
+  --primary-dark: #0d47a1;
   --secondary-color: #4a5568;
-  --success-color: #0c8b5e; /* Vert plus subtil */
-  --danger-color: #d32f2f;
-  --warning-color: #e65100;
-  --light-color: #f5f7fa;
-  --dark-color: #1a202c;
+  --success-color: #0f9d58; /* Professional green */
+  --danger-color: #db4437;  /* Alert red */
+  --warning-color: #f4b400;
+  --light-color: #f8f9fa;
+  --dark-color: #202124;
+  
+  /* UI elements colors */
   --background-color: #f8f9fc;
-  --text-color: #2d3748;
-  --text-light: #505e74;
-  --border-color: #dbe1e9;
+  --text-color: #3c4043;
+  --text-light: #5f6368;
+  --border-color: #dadce0;
   --form-background: #ffffff;
-  --border-radius: 6px; /* Réduit pour un look plus professionnel */
-  --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  --transition-speed: 0.2s;
+  
+  /* UI properties */
+  --border-radius: 8px;
+  --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+  --transition-speed: 0.25s;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
-/* Rapport Container */
+/* ----------------------------------------------------
+  LAYOUT CONTAINER
+  ---------------------------------------------------- */
 .rapport-container {
-  max-width: 960px;
-  margin: 40px auto;
-  padding: 0 24px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  max-width: 1024px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem;
+  font-family: var(--font-family);
+  color: var(--text-color);
 }
 
-/* Rapport Header */
+/* ----------------------------------------------------
+  HEADER STYLING
+  ---------------------------------------------------- */
 .rapport-header {
-  margin-bottom: 36px;
+  margin-bottom: 2.5rem;
   text-align: center;
+  position: relative;
+  padding-top: 3rem; /* Space for absolute positioned title */
 }
+
 .rapport-header h1 {
   color: var(--dark-color);
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 600;
-  letter-spacing: -0.3px;
-  margin-bottom: 12px;
+  letter-spacing: -0.02em;
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
   display: inline-block;
+  margin: 0;
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(to right, var(--primary-light), var(--primary-dark));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .rapport-subtitle {
   color: var(--text-light);
-  font-size: 15px;
-  margin-top: 12px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  font-size: 0.95rem;
   line-height: 1.6;
-  display: block;
+  max-width: 640px;
+  margin: 0.75rem auto;
   text-align: center;
 }
 
-/* Rapport Form */
+/* ----------------------------------------------------
+  FORM CONTAINER
+  ---------------------------------------------------- */
 .rapport-form {
   background-color: var(--form-background);
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
-  padding: 32px;
+  padding: 2.5rem 2rem;
   position: relative;
   animation: fadeIn 0.4s ease-out;
   border: 1px solid var(--border-color);
 }
 
-/* Form Sections */
+/* ----------------------------------------------------
+  FORM SECTIONS
+  ---------------------------------------------------- */
 .form-section {
-  margin-bottom: 32px;
-  padding-bottom: 22px;
+  margin-bottom: 2.25rem;
+  padding-bottom: 1.75rem;
   border-bottom: 1px solid var(--border-color);
 }
 
 .form-section:last-of-type {
   border-bottom: none;
-  margin-bottom: 22px;
+  margin-bottom: 1.5rem;
 }
 
 .form-section h2 {
-  font-size: 18px;
+  font-size: 1.125rem;
   color: var(--primary-dark);
-  margin-bottom: 22px;
+  margin-bottom: 1.5rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.01em;
 }
 
 .form-section h2::before {
   content: '';
   display: inline-block;
-  width: 3px;
-  height: 18px;
-  background: var(--primary-color);
-  margin-right: 12px;
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(to bottom, var(--primary-color), var(--primary-dark));
+  margin-right: 0.75rem;
   border-radius: 2px;
 }
 
-/* Form Rows and Groups */
+/* ----------------------------------------------------
+  FORM LAYOUT - Rows and groups
+  ---------------------------------------------------- */
 .form-row {
   display: flex;
   gap: 20px;
@@ -115,22 +139,24 @@
 }
 
 .form-group {
-  margin-bottom: 22px;
+  margin-bottom: 1.5rem;
 }
 
-/* Labels and Inputs */
+/* ----------------------------------------------------
+  FORM ELEMENTS - Labels and inputs
+  ---------------------------------------------------- */
 .form-group label {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   font-weight: 500;
   color: var(--dark-color);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .tooltip-icon {
-  margin-left: 6px;
-  font-size: 13px;
+  margin-left: 0.375rem;
+  font-size: 0.8125rem;
   cursor: help;
   opacity: 0.7;
   transition: opacity var(--transition-speed);
@@ -144,19 +170,20 @@
 
 .form-control {
   width: 100%;
-  padding: 10px 14px;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  font-size: 14px;
+  font-size: 0.9375rem;
   transition: all var(--transition-speed);
   color: var(--text-color);
   background-color: #fff;
+  line-height: 1.4;
 }
 
 .form-control:focus {
   outline: none;
   border-color: var(--primary-light);
-  box-shadow: 0 0 0 2px rgba(15, 76, 129, 0.15);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
 }
 
 .form-control::placeholder {
@@ -169,42 +196,48 @@
   cursor: not-allowed;
 }
 
-/* Dropdown Menus */
+/* ----------------------------------------------------
+  SELECT DROPDOWNS
+  ---------------------------------------------------- */
 select.form-control {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 8.825l-4.425-4.4 1.4-1.4L6 6.025l3.025-3L10.4 4.4z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 14px center;
-  padding-right: 36px;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
 }
 
-/* Textarea */
+/* ----------------------------------------------------
+  TEXTAREA STYLING
+  ---------------------------------------------------- */
 textarea.form-control {
   resize: vertical;
-  min-height: 100px;
-  line-height: 1.5;
+  min-height: 120px;
+  line-height: 1.6;
 }
 
-/* Checkbox Grid */
+/* ----------------------------------------------------
+  CHECKBOX GRID
+  ---------------------------------------------------- */
 .checkbox-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 14px;
-  margin-top: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.875rem;
+  margin-top: 0.75rem;
 }
 
 .checkbox-item {
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 2px 0;
+  padding: 0.25rem 0;
 }
 
 .checkbox-item input[type="checkbox"] {
-  margin-right: 10px;
+  margin-right: 0.625rem;
   cursor: pointer;
-  width: 16px;
-  height: 16px;
+  width: 1rem;
+  height: 1rem;
   accent-color: var(--primary-color);
 }
 
@@ -212,17 +245,19 @@ textarea.form-control {
   margin-bottom: 0;
   cursor: pointer;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
-/* Range Inputs */
+/* ----------------------------------------------------
+  RANGE INPUTS
+  ---------------------------------------------------- */
 .form-control-range {
   width: 100%;
   height: 6px;
   background: #e2e8f0;
   border-radius: 3px;
   appearance: none;
-  margin: 10px 0;
+  margin: 1rem 0;
   cursor: pointer;
 }
 
@@ -248,15 +283,18 @@ textarea.form-control {
   outline: none;
 }
 
-/* Map Container */
+/* ----------------------------------------------------
+  MAP CONTAINER
+  ---------------------------------------------------- */
 .map-container {
-  margin-top: 20px;
+  margin-top: 1.25rem;
 }
 
 .location-map {
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
   overflow: hidden;
+  height: 300px;
 }
 
 .map-loading {
@@ -269,18 +307,20 @@ textarea.form-control {
   background-color: #f8fafc;
 }
 
-/* Location Buttons */
+/* ----------------------------------------------------
+  LOCATION BUTTONS
+  ---------------------------------------------------- */
 .location-actions {
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .btn-location {
   background-color: var(--light-color);
   border: 1px solid var(--border-color);
   color: var(--text-color);
-  padding: 9px 14px;
+  padding: 0.625rem 1rem;
   border-radius: var(--border-radius);
-  font-size: 13px;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all var(--transition-speed);
   display: inline-flex;
@@ -290,44 +330,47 @@ textarea.form-control {
 
 .btn-location:hover {
   background-color: #e2e8f0;
+  border-color: #cbd5e0;
 }
 
 .btn-location:before {
   content: "📍";
-  margin-right: 8px;
-  font-size: 15px;
+  margin-right: 0.5rem;
+  font-size: 0.9375rem;
 }
 
-/* Form Actions */
+/* ----------------------------------------------------
+  FORM ACTIONS - Buttons
+  ---------------------------------------------------- */
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 14px;
-  margin-top: 32px;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
 .btn-primary,
 .btn-secondary {
-  padding: 11px 22px;
+  padding: 0.75rem 1.5rem;
   border-radius: var(--border-radius);
   font-weight: 500;
-  font-size: 14px;
+  font-size: 0.9375rem;
   cursor: pointer;
   transition: all var(--transition-speed);
   border: none;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.01em;
 }
 
 .btn-primary {
   background-color: var(--primary-color);
   color: white;
-  box-shadow: 0 2px 4px rgba(15, 76, 129, 0.15);
+  box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
 }
 
 .btn-primary:hover {
   background-color: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(8, 55, 97, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(13, 71, 161, 0.25);
 }
 
 .btn-secondary {
@@ -346,7 +389,7 @@ textarea.form-control {
   transform: translateY(0);
 }
 
-/* Button Loading State */
+/* Loading state for buttons */
 .btn-primary.loading {
   background-color: var(--primary-light);
   cursor: not-allowed;
@@ -356,40 +399,42 @@ textarea.form-control {
 .btn-primary.loading::before {
   content: '';
   display: inline-block;
-  width: 14px;
-  height: 14px;
+  width: 1rem;
+  height: 1rem;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: white;
   animation: spin 1s linear infinite;
-  margin-right: 8px;
+  margin-right: 0.5rem;
   vertical-align: middle;
 }
 
-/* Status Messages */
+/* ----------------------------------------------------
+  STATUS MESSAGES
+  ---------------------------------------------------- */
 .status-message {
-  padding: 14px;
+  padding: 1rem;
   border-radius: var(--border-radius);
-  margin-bottom: 22px;
+  margin-bottom: 1.5rem;
   font-weight: 500;
   animation: slideDown 0.3s ease-out;
   position: relative;
-  padding-left: 38px;
-  font-size: 14px;
+  padding-left: 3rem;
+  font-size: 0.9375rem;
 }
 
 .status-message::before {
   position: absolute;
-  left: 14px;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 16px;
+  font-size: 1.125rem;
 }
 
 .status-message.success {
-  background-color: rgba(12, 139, 94, 0.08);
+  background-color: rgba(15, 157, 88, 0.08);
   color: var(--success-color);
-  border-left: 3px solid var(--success-color);
+  border-left: 4px solid var(--success-color);
 }
 
 .status-message.success::before {
@@ -397,9 +442,9 @@ textarea.form-control {
 }
 
 .status-message.error {
-  background-color: rgba(211, 47, 47, 0.08);
+  background-color: rgba(219, 68, 55, 0.08);
   color: var(--danger-color);
-  border-left: 3px solid var(--danger-color);
+  border-left: 4px solid var(--danger-color);
 }
 
 .status-message.error::before {
@@ -407,106 +452,146 @@ textarea.form-control {
 }
 
 .status-message.info {
-  background-color: rgba(15, 76, 129, 0.08);
+  background-color: rgba(26, 115, 232, 0.08);
   color: var(--primary-color);
-  border-left: 3px solid var(--primary-color);
+  border-left: 4px solid var(--primary-color);
 }
 
 .status-message.info::before {
   content: "ℹ";
 }
 
-/* Animations */
+/* ----------------------------------------------------
+  ANIMATIONS
+  ---------------------------------------------------- */
 @keyframes fadeIn {
   from {
-    opacity: 0;
-    transform: translateY(8px);
+   opacity: 0;
+   transform: translateY(10px);
   }
   to {
-    opacity: 1;
-    transform: translateY(0);
+   opacity: 1;
+   transform: translateY(0);
   }
 }
 
 @keyframes slideDown {
   from {
-    opacity: 0;
-    transform: translateY(-16px);
+   opacity: 0;
+   transform: translateY(-16px);
   }
   to {
-    opacity: 1;
-    transform: translateY(0);
+   opacity: 1;
+   transform: translateY(0);
   }
 }
 
 @keyframes spin {
   0% {
-    transform: rotate(0deg);
+   transform: rotate(0deg);
   }
   100% {
-    transform: rotate(360deg);
+   transform: rotate(360deg);
   }
 }
 
-/* Responsive Styles */
+/* ----------------------------------------------------
+  RESPONSIVE STYLES - Tablet
+  ---------------------------------------------------- */
 @media (max-width: 768px) {
   .rapport-form {
-    padding: 22px;
+   padding: 1.5rem;
   }
   
   .form-row {
-    flex-direction: column;
-    gap: 0;
+   flex-direction: column;
+   gap: 0;
   }
   
   .form-row .form-group {
-    min-width: 100%;
+   min-width: 100%;
   }
   
   .checkbox-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
   
   .form-actions {
-    flex-direction: column-reverse;
-    gap: 10px;
+   flex-direction: column-reverse;
+   gap: 0.75rem;
   }
   
   .btn-primary,
   .btn-secondary {
-    width: 100%;
-    padding: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .rapport-container {
-    padding: 0 14px;
-    margin: 16px auto;
-  }
-  
-  .rapport-form {
-    padding: 18px 14px;
+   width: 100%;
+   padding: 0.875rem;
+   text-align: center;
+   justify-content: center;
   }
   
   .rapport-header h1 {
-    font-size: 22px;
+   width: 90%;
+   font-size: 1.5rem;
+  }
+}
+
+/* ----------------------------------------------------
+  RESPONSIVE STYLES - Mobile
+  ---------------------------------------------------- */
+@media (max-width: 480px) {
+  .rapport-container {
+   padding: 0 1rem;
+   margin: 1rem auto 2rem;
+  }
+  
+  .rapport-form {
+   padding: 1.25rem 1rem;
+   border-radius: 6px;
+  }
+  
+  .rapport-header h1 {
+   font-size: 1.25rem;
+   width: 95%;
   }
   
   .rapport-subtitle {
-    font-size: 13px;
+   font-size: 0.875rem;
   }
   
   .form-section h2 {
-    font-size: 16px;
+   font-size: 1rem;
   }
   
   .form-section {
-    margin-bottom: 20px;
-    padding-bottom: 14px;
+   margin-bottom: 1.25rem;
+   padding-bottom: 1rem;
   }
   
   .checkbox-grid {
-    grid-template-columns: 1fr;
+   grid-template-columns: 1fr;
+  }
+  
+  .form-group {
+   margin-bottom: 1.125rem;
+  }
+  
+  .form-control {
+   padding: 0.625rem 0.875rem;
+   font-size: 0.875rem;
+  }
+  
+  .form-actions {
+   margin-top: 1.5rem;
+  }
+  
+  .btn-primary, 
+  .btn-secondary {
+   padding: 0.75rem;
+   font-size: 0.875rem;
+  }
+  
+  .status-message {
+   padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+   font-size: 0.875rem;
   }
 }

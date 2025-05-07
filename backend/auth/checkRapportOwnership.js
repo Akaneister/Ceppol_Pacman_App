@@ -1,3 +1,9 @@
+/* 
+checkRapportOwnership.js
+
+Pas Fonctionnel test
+*/
+
 const db = require('../db'); // adapte le chemin si besoin
 
 async function checkRapportOwnership(req, res, next) {

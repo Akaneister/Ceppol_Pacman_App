@@ -32,6 +32,12 @@ const ListeRapport = () => {
   const [historiqueData, setHistoriqueData] = useState(null);
   // Ajout d'un état pour stocker les droits d'accès
   const [droitsAcces, setDroitsAcces] = useState({});
+  //new
+  const [afficherAjoutHistorique, setAfficherAjoutHistorique] = useState(false);
+  const [nouvelHistorique, setNouvelHistorique] = useState({
+    type_action: '',
+    detail_action: ''
+  });
 
   const { authData } = useAuth();
 
@@ -157,9 +163,10 @@ const ListeRapport = () => {
     const userId = authData.Opid;
 
     // Vérifier si l'utilisateur est le créateur du rapport
-    if (rapport.id_operateur === rapport.id_operateur) {
+    if (rapport.id_operateur === userId) {
       return true;
     }
+    
 
     // Vérifier si l'utilisateur a des droits d'accès sur ce rapport
     const operateursAvecAccesAuRapport = droitsAcces[rapport.id_rapport] || [];
@@ -185,6 +192,11 @@ const ListeRapport = () => {
   const handleFiltreChange = (e) => {
     const { name, value } = e.target;
     setFiltres(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleHistoriqueChange = (e) => {
+    const { name, value } = e.target;
+    setNouvelHistorique(prev => ({ ...prev, [name]: value }));
   };
 
   const appliquerFiltres = async () => {
@@ -331,6 +343,35 @@ const ListeRapport = () => {
     } catch (err) {
       console.error("Erreur lors de l'ajout d'accès:", err);
       setError("Une erreur est survenue lors de l'ajout d'accès.");
+    }
+  };
+
+  const ajouterHistoriqueManuel = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/rapports/historique`, {
+        id_rapport: rapportSelectionne.id_rapport,
+        id_operateur: authData.Opid,
+        type_action: nouvelHistorique.type_action,
+        date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        detail_action: nouvelHistorique.detail_action
+      });
+
+      // Recharger l'historique après l'ajout
+      const historique = await fetchHistorique(rapportSelectionne.id_rapport);
+      setHistoriqueData(historique);
+
+      // Réinitialiser le formulaire
+      setNouvelHistorique({
+        type_action: '',
+        detail_action: ''
+      });
+
+      // Revenir à l'affichage de l'historique
+      setAfficherAjoutHistorique(false);
+      setAfficherHistorique(true);
+    } catch (err) {
+      console.error("Erreur lors de l'ajout d'un historique manuel:", err);
+      setError("Une erreur est survenue lors de l'ajout d'un historique manuel.");
     }
   };
 
@@ -557,150 +598,224 @@ const ListeRapport = () => {
       <div className="modal" ref={modalRef}>
         <div className="modal-content">
           <div className="modal-header">
-            <h2>{afficherHistorique ? "Historique du rapport" : "Détails du rapport"}</h2>
+            <h2>
+              {afficherHistorique
+                ? "Historique du rapport"
+                : afficherAjoutHistorique
+                  ? "Ajouter un historique"
+                  : "Détails du rapport"}
+            </h2>
             <button className="close-btn" onClick={fermerModal}>&times;</button>
           </div>
           <div className="modal-body">
             {rapportSelectionne && (
-              afficherHistorique ? (
-                <div className="historique-rapport">
-                  <h3>Historique des actions</h3>
-                  {historiqueData ? (
-                    historiqueData.map((action, index) => (
-                      <div key={index} className="historique-item">
-                        <p><strong>Action:</strong> {action.type_action}</p>
-                        <p><strong>Détails:</strong> {action.detail_action}</p>
-                        <p><strong>Opérateur:</strong> {getOperateurNom(action.id_operateur)}</p>
-                        <p><strong>Date:</strong> {formatDate(action.date_action)}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p>Chargement de l'historique...</p>
-                  )}
-                </div>
-              ) : (
-                <div className="details-rapport">
-                  <div className="rapport-header">
-                    <h3>{rapportSelectionne.titre}</h3>
-                    <span className="rapport-id">ID: {rapportSelectionne.id_rapport}</span>
+              <>
+                {afficherHistorique ? (
+                  <div className="historique-rapport">
+                    <h3>Historique des actions</h3>
+                    {historiqueData ? (
+                      historiqueData.length > 0 ? (
+                        historiqueData.map((action, index) => (
+                          <div key={index} className="historique-item">
+                            <p><strong>Action:</strong> {action.type_action}</p>
+                            <p><strong>Détails:</strong> {action.detail_action}</p>
+                            <p><strong>Opérateur:</strong> {getOperateurNom(action.id_operateur)}</p>
+                            <p><strong>Date:</strong> {formatDate(action.date_action)}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p>Aucun historique disponible.</p>
+                      )
+                    ) : (
+                      <p>Chargement de l'historique...</p>
+                    )}
                   </div>
+                ) : afficherAjoutHistorique ? (
+                  <div className="ajout-historique-form">
+                    <h3>Ajouter un élément d'historique</h3>
+                    <div className="form-group">
+                      <label htmlFor="type_action">Type d'action:</label>
+                      <input
+                        type="text"
+                        id="type_action"
+                        name="type_action"
+                        value={nouvelHistorique.type_action}
+                        onChange={handleHistoriqueChange}
+                        className="form-control"
+                        placeholder="Ex: OBSERVATION, INTERVENTION, SUIVI..."
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="detail_action">Détails:</label>
+                      <textarea
+                        id="detail_action"
+                        name="detail_action"
+                        value={nouvelHistorique.detail_action}
+                        onChange={handleHistoriqueChange}
+                        className="form-control"
+                        rows="4"
+                        placeholder="Décrivez l'action ou l'observation en détail..."
+                      ></textarea>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="details-rapport">
+                    {/* Garder tout le contenu existant des détails du rapport */}
+                    <div className="rapport-header">
+                      <h3>{rapportSelectionne.titre}</h3>
+                      <span className="rapport-id">ID: {rapportSelectionne.id_rapport}</span>
+                    </div>
 
-                  <div className="rapport-sections">
-                    <div className="rapport-section infos-principales">
-                      <h4>Informations principales</h4>
-                      <div className="info-grid">
-                        <div className="info-item">
-                          <span className="info-label">Date de l'événement:</span>
-                          <span className="info-value">{formatDate(rapportSelectionne.date_evenement)}</span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">Type:</span>
-                          <span className="info-value info-tag type">{getTypeEvenementLibelle(rapportSelectionne.id_type_evenement)}</span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">Sous-type:</span>
-                          <span className="info-value info-tag sous-type">{getSousTypeEvenementLibelle(rapportSelectionne.id_sous_type_evenement)}</span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">Origine:</span>
-                          <span className="info-value info-tag origine">{getOrigineEvenementLibelle(rapportSelectionne.id_origine_evenement)}</span>
-                        </div>
-                        {rapportSelectionne.id_zone && (
+                    <div className="rapport-sections">
+                      <div className="rapport-section infos-principales">
+                        <h4>Informations principales</h4>
+                        <div className="info-grid">
                           <div className="info-item">
-                            <span className="info-label">Zone géographique:</span>
-                            <span className="info-value info-tag zone">{getZoneNom(rapportSelectionne.id_zone)}</span>
+                            <span className="info-label">Date de l'événement:</span>
+                            <span className="info-value">{formatDate(rapportSelectionne.date_evenement)}</span>
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="rapport-section description">
-                      <h4>Description globale</h4>
-                      <div className="description-content">
-                        {rapportSelectionne.description_globale}
-                      </div>
-                    </div>
-
-                    <div className="rapport-section responsable">
-                      <h4>Responsable</h4>
-                      <div className="responsable-info">
-                        <div className="avatar">
-                          {getOperateurNom(rapportSelectionne.id_operateur).substring(0, 1).toUpperCase()}
-                        </div>
-                        <div className="responsable-details">
-                          <div className="responsable-nom">{getOperateurNom(rapportSelectionne.id_operateur)}</div>
-                          <div className="responsable-date">Créé le {formatDate(rapportSelectionne.date_creation)}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {rapportSelectionne.operateurs_acces && rapportSelectionne.operateurs_acces.length > 0 && (
-                      <div className="rapport-section acces">
-                        <h4>Accès partagés</h4>
-                        <div className="acces-liste">
-                          {rapportSelectionne.operateurs_acces.map(opId => (
-                            <div key={opId} className="acces-item">
-                              <span className="acces-avatar">{getOperateurNom(opId).substring(0, 1).toUpperCase()}</span>
-                              <span className="acces-nom">{getOperateurNom(opId)}</span>
+                          <div className="info-item">
+                            <span className="info-label">Type:</span>
+                            <span className="info-value info-tag type">{getTypeEvenementLibelle(rapportSelectionne.id_type_evenement)}</span>
+                          </div>
+                          <div className="info-item">
+                            <span className="info-label">Sous-type:</span>
+                            <span className="info-value info-tag sous-type">{getSousTypeEvenementLibelle(rapportSelectionne.id_sous_type_evenement)}</span>
+                          </div>
+                          <div className="info-item">
+                            <span className="info-label">Origine:</span>
+                            <span className="info-value info-tag origine">{getOrigineEvenementLibelle(rapportSelectionne.id_origine_evenement)}</span>
+                          </div>
+                          {rapportSelectionne.id_zone && (
+                            <div className="info-item">
+                              <span className="info-label">Zone géographique:</span>
+                              <span className="info-value info-tag zone">{getZoneNom(rapportSelectionne.id_zone)}</span>
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
-                    )}
 
-                    {/* Ajout d'une section pour les coordonnées géographiques si disponibles */}
-                    {rapportSelectionne.latitude && rapportSelectionne.longitude && (
-                      <div className="rapport-section coords">
-                        <h4>Coordonnées géographiques</h4>
-                        <div className="coords-info">
-                          <div className="coord-item">
-                            <span className="coord-label">Latitude:</span>
-                            <span className="coord-value">{rapportSelectionne.latitude}</span>
-                          </div>
-                          <div className="coord-item">
-                            <span className="coord-label">Longitude:</span>
-                            <span className="coord-value">{rapportSelectionne.longitude}</span>
-                          </div>
+                      <div className="rapport-section description">
+                        <h4>Description globale</h4>
+                        <div className="description-content">
+                          {rapportSelectionne.description_globale}
                         </div>
                       </div>
-                    )}
+                      //
 
-                    {/* Ajout d'une section pour les informations supplémentaires si disponibles */}
-                    {rapportSelectionne.informations_supplementaires && (
-                      <div className="rapport-section infos-supp">
-                        <h4>Informations supplémentaires</h4>
-                        <div className="infos-supp-content">
-                          {rapportSelectionne.informations_supplementaires}
+                      <div className="rapport-section responsable">
+                        <h4>Responsable</h4>
+                        <div className="responsable-info">
+                          <div className="avatar">
+                            {getOperateurNom(rapportSelectionne.id_operateur).substring(0, 1).toUpperCase()}
+                          </div>
+                          <div className="responsable-details">
+                            <div className="responsable-nom">{getOperateurNom(rapportSelectionne.id_operateur)}</div>
+                            <div className="responsable-date">Créé le {formatDate(rapportSelectionne.date_creation)}</div>
+                          </div>
                         </div>
                       </div>
-                    )}
+
+                      {rapportSelectionne.operateurs_acces && rapportSelectionne.operateurs_acces.length > 0 && (
+                        <div className="rapport-section acces">
+                          <h4>Accès partagés</h4>
+                          <div className="acces-liste">
+                            {rapportSelectionne.operateurs_acces.map(opId => (
+                              <div key={opId} className="acces-item">
+                                <span className="acces-avatar">{getOperateurNom(opId).substring(0, 1).toUpperCase()}</span>
+                                <span className="acces-nom">{getOperateurNom(opId)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {rapportSelectionne.latitude && rapportSelectionne.longitude && (
+                        <div className="rapport-section coords">
+                          <h4>Coordonnées géographiques</h4>
+                          <div className="coords-info">
+                            <div className="coord-item">
+                              <span className="coord-label">Latitude:</span>
+                              <span className="coord-value">{rapportSelectionne.latitude}</span>
+                            </div>
+                            <div className="coord-item">
+                              <span className="coord-label">Longitude:</span>
+                              <span className="coord-value">{rapportSelectionne.longitude}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {rapportSelectionne.informations_supplementaires && (
+                        <div className="rapport-section infos-supp">
+                          <h4>Informations supplémentaires</h4>
+                          <div className="infos-supp-content">
+                            {rapportSelectionne.informations_supplementaires}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )
+                )}
+              </>
             )}
           </div>
           <div className="modal-footer">
-            {rapportSelectionne && !afficherHistorique && (
+            {rapportSelectionne && !afficherHistorique && !afficherAjoutHistorique && (
               <button
                 className="btn btn-secondary"
                 onClick={async () => {
                   setAfficherHistorique(true);
+                  setAfficherAjoutHistorique(false);
                   const historique = await fetchHistorique(rapportSelectionne.id_rapport);
-                  setHistoriqueData(historique);
+                    setHistoriqueData(historique);
+                  }}
+                  >
+                  Voir l'historique
+                  </button>
+                )}
+                {rapportSelectionne && !afficherAjoutHistorique && userPeutModifier(rapportSelectionne) && (
+                  <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setAfficherHistorique(false);
+                    setAfficherAjoutHistorique(true);
+                  }}
+                  >
+                  Ajouter un historique manuel
+                  </button>
+                )}
+                {rapportSelectionne && afficherHistorique && (
+                  <button
+                  className="btn btn-info"
+                  onClick={() => {
+                  setAfficherHistorique(false);
+                  setAfficherAjoutHistorique(false);
                 }}
-              >
-                Voir l'historique
-              </button>
-            )}
-            {rapportSelectionne && afficherHistorique && (
-              <button
-                className="btn btn-info"
-                onClick={() => setAfficherHistorique(false)}
               >
                 Voir les détails
               </button>
             )}
-            {rapportSelectionne && userPeutModifier(rapportSelectionne) && (
+            {rapportSelectionne && afficherAjoutHistorique && (
+              <>
+                <button
+                  className="btn btn-primary"
+                  onClick={ajouterHistoriqueManuel}
+                >
+                  Enregistrer
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setAfficherAjoutHistorique(false);
+                    setAfficherHistorique(false);
+                  }}
+                >
+                  Annuler
+                </button>
+              </>
+            )}
+            {rapportSelectionne && userPeutModifier(rapportSelectionne) && !afficherAjoutHistorique && !afficherHistorique && (
               <button
                 className="btn btn-primary"
                 onClick={() => modifierRapport(rapportSelectionne.id_rapport)}
@@ -791,9 +906,66 @@ const ListeRapport = () => {
 
               </div>
             )}
+
+
+            {rapportSelectionne && afficherAjoutHistorique && (
+              <div className="ajout-historique-form">
+                <h3>Ajouter un élément d'historique</h3>
+                <div className="form-group">
+                  <label htmlFor="type_action">Type d'action:</label>
+                  <input
+                    type="text"
+                    id="type_action"
+                    name="type_action"
+                    value={nouvelHistorique.type_action}
+                    onChange={handleHistoriqueChange}
+                    className="form-control"
+                    placeholder="Ex: OBSERVATION, INTERVENTION, SUIVI..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="detail_action">Détails:</label>
+                  <textarea
+                    id="detail_action"
+                    name="detail_action"
+                    value={nouvelHistorique.detail_action}
+                    onChange={handleHistoriqueChange}
+                    className="form-control"
+                    rows="4"
+                    placeholder="Décrivez l'action ou l'observation en détail..."
+                  ></textarea>
+                </div>
+                <div className="form-actions">
+                  <button className="btn btn-primary" onClick={ajouterHistoriqueManuel}>
+                    Enregistrer
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setAfficherAjoutHistorique(false);
+                      setAfficherHistorique(true);
+                    }}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           <div className="modal-footer">
             <button className="btn btn-primary" onClick={fermerGestionAcces}>Fermer</button>
+            {rapportSelectionne && !afficherHistorique && !afficherAjoutHistorique && (
+              <button
+                className="btn btn-secondary"
+                onClick={async () => {
+                  setAfficherHistorique(true);
+                  const historique = await fetchHistorique(rapportSelectionne.id_rapport);
+                  setHistoriqueData(historique);
+                }}
+              >
+                Voir l'historique
+              </button>
+            )}
           </div>
         </div>
       </div>

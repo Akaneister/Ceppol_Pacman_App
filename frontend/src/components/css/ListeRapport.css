@@ -16,7 +16,7 @@
   ========================================== */
 h1 {
   color: #1a3875;
-  border-bottom: 2px solid #e2e8f0;
+  /*border-bottom: 2px solid #e2e8f0;*/
   padding-bottom: 15px;
   margin-bottom: 30px;
   font-weight: 600;
@@ -251,7 +251,7 @@ h3 {
 .rapports-table td {
   padding: 16px 20px;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  /*border-bottom: 1px solid #e2e8f0;*/
 }
 
 .rapports-table th {
@@ -341,7 +341,7 @@ h3 {
 
 .modal-header {
   padding: 20px 25px;
-  border-bottom: 1px solid #e2e8f0;
+  /*border-bottom: 1px solid #e2e8f0;*/
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -401,7 +401,7 @@ h3 {
 .rapport-header {
   margin-bottom: 25px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #e2e8f0;
+  /*border-bottom: 1px solid #e2e8f0;*/
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -450,7 +450,7 @@ h3 {
   font-size: 1.1rem;
   color: #1a3875;
   font-weight: 600;
-  border-bottom: 2px solid #e2e8f0;
+  /*border-bottom: 2px solid #e2e8f0;*/
   padding-bottom: 10px;
 }
 
@@ -620,7 +620,7 @@ h3 {
 .acces-table td {
   padding: 14px 20px;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  /*border-bottom: 1px solid #e2e8f0;*/
 }
 
 .acces-table th {

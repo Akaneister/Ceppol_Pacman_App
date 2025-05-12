@@ -213,6 +213,7 @@ const ListeRapport = () => {
       if (filtres.zone) params.append('id_zone', filtres.zone);
       if (filtres.dateDebut) params.append('date_debut', filtres.dateDebut);
       if (filtres.dateFin) params.append('date_fin', filtres.dateFin);
+      if (filtres.archiver) params.append('archiver', filtres.archiver);
 
       // Appel à l'API avec les filtres
       const response = await axios.get(`${API_BASE_URL}/rapports?${params}`);
@@ -407,13 +408,15 @@ const ListeRapport = () => {
   };
 
   // Filtrer les rapports en fonction du terme de recherche
-  const rapportsFiltres = rapports.filter(rapport => {
-    return rapport.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const rapportsFiltres = searchTerm
+  ? rapports.filter(rapport =>
+      rapport.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rapport.description_globale.toLowerCase().includes(searchTerm.toLowerCase()) ||
       getTypeEvenementLibelle(rapport.id_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
       getSousTypeEvenementLibelle(rapport.id_sous_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getOrigineEvenementLibelle(rapport.id_origine_evenement).toLowerCase().includes(searchTerm.toLowerCase());
-  });
+      getOrigineEvenementLibelle(rapport.id_origine_evenement).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  : rapports;
 
 
 
@@ -510,6 +513,17 @@ const ListeRapport = () => {
               value={filtres.dateFin}
               onChange={handleFiltreChange}
             />
+          </div>
+
+
+          
+          <div className="filtre-groupe">
+            <label htmlFor="archiver">Archiver:</label>
+            <select name="archiver" id="archiver" value={filtres.archiver} onChange={handleFiltreChange}>
+              <option value="">Tous</option>
+              <option value="1">Oui</option>
+              <option value="0">Non</option>
+            </select>
           </div>
         </div>
 

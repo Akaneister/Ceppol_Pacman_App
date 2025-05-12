@@ -8,6 +8,7 @@ import AjouterRapport from './components/pages/AjouterRapport'; // Importer la p
 import ListeRapport from './components/pages/ListeRapport'; // Importer la page "Liste des rapports"
 import ModifierRapport from './components/pages/ModifierRapport'; // Import
 import Carte from './components/pages/carte.js'; // Importer la page "Carte"
+import NotFound from './components/pages/NotFound'; // Importer la page "Not Found"
 
 const App = () => {
   return (
@@ -37,7 +38,8 @@ const AppContent = () => {
           <PrivateRoute>
             <AjouterRapport />
           </PrivateRoute>
-        } /> {/* Nouvelle route pour la page "Ajouter un rapport" */}
+        } /> 
+        {/* Nouvelle route pour la page "Ajouter un rapport" */}
         <Route path="/liste-rapports" element={
           <PrivateRoute>
             <ListeRapport />
@@ -47,12 +49,20 @@ const AppContent = () => {
           <PrivateRoute>
             <ModifierRapport />
           </PrivateRoute>
-        } /> {/* Nouvelle route pour la page "Modifier un rapport" */}
+        } /> 
+        {/* Nouvelle route pour la page "Modifier un rapport" */}
         <Route path="/carte" element={
           <PrivateRoute>
             <Carte />
           </PrivateRoute>
-        } /> {/* Nouvelle route pour la page "Carte" */}
+        } /> 
+        {/*Ereeur  */}
+        <Route path="*" element={
+          <PrivateRoute>
+            <NotFound />
+          </PrivateRoute>
+        } />
+        
       </Routes>
     </>
   );

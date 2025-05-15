@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AuthProvider } from './components/context/AuthContext';
 import PrivateRoute from './components/routes/PrivateRoutes.js';
 import AuthPage from './components/pages/AuthPage';
-import HomePage from './components/pages/Home';
+import Documentation from './components/pages/Home';
 import Navbar from './components/layout/Navbar';
 import AjouterRapport from './components/pages/AjouterRapport'; // Importer la page "Ajouter un rapport"
 import ListeRapport from './components/pages/ListeRapport'; // Importer la page "Liste des rapports"
@@ -31,7 +31,12 @@ const AppContent = () => {
         <Route path="/login" element={<AuthPage />} />
         <Route path="/" element={
           <PrivateRoute>
-            <HomePage />
+            <AjouterRapport />
+          </PrivateRoute>
+        } />
+        <Route path="/doc" element={
+          <PrivateRoute>
+            <Documentation />
           </PrivateRoute>
         } />
         <Route path="/ajouter-rapport" element={

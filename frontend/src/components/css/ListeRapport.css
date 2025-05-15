@@ -47,18 +47,22 @@ h3 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   border-radius: 6px;
   overflow: hidden;
+    justify-content: space-around; /* Ajouté */
+  align-items: center;           /* (optionnel) Pour bien centrer verticalement */
 }
 
 .search-input {
   flex: 1;
-  padding: 14px 18px;
+  padding: 8px 12px; /* Réduit le padding */
   border: 1px solid #e2e8f0;
-  border-right: none;
-  border-radius: 6px 0 0 6px;
-  font-size: 16px;
+  
+  border-radius: 6px 6px 6px 6px;
+  font-size: 14px; /* Taille de police réduite */
   outline: none;
   transition: border-color 0.2s;
+  max-width: 1200px;
 }
+
 
 .search-input:focus {
   border-color: #4a90e2;
@@ -67,13 +71,14 @@ h3 {
 
 .search-btn {
   border-radius: 0 6px 6px 0;
-  padding: 14px 24px;
+  padding: 10px 18px; /* Réduction ici */
   border: none;
   background-color: #1a3875;
   color: white;
   cursor: pointer;
   transition: background-color 0.2s;
   font-weight: 500;
+  font-size: 14px; /* Réduction optionnelle */
 }
 
 .search-btn:hover {
@@ -155,6 +160,46 @@ h3 {
     font-size: 0.9rem; /* Added smaller font size */
   }
   
+  .toggle-filtres-btn {
+  background-color: transparent;
+  border: none;
+  color: #4a90e2;
+  font-weight: 600;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.toggle-filtres-btn:hover {
+  text-decoration: underline;
+}
+
+.toggle-filtres-btn {
+  background-color: #007bff; /* Bleu primaire */
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.toggle-filtres-btn:hover {
+  background-color: #0056b3; /* Bleu plus foncé au survol */
+  transform: translateY(-1px);
+}
+
+.toggle-filtres-btn:active {
+  transform: scale(0.98);
+  background-color: #004a99;
+}
+
+
 
 /* ==========================================
   BUTTONS
@@ -276,6 +321,21 @@ h3 {
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+.btn-icon:hover {
+  opacity: 0.8;
+}
+
 
 /* ==========================================
   STATUS MESSAGES

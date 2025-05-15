@@ -18,15 +18,15 @@ const AjouterRapport = () => {
   const [formData, setFormData] = useState(() => {
     // Get current date and time in local timezone
     const now = new Date();
-    
+
     // Format date as YYYY-MM-DD for the date input
     const formattedDate = now.toISOString().split('T')[0];
-    
+
     // Format time as HH:MM in local timezone for the time input
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const formattedTime = `${hours}:${minutes}`;
-    
+
     return {
       titre: '',
       date_evenement: formattedDate,
@@ -36,7 +36,7 @@ const AjouterRapport = () => {
       id_sous_type_evenement: '',
       id_origine_evenement: '',
       // Champs pour la cible de l'événement
-      id_cible: '',
+      libelle: '',
       nom_cible: '',
       pavillon_cible: '',
       // Champs pour la localisation
@@ -49,15 +49,22 @@ const AjouterRapport = () => {
       force_vent: '',
       etat_mer: '',
       nebulosite: '',
+      maree: '',
       // Contacts et alertes
       cedre_alerte: false,
       cross_alerte: false,
       photo: false,
-      polrep: false,
+      message_polrep: false,
       derive_mothy: false,
       polmar_terre: false,
       smp: false,
       bsaa: false,
+      sensible_proximite: false,
+      moyen_proximite: '',
+      risque_court_terme: '',
+      risque_moyen_long_terme: '',
+      moyen_marine_etat: '',
+      moyen_depeche: '',
       delai_appareillage: ''
     };
   });
@@ -269,24 +276,36 @@ const AjouterRapport = () => {
       // Combiner la date et l'heure pour le backend
       const dateTimeString = `${formData.date_evenement}T${formData.heure_evenement}:00`;
 
-      // Préparation des données à envoyer selon la structure attendue par le backend
+      // Créer une date locale
+      const localDate = new Date(`${formData.date_evenement}T${formData.heure_evenement}:00`);
+
+      // Convertir en UTC et formatter au format ISO
+      const dateTimeUTC = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString();
+
+
+
+      
+
       const rapport = {
         titre: formData.titre,
-        date_evenement: dateTimeString,
+        date_evenement: dateTimeUTC,
         description_globale: formData.description_globale,
         id_operateur: authData.Opid,
-        // Convertir les ID en nombres
         id_type_evenement: formData.id_type_evenement ? parseInt(formData.id_type_evenement) : null,
         id_sous_type_evenement: formData.id_sous_type_evenement ? parseInt(formData.id_sous_type_evenement) : null,
         id_origine_evenement: formData.id_origine_evenement ? parseInt(formData.id_origine_evenement) : null,
       };
 
+
       // Données associées pour les tables connexes
       const metaData = {
         cible: {
-          id_cible: formData.id_cible || null,
+          libelle: formData.libelle || null,
           nom_cible: formData.nom_cible || null,
           pavillon_cible: formData.pavillon_cible || null,
+          immatriculation: formData.immatriculation || null,
+          QuantiteProduit: formData.QuantiteProduit || null,
+          TypeProduit: formData.TypeProduit || null,
         },
         localisation: {
           id_zone: formData.id_zone ? parseInt(formData.id_zone) : null,
@@ -299,17 +318,24 @@ const AjouterRapport = () => {
           force_vent: formData.force_vent ? parseInt(formData.force_vent) : null,
           etat_mer: formData.etat_mer ? parseInt(formData.etat_mer) : null,
           nebulosite: formData.nebulosite ? parseInt(formData.nebulosite) : null,
+          maree: formData.maree || null,
         },
         alertes: {
           cedre_alerte: formData.cedre_alerte ? 1 : 0,
           cross_alerte: formData.cross_alerte ? 1 : 0,
           photo: formData.photo ? 1 : 0,
-          polrep: formData.polrep ? 1 : 0,
+          message_polrep: formData.message_polrep ? 1 : 0,
           derive_mothy: formData.derive_mothy ? 1 : 0,
           polmar_terre: formData.polmar_terre ? 1 : 0,
           smp: formData.smp ? 1 : 0,
           bsaa: formData.bsaa ? 1 : 0,
+          sensible_proximite: formData.sensible_proximite ? 1 : 0,
           delai_appareillage: formData.delai_appareillage || null,
+          moyen_proximite: formData.moyen_proximite || null,
+          risque_court_terme: formData.risque_court_terme || null,
+          risque_moyen_long_terme: formData.risque_moyen_long_terme || null,
+          moyen_depeche: formData.moyen_depeche || null,
+          moyen_marine_etat: formData.moyen_marine_etat || null,
         }
       };
 
@@ -321,7 +347,7 @@ const AjouterRapport = () => {
         metaData
       });
 
-     
+
 
 
       console.log('Rapport créé avec succès:', response.data);
@@ -357,7 +383,7 @@ const AjouterRapport = () => {
       id_type_evenement: '',
       id_sous_type_evenement: '',
       id_origine_evenement: '',
-      id_cible: '',
+      libelle: '',
       nom_cible: '',
       pavillon_cible: '',
       id_zone: '',
@@ -368,15 +394,25 @@ const AjouterRapport = () => {
       force_vent: '',
       etat_mer: '',
       nebulosite: '',
+      maree: '',
       cedre_alerte: false,
       cross_alerte: false,
       photo: false,
-      polrep: false,
+      message_polrep: false,
       derive_mothy: false,
       polmar_terre: false,
       smp: false,
       bsaa: false,
-      delai_appareillage: ''
+      sensible_proximite: false,
+      moyen_proximite: '',
+      risque_court_terme: '',
+      risque_moyen_long_terme: '',
+      moyen_marine_etat: '',
+      moyen_depeche: '',
+      delai_appareillage: '',
+      immatriculation: '',
+      QuantiteProduit: '',
+      TypeProduit: ''
     });
 
     // Supprimer le marqueur de la carte
@@ -395,18 +431,18 @@ const AjouterRapport = () => {
   return (
     <div className="rapport-container">
 
-      
-        <div className="rapport-header">
-          <h1 >Nouveau Rapport d'Événement</h1>
-          <p className="rapport-subtitle" style={{ fontSize: '0.9em', fontStyle: 'italic' }}>
-            Complétez tous les champs obligatoires (*) pour soumettre un nouveau rapport
-          </p>
-        </div>
 
-        
+      <div className="rapport-header">
+        <h1 >Nouveau Rapport d'Événement</h1>
+        <p className="rapport-subtitle" style={{ fontSize: '0.9em', fontStyle: 'italic' }}>
+          Complétez tous les champs obligatoires (*) pour soumettre un nouveau rapport
+        </p>
+      </div>
 
-        <form className="rapport-form" onSubmit={handleSubmit}>
-          {/* Section Informations Générales */}
+
+
+      <form className="rapport-form" onSubmit={handleSubmit}>
+        {/* Section Informations Générales */}
         <div className="form-section">
           <h2>Informations Générales</h2>
 
@@ -540,24 +576,20 @@ const AjouterRapport = () => {
           <h2>Cible de l'Événement</h2>
 
           <div className="form-group">
-            <label htmlFor="id_cible">
+            <label htmlFor="libelle">
               Type de cible
               <span className="tooltip-icon" title="Type d'objet ou entité ciblé par l'événement">ℹ️</span>
             </label>
-            <select
-              id="id_cible"
-              name="id_cible"
-              value={formData.id_cible}
+            <input
+              type="text"
+              id="libelle"
+              name="libelle"
+              value={formData.libelle}
               onChange={handleChange}
               className="form-control"
+              placeholder="Ex: Navire, Installation, etc."
             >
-              <option value="">-- Sélectionner --</option>
-              {typesCible.map(type => (
-                <option key={type.id_type_cible} value={type.id_type_cible}>
-                  {type.libelle}
-                </option>
-              ))}
-            </select>
+            </input>
           </div>
 
           <div className="form-row">
@@ -592,7 +624,60 @@ const AjouterRapport = () => {
                 placeholder="Ex: France"
               />
             </div>
+
+            <div className="form-group">
+              <label htmlFor="immatriculation">
+                Immatriculation
+                <span className="tooltip-icon" title="MMSI/IMO Info immatriculation">ℹ️</span>
+              </label>
+              <input
+                id="immatriculation"
+                type="text"
+                name="immatriculation"
+                value={formData.immatriculation}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="Ex: MMSI/IMO Info immatriculation"
+              />
+            </div>
           </div>
+
+
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="TypeProduit">
+                Type Produit
+                <span className="tooltip-icon" title="Type Produit">ℹ️</span>
+              </label>
+              <input
+                id="TypeProduit"
+                type="text"
+                name="TypeProduit"
+                value={formData.TypeProduit}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="Ex: fioul lourd, Huile, etc."
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="QuantiteProduit">
+                Quantite Produit
+                <span className="tooltip-icon" title="Quantite de Produit">ℹ️</span>
+              </label>
+              <input
+                id="QuantiteProduit"
+                type="text"
+                name="QuantiteProduit"
+                value={formData.QuantiteProduit}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="Ex: 1000L, 1000T, etc."
+              />
+            </div>
+          </div>
+
         </div>
 
         {/* Section pour la localisation */}
@@ -714,6 +799,27 @@ const AjouterRapport = () => {
             </div>
 
             <div className="form-group">
+              <label htmlFor="maree">
+                Marée
+                <span className="tooltip-icon" title="État actuel de la marée (observation au moment du rapport)">ℹ️</span>
+              </label>
+              <select
+                id="maree"
+                name="maree"
+                value={formData.maree}
+                onChange={handleChange}
+                className="form-control"
+              >
+                <option value="">-- Sélectionner --</option>
+                <option value="haute">Haute mer</option>
+                <option value="basse">Basse mer</option>
+                <option value="montante">Marée montante</option>
+                <option value="descendante">Marée descendante</option>
+              </select>
+            </div>
+
+
+            <div className="form-group">
               <label htmlFor="force_vent">
                 Force du vent (0-12)
                 <span className="tooltip-icon" title="Échelle de Beaufort de 0 à 12">ℹ️</span>
@@ -798,7 +904,7 @@ const AjouterRapport = () => {
               <label htmlFor="cross_alerte">CROSS alerté</label>
             </div>
 
-         
+
 
             <div className="checkbox-item">
               <input
@@ -813,13 +919,13 @@ const AjouterRapport = () => {
 
             <div className="checkbox-item">
               <input
-                id="polrep"
+                id="message_polrep"
                 type="checkbox"
-                name="polrep"
-                checked={formData.polrep}
+                name="message_polrep"
+                checked={formData.message_polrep}
                 onChange={handleChange}
               />
-              <label htmlFor="polrep">POLREP</label>
+              <label htmlFor="message_polrep">POLREP</label>
             </div>
 
             <div className="checkbox-item">
@@ -857,6 +963,17 @@ const AjouterRapport = () => {
 
             <div className="checkbox-item">
               <input
+                id="sensible_proximite"
+                type="checkbox"
+                name="sensible_proximite"
+                checked={formData.sensible_proximite}
+                onChange={handleChange}
+              />
+              <label htmlFor="sensible_proximite">Site sensible à proximité</label>
+            </div>
+
+            <div className="checkbox-item">
+              <input
                 id="bsaa"
                 type="checkbox"
                 name="bsaa"
@@ -884,6 +1001,79 @@ const AjouterRapport = () => {
               />
             </div>
           )}
+          <br></br>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="moyen_proximite">Moyens à proximité</label>
+              <input
+                type="text"
+                id="moyen_proximite"
+                name="moyen_proximite"
+                value={formData.moyen_proximite}
+                onChange={handleChange}
+                className="form-control"
+
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="moyen_depeche">Moyens dépêchés sur zone</label>
+              <input
+                type="text"
+                id="moyen_depeche"
+                name="moyen_depeche"
+                value={formData.moyen_depeche}
+                onChange={handleChange}
+                className="form-control"
+
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="moyen_marine_etat">Moyens maritimes ou de l’État</label>
+            <input
+              type="text"
+              id="moyen_marine_etat"
+              name="moyen_marine_etat"
+              value={formData.moyen_marine_etat}
+              onChange={handleChange}
+              className="form-control"
+
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="risque_court_terme">Risque prévisible à court terme</label>
+              <input
+                type="text"
+                id="risque_court_terme"
+                name="risque_court_terme"
+                value={formData.risque_court_terme}
+                onChange={handleChange}
+                className="form-control"
+                rows={3}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="risque_moyen_long_terme">
+                Risque prévisible à moyen et long terme
+              </label>
+              <input
+                type="text"
+                id="risque_moyen_long_terme"
+                name="risque_moyen_long_terme"
+                value={formData.risque_moyen_long_terme}
+                onChange={handleChange}
+                className="form-control"
+                rows={3}
+              />
+            </div>
+          </div>
+
         </div>
 
         {/* Section Description Détaillée */}
@@ -923,7 +1113,7 @@ const AjouterRapport = () => {
                 id_type_evenement: '',
                 id_sous_type_evenement: '',
                 id_origine_evenement: '',
-                id_cible: '',
+                libelle: '',
                 nom_cible: '',
                 pavillon_cible: '',
                 id_zone: '',
@@ -937,12 +1127,21 @@ const AjouterRapport = () => {
                 cedre_alerte: false,
                 cross_alerte: false,
                 photo: false,
-                polrep: false,
+                message_polrep: false,
                 derive_mothy: false,
                 polmar_terre: false,
                 smp: false,
                 bsaa: false,
-                delai_appareillage: ''
+                sensible_proximite: false,
+                moyen_proximite: '',
+                risque_court_terme: '',
+                risque_moyen_long_terme: '',
+                moyen_marine_etat: '',
+                moyen_depeche: '',
+                delai_appareillage: '',
+                immatriculation: '',
+                QuantiteProduit: '',
+                TypeProduit: ''
               });
               setSubmitStatus(null);
             }}
@@ -965,7 +1164,7 @@ const AjouterRapport = () => {
         </div>
       )}
     </div>
-    
+
   );
 };
 

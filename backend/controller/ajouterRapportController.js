@@ -67,6 +67,16 @@ const getTypeCible = async (req, res) => {
   }
 };
 
+const getCible = async (req, res) => {
+  try {
+    const [result] = await db.query('SELECT * FROM Cible');
+    res.json(result);
+  } catch (err) {
+    console.error('Erreur dans getTypeEvenement:', err);  // Log l'erreur détaillée
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
 // Récupération des zones géographiques
 const getZoneGeographique = async (req, res) => {
   try {
@@ -100,6 +110,8 @@ const createRapport = async (req, res) => {
     console.log('Début de la transaction');
     await connection.beginTransaction();
 
+    //Insertion dans la table type cibmle
+
     console.log('Insertion dans la table Rapport');
     const [rapportResult] = await connection.query(
       `INSERT INTO Rapport (titre, date_evenement, description_globale, id_operateur, id_type_evenement, id_sous_type_evenement, id_origine_evenement)
@@ -118,18 +130,33 @@ const createRapport = async (req, res) => {
     console.log('Rapport inséré avec succès:', rapportResult);
 
     const id_rapport = rapportResult.insertId;
+    let typeCibleId = null;
+
+    // Insertion dans la table TypeCible
+    if (metaData.cible && metaData.cible.libelle) {
+      console.log('Insertion dans la table TypeCible');
+      const [result] = await connection.query(
+        `INSERT INTO TypeCible (libelle) VALUES (?)`,
+        [metaData.cible.libelle]
+      );
+      typeCibleId = result.insertId;
+      console.log('TypeCible inséré avec succès, ID :', typeCibleId);
+    }
 
     // Insertion dans la table Cible si des données sont présentes
-    if (metaData.cible && (metaData.cible.nom_cible || metaData.cible.id_cible)) {
+    if (metaData.cible && (metaData.cible.nom_cible || metaData.cible.libelle)) {
       console.log('Insertion dans la table Cible');
       await connection.query(
-        `INSERT INTO Cible (id_rapport, nom, pavillon, id_type_cible)
-         VALUES (?, ?, ?, ?)`,
+        `INSERT INTO Cible (id_rapport, nom, pavillon, immatriculation, QuantiteProduit, TypeProduit, id_type_cible)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           id_rapport,
           metaData.cible.nom_cible || null,
           metaData.cible.pavillon_cible || null,
-          metaData.cible.id_cible || null,
+          metaData.cible.immatriculation || null,
+          metaData.cible.QuantiteProduit || null,
+          metaData.cible.TypeProduit || null,
+          typeCibleId // Lien avec TypeCible
         ]
       );
       console.log('Cible insérée avec succès');
@@ -155,15 +182,17 @@ const createRapport = async (req, res) => {
     // Insertion dans la table Meteo si des données sont présentes
     if (metaData.meteo) {
       console.log('Insertion dans la table Meteo');
+      console.log('Météo:', metaData.meteo);
       await connection.query(
-        `INSERT INTO Meteo (id_rapport, direction_vent, force_vent, etat_mer, nebulosite)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO Meteo (id_rapport, direction_vent, force_vent, etat_mer, nebulosite, maree)
+         VALUES (?, ?, ?, ?, ?, ?)`,
         [
           id_rapport,
           metaData.meteo.direction_vent || null,
           metaData.meteo.force_vent || null,
           metaData.meteo.etat_mer || null,
           metaData.meteo.nebulosite || null,
+          metaData.meteo.maree || null,
         ]
       );
       console.log('Météo insérée avec succès');
@@ -174,8 +203,25 @@ const createRapport = async (req, res) => {
       const alertes = metaData.alertes;
       console.log('Insertion dans la table Alerte');
       await connection.query(
-        `INSERT INTO Alerte (id_rapport, cedre, cross_contact, smp, bsaa, delai_appareillage_bsaa, polrep, message_polrep, photo, derive_mothym, pne)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO Alerte (
+          id_rapport,
+          cedre,
+          cross_contact,
+          smp,
+          bsaa,
+          delai_appareillage_bsaa,
+          polrep,
+          message_polrep,
+          photo,
+          derive_mothym,
+          pne,
+          sensible_proximite,
+          moyen_proximite,
+          moyen_depeche,
+          moyen_marine_etat,
+          risque_court_terme,
+          risque_moyen_long_terme
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id_rapport,
           alertes.cedre_alerte ? 1 : 0,
@@ -184,12 +230,19 @@ const createRapport = async (req, res) => {
           alertes.bsaa ? 1 : 0,
           alertes.delai_appareillage ? new Date(alertes.delai_appareillage) : null,
           alertes.polrep ? 1 : 0,
-          null, // message_polrep n'est pas fourni dans les données
+          alertes.message_polrep || null,
           alertes.photo ? 1 : 0,
           alertes.derive_mothy ? 1 : 0,
           alertes.polmar_terre ? 1 : 0,
+          alertes.sensible_proximite ? 1 : 0,
+          alertes.moyen_proximite || null,
+          alertes.moyen_depeche || null,
+          alertes.moyen_marine_etat || null,
+          alertes.risque_court_terme || null,
+          alertes.risque_moyen_long_terme || null,
         ]
       );
+
       console.log('Alerte insérée avec succès');
     }
 
@@ -228,5 +281,6 @@ module.exports = {
   getOrigineEvenement,
   getTypeCible,
   getZoneGeographique,
-  createRapport
+  createRapport,
+  getCible,
 };

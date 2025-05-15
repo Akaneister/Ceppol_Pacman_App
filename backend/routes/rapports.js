@@ -11,7 +11,8 @@ const {
   getOrigineEvenement,
   getTypeCible,
   getZoneGeographique,
-  createRapport
+  createRapport,
+  getCible,
 } = require('../controller/ajouterRapportController');
 
 const { getRapportInfo } = require('../controller/rapportDetailsController');
@@ -29,6 +30,7 @@ const {
   getDroit,
   ajouterEvenementHistorique,
   ajouterManuelHistorique,
+  
 } = require('../controller/listeRapportController');
 
 
@@ -48,6 +50,7 @@ router.get('/type-evenement', getTypeEvenement);
 router.get('/sous-type-pollution', getSousTypePollution);
 router.get('/origine-evenement', getOrigineEvenement);
 router.get('/type-cible', getTypeCible);
+router.get('/cible', getCible); // Route pour obtenir les cibles
 router.get('/zone-geographique', getZoneGeographique);
 router.get('/operateurs', getOperateurs); // Route pour obtenir les opérateurs
 router.get('/:id',getRapportInfo); // Route pour obtenir les détails d'un rapport)

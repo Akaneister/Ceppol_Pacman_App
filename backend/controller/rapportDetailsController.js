@@ -38,6 +38,13 @@ const getRapportInfo = async (req, res) => {
       `SELECT * FROM Cible WHERE id_rapport = ?`, [id_rapport]
     );
 
+    const [typeCible] = await connection.query(
+      `SELECT tc.libelle
+        FROM Cible c
+        JOIN TypeCible tc ON c.id_type_cible = tc.id_type_cible
+        WHERE c.id_rapport = ?`, [id_rapport]
+    );
+
     const [lieu] = await connection.query(
       `SELECT * FROM Lieu WHERE id_rapport = ?`, [id_rapport]
     );
@@ -60,6 +67,7 @@ const getRapportInfo = async (req, res) => {
       rapport: rapport[0],
       metaData: {
         cible: cible[0] || null,
+        typeCible: typeCible[0] || null,
         localisation: lieu[0] || null,
         meteo: meteo[0] || null,
         alertes: alerte[0] || null,
@@ -76,5 +84,5 @@ const getRapportInfo = async (req, res) => {
 
 
 module.exports = {
-    getRapportInfo,
-    };
+  getRapportInfo,
+};

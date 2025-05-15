@@ -135,6 +135,7 @@ const getHistoriqueRapport = async (req, res) => {
 }
 // Récupérer les opérateurs ayant accès à un rapport
 const getOperateursAvecAcces = async (req, res) => {
+
   const { id } = req.params;
 
   // Vérifier si l'ID du rapport est présent dans les paramètres
@@ -351,6 +352,7 @@ const updateRapport = async (req, res) => {
 
 //=================== Fonction Post  ===================//
 const ajouterAccesOperateur = async (req, res) => {
+    console.log('aa', req.params);
   const { id } = req.params; // ID du rapport
   const { id_operateur, peut_modifier } = req.body; // ID de l'opérateur et si il peut modifier ou non
 

@@ -2,6 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../css/ListeRapport.css';
+import {
+  Eye,              // Détails
+  History,          // Historique
+  Pencil,           // Modifier
+  Share2,           // Gérer accès
+} from 'lucide-react'
 
 
 const ListeRapport = () => {
@@ -93,6 +99,14 @@ const ListeRapport = () => {
       console.error("Erreur lors de la récupération des droits d'accès:", err);
     }
   };
+  //new 558
+  const [filtresOuverts, setFiltresOuverts] = useState(false);
+
+  // Fonction pour basculer l'état des filtres
+  const toggleFiltres = () => {
+    setFiltresOuverts(prevState => !prevState);
+  };
+
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -166,7 +180,7 @@ const ListeRapport = () => {
     if (rapport.id_operateur === userId) {
       return true;
     }
-    
+
 
     // Vérifier si l'utilisateur a des droits d'accès sur ce rapport
     const operateursAvecAccesAuRapport = droitsAcces[rapport.id_rapport] || [];
@@ -409,14 +423,14 @@ const ListeRapport = () => {
 
   // Filtrer les rapports en fonction du terme de recherche
   const rapportsFiltres = searchTerm
-  ? rapports.filter(rapport =>
+    ? rapports.filter(rapport =>
       rapport.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rapport.description_globale.toLowerCase().includes(searchTerm.toLowerCase()) ||
       getTypeEvenementLibelle(rapport.id_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
       getSousTypeEvenementLibelle(rapport.id_sous_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
       getOrigineEvenementLibelle(rapport.id_origine_evenement).toLowerCase().includes(searchTerm.toLowerCase())
     )
-  : rapports;
+    : rapports;
 
 
 
@@ -440,102 +454,115 @@ const ListeRapport = () => {
 
       {/* Filtres */}
       <div className="filtres-section">
-        <h2>Filtres</h2>
-        <div className="filtres-grid">
-          <div className="filtre-groupe">
-            <label htmlFor="type">Type d'événement:</label>
-            <select name="type" id="type" value={filtres.type} onChange={handleFiltreChange}>
-              <option value="">Tous</option>
-              {typeEvenements.map(type => (
-                <option key={type.id_type_evenement} value={type.id_type_evenement}>
-                  {type.libelle}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Bouton pour basculer l'affichage des filtres */}
+        <button
+          onClick={toggleFiltres}
+          className="toggle-filtres-btn"
+          title={filtresOuverts ? "Masquer les filtres" : "Afficher les filtres"}
+        >
+          {filtresOuverts ? "Masquer les filtres ▲" : "Afficher les filtres ▼"}
+        </button>
 
-          <div className="filtre-groupe">
-            <label htmlFor="sousType">Sous-type:</label>
-            <select name="sousType" id="sousType" value={filtres.sousType} onChange={handleFiltreChange}>
-              <option value="">Tous</option>
-              {sousTypeEvenements
-                .filter(st => !filtres.type || st.id_type_evenement === parseInt(filtres.type))
-                .map(sousType => (
-                  <option key={sousType.id_sous_type_evenement} value={sousType.id_sous_type_evenement}>
-                    {sousType.libelle}
+        {/* Section des filtres qui se déplie ou se replie */}
+        {filtresOuverts && (
+        <div>
+          <div className="filtres-grid">
+            <div className="filtre-groupe">
+              <label htmlFor="type">Type d'événement:</label>
+              <select name="type" id="type" value={filtres.type} onChange={handleFiltreChange}>
+                <option value="">Tous</option>
+                {typeEvenements.map(type => (
+                  <option key={type.id_type_evenement} value={type.id_type_evenement}>
+                    {type.libelle}
                   </option>
-                ))
-              }
-            </select>
+                ))}
+              </select>
+            </div>
+
+            <div className="filtre-groupe">
+              <label htmlFor="sousType">Sous-type:</label>
+              <select name="sousType" id="sousType" value={filtres.sousType} onChange={handleFiltreChange}>
+                <option value="">Tous</option>
+                {sousTypeEvenements
+                  .filter(st => !filtres.type || st.id_type_evenement === parseInt(filtres.type))
+                  .map(sousType => (
+                    <option key={sousType.id_sous_type_evenement} value={sousType.id_sous_type_evenement}>
+                      {sousType.libelle}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div className="filtre-groupe">
+              <label htmlFor="origine">Origine:</label>
+              <select name="origine" id="origine" value={filtres.origine} onChange={handleFiltreChange}>
+                <option value="">Toutes</option>
+                {origineEvenements.map(origine => (
+                  <option key={origine.id_origine_evenement} value={origine.id_origine_evenement}>
+                    {origine.libelle}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filtre-groupe">
+              <label htmlFor="zone">Zone:</label>
+              <select name="zone" id="zone" value={filtres.zone} onChange={handleFiltreChange}>
+                <option value="">Toutes</option>
+                {zones.map(zone => (
+                  <option key={zone.id_zone} value={zone.id_zone}>
+                    {zone.nom_zone}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filtre-groupe">
+              <label htmlFor="dateDebut">Date début:</label>
+              <input
+                type="date"
+                name="dateDebut"
+                id="dateDebut"
+                value={filtres.dateDebut}
+                onChange={handleFiltreChange}
+              />
+            </div>
+
+            <div className="filtre-groupe">
+              <label htmlFor="dateFin">Date fin:</label>
+              <input
+                type="date"
+                name="dateFin"
+                id="dateFin"
+                value={filtres.dateFin}
+                onChange={handleFiltreChange}
+              />
+            </div>
+
+            <div className="filtre-groupe">
+              <label htmlFor="archiver">Archiver:</label>
+              <select name="archiver" id="archiver" value={filtres.archiver} onChange={handleFiltreChange}>
+                <option value="">Tous</option>
+                <option value="1">Oui</option>
+                <option value="0">Non</option>
+              </select>
+            </div>
           </div>
-
-          <div className="filtre-groupe">
-            <label htmlFor="origine">Origine:</label>
-            <select name="origine" id="origine" value={filtres.origine} onChange={handleFiltreChange}>
-              <option value="">Toutes</option>
-              {origineEvenements.map(origine => (
-                <option key={origine.id_origine_evenement} value={origine.id_origine_evenement}>
-                  {origine.libelle}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filtre-groupe">
-            <label htmlFor="zone">Zone:</label>
-            <select name="zone" id="zone" value={filtres.zone} onChange={handleFiltreChange}>
-              <option value="">Toutes</option>
-              {zones.map(zone => (
-                <option key={zone.id_zone} value={zone.id_zone}>
-                  {zone.nom_zone}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filtre-groupe">
-            <label htmlFor="dateDebut">Date début:</label>
-            <input
-              type="date"
-              name="dateDebut"
-              id="dateDebut"
-              value={filtres.dateDebut}
-              onChange={handleFiltreChange}
-            />
-          </div>
-
-          <div className="filtre-groupe">
-            <label htmlFor="dateFin">Date fin:</label>
-            <input
-              type="date"
-              name="dateFin"
-              id="dateFin"
-              value={filtres.dateFin}
-              onChange={handleFiltreChange}
-            />
-          </div>
-
-
-          
-          <div className="filtre-groupe">
-            <label htmlFor="archiver">Archiver:</label>
-            <select name="archiver" id="archiver" value={filtres.archiver} onChange={handleFiltreChange}>
-              <option value="">Tous</option>
-              <option value="1">Oui</option>
-              <option value="0">Non</option>
-            </select>
+          <div className="filtres-actions">
+            <button className="btn btn-primary" onClick={appliquerFiltres}>
+              Appliquer les filtres
+            </button>
+            <button className="btn btn-secondary" onClick={reinitialiserFiltres}>
+              Réinitialiser
+            </button>
           </div>
         </div>
+        )}
 
-        <div className="filtres-actions">
-          <button className="btn btn-primary" onClick={appliquerFiltres}>
-            Appliquer les filtres
-          </button>
-          <button className="btn btn-secondary" onClick={reinitialiserFiltres}>
-            Réinitialiser
-          </button>
-        </div>
+        {/* Actions pour appliquer ou réinitialiser les filtres */}
+        
 
+        {/* Message pour les filtres appliqués */}
         {filtreActif && <div className="filtres-actifs">Filtres appliqués</div>}
       </div>
 
@@ -569,35 +596,40 @@ const ListeRapport = () => {
                   <td>{getOrigineEvenementLibelle(rapport.id_origine_evenement)}</td>
                   <td>{formatDate(rapport.date_evenement)}</td>
                   <td>{getOperateurNom(rapport.id_operateur)}</td>
-                  <td className="actions-cell">
+                  <td className="actions-cell flex gap-2">
                     <button
-                      className="btn btn-info btn-sm"
+                      className="btn-icon text-info"
                       onClick={() => voirDetails(rapport)}
+                      title="Voir détails"
                     >
-                      Détails
+                      <Eye size={18} />
                     </button>
+
                     <button
-                      className="btn btn-secondary btn-sm"
+                      className="btn-icon text-secondary"
                       onClick={() => voirHistorique(rapport)}
+                      title="Voir historique"
                     >
-                      Historique
+                      <History size={18} />
                     </button>
+
                     {userPeutModifier(rapport) && (
-                      <>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => modifierRapport(rapport.id_rapport)}
-                        >
-                          Modifier
-                        </button>
-                      </>
+                      <button
+                        className="btn-icon text-primary"
+                        onClick={() => modifierRapport(rapport.id_rapport)}
+                        title="Modifier le rapport"
+                      >
+                        <Pencil size={18} />
+                      </button>
                     )}
+
                     {authData && rapport.id_operateur === authData.Opid && (
                       <button
-                        className="btn btn-warning btn-sm"
+                        className="btn-icon text-warning"
                         onClick={() => ouvrirGestionAcces(rapport)}
+                        title="Gérer l'accès"
                       >
-                        Gérer accès
+                        <Share2 size={18} />
                       </button>
                     )}
                   </td>
@@ -782,27 +814,27 @@ const ListeRapport = () => {
                   setAfficherHistorique(true);
                   setAfficherAjoutHistorique(false);
                   const historique = await fetchHistorique(rapportSelectionne.id_rapport);
-                    setHistoriqueData(historique);
-                  }}
-                  >
-                  Voir l'historique
-                  </button>
-                )}
-                {rapportSelectionne && !afficherAjoutHistorique && userPeutModifier(rapportSelectionne) && (
-                  <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setAfficherHistorique(false);
-                    setAfficherAjoutHistorique(true);
-                  }}
-                  >
-                  Ajouter un historique manuel
-                  </button>
-                )}
-                {rapportSelectionne && afficherHistorique && (
-                  <button
-                  className="btn btn-info"
-                  onClick={() => {
+                  setHistoriqueData(historique);
+                }}
+              >
+                Voir l'historique
+              </button>
+            )}
+            {rapportSelectionne && !afficherAjoutHistorique && userPeutModifier(rapportSelectionne) && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setAfficherHistorique(false);
+                  setAfficherAjoutHistorique(true);
+                }}
+              >
+                Ajouter un historique manuel
+              </button>
+            )}
+            {rapportSelectionne && afficherHistorique && (
+              <button
+                className="btn btn-info"
+                onClick={() => {
                   setAfficherHistorique(false);
                   setAfficherAjoutHistorique(false);
                 }}

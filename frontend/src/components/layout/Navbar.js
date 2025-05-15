@@ -61,17 +61,17 @@ const Navbar = () => {
         {/* Navigation principale */}
         <nav className={`navbar-menu ${mobileMenuOpen ? 'mobile-open' : ''}`}>
           <ul className="navbar-links">
-            <li className={isActive('/') ? 'active' : ''}>
-              <Link to="/">
-                <span className="link-icon">🏠</span>
-                <span className="link-text">Accueil</span>
+            <li className={isActive('/doc') ? 'active' : ''}>
+              <Link to="/doc">
+                <span className="link-icon">📁</span>
+                <span className="link-text">Documentation</span>
               </Link>
             </li>
 
             {/* Les liens suivants sont visibles uniquement si l'utilisateur est authentifié */}
             {authData.isAuthenticated && (
               <>
-                <li className={isActive('/ajouter-rapport') ? 'active' : ''}>
+                <li className={isActive('/ajouter-rapport') || isActive('/') ? 'active' : ''}>
                   <Link to="/ajouter-rapport">
                     <span className="link-icon">📝</span>
                     <span className="link-text">Ajouter un rapport</span>

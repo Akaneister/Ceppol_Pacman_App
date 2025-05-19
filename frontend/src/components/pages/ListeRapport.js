@@ -7,7 +7,11 @@ import {
   History,          // Historique
   Pencil,           // Modifier
   Share2,           // Gérer accès
+  Download,        // Télécharger
 } from 'lucide-react'
+
+
+
 
 
 const ListeRapport = () => {
@@ -28,7 +32,8 @@ const ListeRapport = () => {
     origine: '',
     zone: '',
     dateDebut: '',
-    dateFin: ''
+    dateFin: '',
+    archive: '0'
   });
   const [rapportSelectionne, setRapportSelectionne] = useState(null);
   const [afficherHistorique, setAfficherHistorique] = useState(false);
@@ -99,6 +104,66 @@ const ListeRapport = () => {
       console.error("Erreur lors de la récupération des droits d'accès:", err);
     }
   };
+
+  const telechargerHistorique = async (rapport) => {
+    try {
+      // Charger l'historique du rapport
+      const historique = await fetchHistorique(rapport.id_rapport);
+
+      if (historique && historique.length > 0) {
+        // Définir l'en-tête du fichier texte
+        let txtContent = "Type d'action       | Détails                             | Opérateur         | Date\n";
+        txtContent += "--------------------|-------------------------------------|-------------------|---------------------\n";
+
+        historique.forEach(action => {
+          const operateurNom = getOperateurNom(action.id_operateur);
+          const dateFormatee = formatDate(action.date_action);
+          const detailAction = action.detail_action
+            ? action.detail_action.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
+            : "";
+
+          // Ajuster les longueurs pour aligner le tout (padding à droite)
+          const typeAction = action.type_action.padEnd(20);
+          const details = detailAction.slice(0, 35).padEnd(35);
+          const operateur = operateurNom.padEnd(19);
+          const date = dateFormatee.padEnd(20);
+
+          txtContent += `${typeAction}| ${details}| ${operateur}| ${date}\n`;
+        });
+
+        // Créer un objet Blob avec le contenu texte
+        const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        // Créer un lien pour télécharger le fichier
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `historique_rapport_${rapport.id_rapport}.txt`);
+        link.style.visibility = 'hidden';
+
+        // Ajouter le lien au DOM, cliquer dessus, puis le supprimer
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Libérer l'URL
+        URL.revokeObjectURL(url);
+      } else {
+        alert("Aucun historique disponible pour ce rapport.");
+      }
+    } catch (error) {
+      console.error("Erreur lors du téléchargement de l'historique :", error);
+      alert("Une erreur est survenue lors du téléchargement de l'historique.");
+    }
+  };
+
+
+
+
+
+
+
+
   //new 558
   const [filtresOuverts, setFiltresOuverts] = useState(false);
 
@@ -176,17 +241,16 @@ const ListeRapport = () => {
 
     const userId = authData.Opid;
 
-    // Vérifier si l'utilisateur est le créateur du rapport
+    // Vérifie si l'utilisateur est le créateur
     if (rapport.id_operateur === userId) {
       return true;
     }
 
-
-    // Vérifier si l'utilisateur a des droits d'accès sur ce rapport
-    const operateursAvecAccesAuRapport = droitsAcces[rapport.id_rapport] || [];
-
-    return operateursAvecAccesAuRapport.includes(rapport.id_operateur);
+    // Vérifie s'il a reçu un accès dans acces_rapport
+    const operateursAvecAcces = droitsAcces[rapport.id_rapport] || [];
+    return operateursAvecAcces.includes(userId);
   };
+
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -213,35 +277,7 @@ const ListeRapport = () => {
     setNouvelHistorique(prev => ({ ...prev, [name]: value }));
   };
 
-  const appliquerFiltres = async () => {
-    try {
-      setLoading(true);
-      setFiltreActif(true);
 
-      // Construire les paramètres de requête à partir des filtres
-      const params = new URLSearchParams();
-
-      if (filtres.type) params.append('id_type_evenement', filtres.type);
-      if (filtres.sousType) params.append('id_sous_type_evenement', filtres.sousType);
-      if (filtres.origine) params.append('id_origine_evenement', filtres.origine);
-      if (filtres.zone) params.append('id_zone', filtres.zone);
-      if (filtres.dateDebut) params.append('date_debut', filtres.dateDebut);
-      if (filtres.dateFin) params.append('date_fin', filtres.dateFin);
-      if (filtres.archiver) params.append('archiver', filtres.archiver);
-
-      // Appel à l'API avec les filtres
-      const response = await axios.get(`${API_BASE_URL}/rapports?${params}`);
-      setRapports(response.data);
-
-      // Charger les droits d'accès
-      await fetchDroitsAcces();
-    } catch (err) {
-      console.error("Erreur lors de l'application des filtres:", err);
-      setError("Une erreur est survenue lors de l'application des filtres.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const reinitialiserFiltres = async () => {
     setFiltres({
@@ -422,15 +458,30 @@ const ListeRapport = () => {
   };
 
   // Filtrer les rapports en fonction du terme de recherche
-  const rapportsFiltres = searchTerm
-    ? rapports.filter(rapport =>
-      rapport.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rapport.description_globale.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getTypeEvenementLibelle(rapport.id_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getSousTypeEvenementLibelle(rapport.id_sous_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getOrigineEvenementLibelle(rapport.id_origine_evenement).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    : rapports;
+  const rapportsFiltres = rapports.filter(rapport => {
+    const correspond = (
+      (!filtres.type || rapport.id_type_evenement == filtres.type) &&
+      (!filtres.sousType || rapport.id_sous_type_evenement == filtres.sousType) &&
+      (!filtres.origine || rapport.id_origine_evenement == filtres.origine) &&
+      (!filtres.zone || rapport.id_zone == filtres.zone) &&
+      (!filtres.dateDebut || new Date(rapport.date_evenement) >= new Date(filtres.dateDebut)) &&
+      (!filtres.dateFin || new Date(rapport.date_evenement) <= new Date(filtres.dateFin)) &&
+      (!filtres.archive || rapport.archive == filtres.archive)
+    );
+
+    const rechercheTexte = searchTerm
+      ? (
+        rapport.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rapport.description_globale.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getTypeEvenementLibelle(rapport.id_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getSousTypeEvenementLibelle(rapport.id_sous_type_evenement).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getOrigineEvenementLibelle(rapport.id_origine_evenement).toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      : true;
+
+    return correspond && rechercheTexte;
+  });
+
 
 
 
@@ -465,102 +516,99 @@ const ListeRapport = () => {
 
         {/* Section des filtres qui se déplie ou se replie */}
         {filtresOuverts && (
-        <div>
-          <div className="filtres-grid">
-            <div className="filtre-groupe">
-              <label htmlFor="type">Type d'événement:</label>
-              <select name="type" id="type" value={filtres.type} onChange={handleFiltreChange}>
-                <option value="">Tous</option>
-                {typeEvenements.map(type => (
-                  <option key={type.id_type_evenement} value={type.id_type_evenement}>
-                    {type.libelle}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filtre-groupe">
-              <label htmlFor="sousType">Sous-type:</label>
-              <select name="sousType" id="sousType" value={filtres.sousType} onChange={handleFiltreChange}>
-                <option value="">Tous</option>
-                {sousTypeEvenements
-                  .filter(st => !filtres.type || st.id_type_evenement === parseInt(filtres.type))
-                  .map(sousType => (
-                    <option key={sousType.id_sous_type_evenement} value={sousType.id_sous_type_evenement}>
-                      {sousType.libelle}
+          <div>
+            <div className="filtres-grid">
+              <div className="filtre-groupe">
+                <label htmlFor="type">Type d'événement:</label>
+                <select name="type" id="type" value={filtres.type} onChange={handleFiltreChange}>
+                  <option value="">Tous</option>
+                  {typeEvenements.map(type => (
+                    <option key={type.id_type_evenement} value={type.id_type_evenement}>
+                      {type.libelle}
                     </option>
                   ))}
-              </select>
-            </div>
+                </select>
+              </div>
 
-            <div className="filtre-groupe">
-              <label htmlFor="origine">Origine:</label>
-              <select name="origine" id="origine" value={filtres.origine} onChange={handleFiltreChange}>
-                <option value="">Toutes</option>
-                {origineEvenements.map(origine => (
-                  <option key={origine.id_origine_evenement} value={origine.id_origine_evenement}>
-                    {origine.libelle}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="filtre-groupe">
+                <label htmlFor="sousType">Sous-type:</label>
+                <select name="sousType" id="sousType" value={filtres.sousType} onChange={handleFiltreChange}>
+                  <option value="">Tous</option>
+                  {sousTypeEvenements
+                    .filter(st => !filtres.type || st.id_type_evenement === parseInt(filtres.type))
+                    .map(sousType => (
+                      <option key={sousType.id_sous_type_evenement} value={sousType.id_sous_type_evenement}>
+                        {sousType.libelle}
+                      </option>
+                    ))}
+                </select>
+              </div>
 
-            <div className="filtre-groupe">
-              <label htmlFor="zone">Zone:</label>
-              <select name="zone" id="zone" value={filtres.zone} onChange={handleFiltreChange}>
-                <option value="">Toutes</option>
-                {zones.map(zone => (
-                  <option key={zone.id_zone} value={zone.id_zone}>
-                    {zone.nom_zone}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="filtre-groupe">
+                <label htmlFor="origine">Origine:</label>
+                <select name="origine" id="origine" value={filtres.origine} onChange={handleFiltreChange}>
+                  <option value="">Toutes</option>
+                  {origineEvenements.map(origine => (
+                    <option key={origine.id_origine_evenement} value={origine.id_origine_evenement}>
+                      {origine.libelle}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="filtre-groupe">
-              <label htmlFor="dateDebut">Date début:</label>
-              <input
-                type="date"
-                name="dateDebut"
-                id="dateDebut"
-                value={filtres.dateDebut}
-                onChange={handleFiltreChange}
-              />
-            </div>
+              <div className="filtre-groupe">
+                <label htmlFor="zone">Zone:</label>
+                <select name="zone" id="zone" value={filtres.zone} onChange={handleFiltreChange}>
+                  <option value="">Toutes</option>
+                  {zones.map(zone => (
+                    <option key={zone.id_zone} value={zone.id_zone}>
+                      {zone.nom_zone}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="filtre-groupe">
-              <label htmlFor="dateFin">Date fin:</label>
-              <input
-                type="date"
-                name="dateFin"
-                id="dateFin"
-                value={filtres.dateFin}
-                onChange={handleFiltreChange}
-              />
-            </div>
+              <div className="filtre-groupe">
+                <label htmlFor="dateDebut">Date début:</label>
+                <input
+                  type="date"
+                  name="dateDebut"
+                  id="dateDebut"
+                  value={filtres.dateDebut}
+                  onChange={handleFiltreChange}
+                />
+              </div>
 
-            <div className="filtre-groupe">
-              <label htmlFor="archiver">Archiver:</label>
-              <select name="archiver" id="archiver" value={filtres.archiver} onChange={handleFiltreChange}>
-                <option value="">Tous</option>
-                <option value="1">Oui</option>
-                <option value="0">Non</option>
-              </select>
+              <div className="filtre-groupe">
+                <label htmlFor="dateFin">Date fin:</label>
+                <input
+                  type="date"
+                  name="dateFin"
+                  id="dateFin"
+                  value={filtres.dateFin}
+                  onChange={handleFiltreChange}
+                />
+              </div>
+
+              <div className="filtre-groupe">
+                <label htmlFor="archive">Archiver:</label>
+                <select name="archive" id="archive" value={filtres.archive} onChange={handleFiltreChange}>
+                  <option value="">Tous</option>
+                  <option value="1">Oui</option>
+                  <option value="0">Non</option>
+                </select>
+              </div>
+            </div>
+            <div className="filtres-actions">
+              <button className="btn btn-secondary" onClick={reinitialiserFiltres}>
+                Réinitialiser
+              </button>
             </div>
           </div>
-          <div className="filtres-actions">
-            <button className="btn btn-primary" onClick={appliquerFiltres}>
-              Appliquer les filtres
-            </button>
-            <button className="btn btn-secondary" onClick={reinitialiserFiltres}>
-              Réinitialiser
-            </button>
-          </div>
-        </div>
         )}
 
         {/* Actions pour appliquer ou réinitialiser les filtres */}
-        
+
 
         {/* Message pour les filtres appliqués */}
         {filtreActif && <div className="filtres-actifs">Filtres appliqués</div>}
@@ -622,6 +670,7 @@ const ListeRapport = () => {
                         <Pencil size={18} />
                       </button>
                     )}
+                    
 
                     {authData && rapport.id_operateur === authData.Opid && (
                       <button
@@ -833,13 +882,11 @@ const ListeRapport = () => {
             )}
             {rapportSelectionne && afficherHistorique && (
               <button
-                className="btn btn-info"
-                onClick={() => {
-                  setAfficherHistorique(false);
-                  setAfficherAjoutHistorique(false);
-                }}
+                className="btn-icon text-info"
+                onClick={() => telechargerHistorique(rapportSelectionne)}
+                title="Télécharger l'historique"
               >
-                Voir les détails
+                <Download size={18} />
               </button>
             )}
             {rapportSelectionne && afficherAjoutHistorique && (

@@ -171,9 +171,7 @@ h3 {
   padding: 0;
 }
 
-.toggle-filtres-btn:hover {
-  text-decoration: underline;
-}
+
 
 .toggle-filtres-btn {
   background-color: #007bff; /* Bleu primaire */

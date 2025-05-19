@@ -247,8 +247,28 @@
   }
 }
 
+@media (max-width:1200px){
+  .link-text {
+    font-size: 0.8rem;
+  }
+  .user-name {
+    font-size: 0.8rem;
+  }
+  .user-info {
+    display: none;
+  }
+}
+
 /* Medium devices (tablets, less than 992px) */
 @media (max-width: 991.98px) {
+
+    .link-text {
+    font-size: 0.8rem;
+  }
+  .user-name {
+    font-size: 0.8rem;
+  }
+
   .navbar {
     max-width: 720px;
   }

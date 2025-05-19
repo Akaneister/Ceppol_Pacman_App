@@ -535,6 +535,19 @@ textarea.form-control {
   }
 }
 
+
+/*-----------------------------------------------------
+  Erreur Modification Rapport pas les droits
+  ---------------------------------------------------- */
+  .error-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    
+  }
+
 /* ----------------------------------------------------
   RESPONSIVE STYLES - Mobile
   ---------------------------------------------------- */

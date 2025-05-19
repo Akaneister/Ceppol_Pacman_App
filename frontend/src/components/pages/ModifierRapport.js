@@ -5,12 +5,54 @@ import axios from 'axios';
 import 'leaflet/dist/leaflet.css';
 import '../css/AjouterRapport.css'; // Utilisation du même fichier CSS pour la cohérence visuelle
 
+
+
+
+
 const API = process.env.REACT_APP_API_URL;
 
 const ModifierRapport = () => {
+
   const { id } = useParams(); // récupère l'id depuis l'URL
   const navigate = useNavigate();
   const { authData } = useAuth();
+
+
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        const accesResponse = await axios.get(`${API}/rapports/${id}/acces`);
+        const accesList = accesResponse.data;
+
+        const rapportResponse = await axios.get(`${API}/rapports/${id}`);
+        const rapport = rapportResponse.data.rapport || rapportResponse.data;
+
+        const estCreateur = rapport.id_operateur === authData.Opid;
+        const aAccess = accesList.some(acc => acc.id_operateur === authData.Opid);
+
+        setHasAccess(estCreateur || aAccess);
+
+
+        if (estCreateur || aAccess) {
+          setHasAccess(true);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification de l\'accès :', error);
+        setHasAccess(false);
+      } finally {
+        setAccessChecked(true);
+      }
+    };
+    checkAccess();
+  }, [authData, id]);
+
+
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,121 +122,123 @@ const ModifierRapport = () => {
 
 
   // Chargement des données du rapport et des listes déroulantes
-useEffect(() => {
-  const fetchData = async () => {
-    console.log('📥 Début du chargement des données du rapport et des listes déroulantes...');
-    try {
-      setLoading(true);
-      setError('');
+  useEffect(() => {
+    const fetchData = async () => {
+      console.log('📥 Début du chargement des données du rapport et des listes déroulantes...');
+      try {
+        setLoading(true);
+        setError('');
 
-      console.log('🔄 Requêtes en cours vers l\'API...');
-      const [
-        typesRes,
-        sousTypesRes,
-        originesRes,
-        zonesRes,
-        typesCibleRes,
-        rapportRes,
-      ] = await Promise.all([
-        axios.get(`${API}/rapports/type-evenement`),
-        axios.get(`${API}/rapports/sous-type-pollution`),
-        axios.get(`${API}/rapports/origine-evenement`),
-        axios.get(`${API}/rapports/zone-geographique`),
-        axios.get(`${API}/rapports/type-cible`),
-        axios.get(`${API}/rapports/${id}`),
-      ]);
+        console.log('🔄 Requêtes en cours vers l\'API...');
+        const [
+          typesRes,
+          sousTypesRes,
+          originesRes,
+          zonesRes,
+          typesCibleRes,
+          rapportRes,
+        ] = await Promise.all([
+          axios.get(`${API}/rapports/type-evenement`),
+          axios.get(`${API}/rapports/sous-type-pollution`),
+          axios.get(`${API}/rapports/origine-evenement`),
+          axios.get(`${API}/rapports/zone-geographique`),
+          axios.get(`${API}/rapports/type-cible`),
+          axios.get(`${API}/rapports/${id}`),
+        ]);
 
-      console.log('✅ Données des listes déroulantes récupérées avec succès.');
+        console.log('✅ Données des listes déroulantes récupérées avec succès.');
 
-      // Mise à jour des listes
-      setTypesEvenement(typesRes.data);
-      setSousTypesEvenement(sousTypesRes.data);
-      setOriginesEvenement(originesRes.data);
-      setZonesGeographiques(zonesRes.data);
-      setTypesCible(typesCibleRes.data);
+        // Mise à jour des listes
+        setTypesEvenement(typesRes.data);
+        setSousTypesEvenement(sousTypesRes.data);
+        setOriginesEvenement(originesRes.data);
+        setZonesGeographiques(zonesRes.data);
+        setTypesCible(typesCibleRes.data);
 
-      console.log('📦 Récupération et traitement des données du rapport...');
-      const rapportData = rapportRes.data.rapport || rapportRes.data;
-      const metaData = rapportRes.data.metaData || {};
+        console.log('📦 Récupération et traitement des données du rapport...');
+        const rapportData = rapportRes.data.rapport || rapportRes.data;
+        const metaData = rapportRes.data.metaData || {};
 
-      // 🧾 Affichage brut des données récupérées
-      console.log('📄 Données du rapport récupérées :', rapportData);
-      console.log('📄 MetaData associées :', metaData);
+        // 🧾 Affichage brut des données récupérées
+        console.log('📄 Données du rapport récupérées :', rapportData);
+        console.log('📄 MetaData associées :', metaData);
 
-      // Formatage date/heure locale
-      let dateEvenement = '';
-      let heureEvenement = '';
+        // Formatage date/heure locale
+        let dateEvenement = '';
+        let heureEvenement = '';
 
-      if (rapportData.date_evenement) {
-        const dateObj = new Date(rapportData.date_evenement);
-        dateEvenement = dateObj.toISOString().split('T')[0];
-        heureEvenement = dateObj.toTimeString().substring(0, 5);
-        console.log(`🕒 Date UTC reçue : ${rapportData.date_evenement} → affichée : ${dateEvenement} ${heureEvenement}`);
+        if (rapportData.date_evenement) {
+          const dateObj = new Date(rapportData.date_evenement);
+          dateEvenement = dateObj.toISOString().split('T')[0];
+          heureEvenement = dateObj.toTimeString().substring(0, 5);
+          console.log(`🕒 Date UTC reçue : ${rapportData.date_evenement} → affichée : ${dateEvenement} ${heureEvenement}`);
+        }
+
+        const newFormData = {
+          titre: rapportData.titre || '',
+          date_evenement: dateEvenement,
+          heure_evenement: heureEvenement,
+          description_globale: rapportData.description_globale || '',
+          id_type_evenement: rapportData.id_type_evenement?.toString() || '',
+          id_sous_type_evenement: rapportData.id_sous_type_evenement?.toString() || '',
+          id_origine_evenement: rapportData.id_origine_evenement?.toString() || '',
+
+          id_cible: metaData.cible?.id_type_cible?.toString() || '',
+          nom_cible: metaData.cible?.nom || '',
+          pavillon_cible: metaData.cible?.pavillon || '',
+          libelle: metaData.typeCible?.libelle || '',
+          immatriculation: metaData.cible?.immatriculation || '',
+          TypeProduit: metaData.cible?.TypeProduit || '',
+          QuantiteProduit: metaData.cible?.QuantiteProduit || '',
+
+          id_zone: metaData.localisation?.id_zone?.toString() || '',
+          details_lieu: metaData.localisation?.details_lieu || '',
+          latitude: metaData.localisation?.latitude?.toString() || '',
+          longitude: metaData.localisation?.longitude?.toString() || '',
+
+          direction_vent: metaData.meteo?.direction_vent || '',
+          force_vent: metaData.meteo?.force_vent?.toString() || '',
+          etat_mer: metaData.meteo?.etat_mer?.toString() || '',
+          nebulosite: metaData.meteo?.nebulosite?.toString() || '',
+          maree: metaData.meteo?.maree || '',
+
+          cedre_alerte: metaData.alertes?.cedre === 1,
+          cross_alerte: metaData.alertes?.cross_contact === 1,
+          photo: metaData.alertes?.photo === 1,
+          message_polrep: metaData.alertes?.polrep === 1,
+          derive_mothy: metaData.alertes?.derive_mothy === 1,
+          polmar_terre: metaData.alertes?.pne === 1,
+          smp: metaData.alertes?.smp === 1,
+          bsaa: metaData.alertes?.bsaa === 1,
+          sensible_proximite: metaData.alertes?.sensible_proximite === 1,
+
+          moyen_proximite: metaData.alertes?.moyen_proximite || '',
+          moyen_depeche: metaData.alertes?.moyen_depeche || '',
+          moyen_marine_etat: metaData.alertes?.moyen_marine_etat || '',
+
+          risque_court_terme: metaData.alertes?.risque_court_terme || '',
+          risque_moyen_long_terme: metaData.alertes?.risque_moyen_long_terme || '',
+
+          delai_appareillage: metaData.alertes?.delai_appareillage_bsaa || ''
+        };
+
+        console.log('📝 Formulaire prérempli avec :', newFormData);
+        setFormData(newFormData);
+        setAncienRapport(newFormData);
+
+      } catch (err) {
+        console.error('❌ Erreur lors du chargement des données :', err);
+        setError('Impossible de charger les données du rapport.');
+      } finally {
+        setLoading(false);
+        console.log('✅ Chargement terminé.');
       }
+    };
 
-      const newFormData = {
-        titre: rapportData.titre || '',
-        date_evenement: dateEvenement,
-        heure_evenement: heureEvenement,
-        description_globale: rapportData.description_globale || '',
-        id_type_evenement: rapportData.id_type_evenement?.toString() || '',
-        id_sous_type_evenement: rapportData.id_sous_type_evenement?.toString() || '',
-        id_origine_evenement: rapportData.id_origine_evenement?.toString() || '',
 
-        id_cible: metaData.cible?.id_type_cible?.toString() || '',
-        nom_cible: metaData.cible?.nom || '',
-        pavillon_cible: metaData.cible?.pavillon || '',
-        libelle: metaData.typeCible?.libelle || '',
-        immatriculation: metaData.cible?.immatriculation || '',
-        TypeProduit: metaData.cible?.TypeProduit || '',
-        QuantiteProduit: metaData.cible?.QuantiteProduit || '',
 
-        id_zone: metaData.localisation?.id_zone?.toString() || '',
-        details_lieu: metaData.localisation?.details_lieu || '',
-        latitude: metaData.localisation?.latitude?.toString() || '',
-        longitude: metaData.localisation?.longitude?.toString() || '',
-
-        direction_vent: metaData.meteo?.direction_vent || '',
-        force_vent: metaData.meteo?.force_vent?.toString() || '',
-        etat_mer: metaData.meteo?.etat_mer?.toString() || '',
-        nebulosite: metaData.meteo?.nebulosite?.toString() || '',
-        maree: metaData.meteo?.maree || '',
-
-        cedre_alerte: metaData.alertes?.cedre === 1,
-        cross_alerte: metaData.alertes?.cross_contact === 1,
-        photo: metaData.alertes?.photo === 1,
-        message_polrep: metaData.alertes?.polrep === 1,
-        derive_mothy: metaData.alertes?.derive_mothy === 1,
-        polmar_terre: metaData.alertes?.pne === 1,
-        smp: metaData.alertes?.smp === 1,
-        bsaa: metaData.alertes?.bsaa === 1,
-        sensible_proximite: metaData.alertes?.sensible_proximite === 1,
-
-        moyen_proximite: metaData.alertes?.moyen_proximite || '',
-        moyen_depeche: metaData.alertes?.moyen_depeche || '',
-        moyen_marine_etat: metaData.alertes?.moyen_marine_etat || '',
-
-        risque_court_terme: metaData.alertes?.risque_court_terme || '',
-        risque_moyen_long_terme: metaData.alertes?.risque_moyen_long_terme || '',
-
-        delai_appareillage: metaData.alertes?.delai_appareillage_bsaa || ''
-      };
-
-      console.log('📝 Formulaire prérempli avec :', newFormData);
-      setFormData(newFormData);
-      setAncienRapport(newFormData);
-
-    } catch (err) {
-      console.error('❌ Erreur lors du chargement des données :', err);
-      setError('Impossible de charger les données du rapport.');
-    } finally {
-      setLoading(false);
-      console.log('✅ Chargement terminé.');
-    }
-  };
-
-  fetchData();
-}, [id]);
+    fetchData();
+  }, [id]);
 
 
 
@@ -362,10 +406,162 @@ useEffect(() => {
       });
       return false;
     }
+
+    // Vérifier si au moins un champ a été modifié
+    const isModified = Object.keys(formData).some(
+      key => formData[key] !== ancienRapport[key]
+    );
+    if (!isModified) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Aucune modification détectée. Modifiez au moins un champ pour enregistrer.'
+      });
+      return false;
+    }
+
     return true;
   };
 
+
   // Fonction pour gérer l'envoi du formulaire
+  const handleArchiver = async (e) => {
+
+    const confirmation = window.confirm("Voulez-vous vraiment archiver ce rapport ? Cette action est irréversible.");
+
+    if (!confirmation) return;
+    e.preventDefault();
+
+    
+
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const dateTimeString = `${formData.date_evenement}T${formData.heure_evenement}:00`;
+
+      const rapport = {
+        titre: formData.titre,
+        date_evenement: dateTimeString,
+        description_globale: formData.description_globale,
+        id_operateur: authData.Opid,
+        id_type_evenement: formData.id_type_evenement ? parseInt(formData.id_type_evenement) : null,
+        id_sous_type_evenement: formData.id_sous_type_evenement ? parseInt(formData.id_sous_type_evenement) : null,
+        id_origine_evenement: formData.id_origine_evenement ? parseInt(formData.id_origine_evenement) : null,
+        archive : 1 // Archiver le rapport
+      };
+
+      const metaData = {
+        cible: {
+          id_cible: formData.id_cible || null,
+          nom_cible: formData.nom_cible || null,
+          pavillon_cible: formData.pavillon_cible || null,
+          libelle: formData.libelle || null,
+        },
+        localisation: {
+          id_zone: formData.id_zone ? parseInt(formData.id_zone) : null,
+          details_lieu: formData.details_lieu || null,
+          latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+          longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        },
+        meteo: {
+          direction_vent: formData.direction_vent || null,
+          force_vent: formData.force_vent ? parseInt(formData.force_vent) : null,
+          etat_mer: formData.etat_mer ? parseInt(formData.etat_mer) : null,
+          nebulosite: formData.nebulosite ? parseInt(formData.nebulosite) : null,
+        },
+        alertes: {
+          cedre_alerte: formData.cedre_alerte ? 1 : 0,
+          cross_alerte: formData.cross_alerte ? 1 : 0,
+          photo: formData.photo ? 1 : 0,
+          polrep: formData.polrep ? 1 : 0,
+          derive_mothy: formData.derive_mothy ? 1 : 0,
+          polmar_terre: formData.polmar_terre ? 1 : 0,
+          smp: formData.smp ? 1 : 0,
+          bsaa: formData.bsaa ? 1 : 0,
+          delai_appareillage: formData.delai_appareillage || null,
+        }
+      };
+
+      // Envoi du PUT vers l'API
+      const response = await axios.put(`${API}/rapports/${id}/after`, {
+        rapport,
+        metaData
+      });
+
+
+      function genererDetailAction(ancien, nouveau) {
+        console.log('Ancien rapport:', ancien);
+
+        const modifications = [];
+
+        // Parcours des champs du nouveau rapport
+        for (const champ in nouveau) {
+          const ancienVal = ancien[champ];
+          const nouveauVal = nouveau[champ];
+
+          // Si les valeurs sont différentes, on les ajoute aux modifications
+          if (ancienVal !== nouveauVal) {
+            modifications.push(`${champ} : "${ancienVal}" → "${nouveauVal}"`);
+          }
+        }
+
+        // Retourne un message selon qu'il y ait des modifications ou non
+        return modifications.length > 0
+          ? `Champs modifiés :\n- ${modifications.join('\n- ')}`
+          : 'Aucune modification détectée';
+      }
+
+      // Fonction pour formater la valeur (en tenant compte des valeurs null/undefined et autres types)
+      function formatValeur(val) {
+        if (val === null || val === undefined) {
+          return ''; // Retourne une chaîne vide si la valeur est null ou undefined
+        }
+
+        // Si la valeur est un booléen, on la transforme en chaîne de caractères
+        if (typeof val === 'boolean') {
+          return val ? 'Oui' : 'Non';
+        }
+
+        // Si la valeur est un nombre, on retourne son formatage
+        if (typeof val === 'number') {
+          return val.toString();
+        }
+
+        // Pour les autres types de valeurs (chaînes, objets, tableaux, etc.), on retourne la valeur sous forme de chaîne
+        return val.toString();
+      }
+
+
+
+      // GÉNÉRATION DU DETAIL_ACTION AVANCÉ
+      const detail_action = genererDetailAction(ancienRapport, formData);
+
+      console.log('detail_action:', detail_action);
+      await axios.post(`${API}/rapports/historique`, {
+        id_rapport: id,
+        id_operateur: authData.Opid,
+        type_action: 'Modification Rapport',
+        date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        detail_action
+      });
+
+      console.log('Rapport archivé avec succès:', response.data);
+      setSubmitStatus({ type: 'success', message: 'Rapport mis à jour avec succès!' });
+
+      setTimeout(() => {
+        navigate('/liste-rapports');
+      }, 2000);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du rapport:', error);
+      setSubmitStatus({
+        type: 'error',
+        message: error.response?.data?.message || 'Une erreur est survenue lors de la mise à jour du rapport.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -500,6 +696,7 @@ useEffect(() => {
   };
 
 
+
   if (loading) return (
     <div className="loading-container">
       <div className="loading-spinner"></div>
@@ -517,10 +714,40 @@ useEffect(() => {
     </div>
   );
 
+
+  if (!accessChecked) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Vérification des permissions...</p>
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="error-container">
+        <h2>Accès refusé</h2>
+
+        <p>Vous n'avez pas les droits pour modifier ce rapport.</p>
+        <br></br>
+        <button className="btn-primary" onClick={() => navigate('/liste-rapports')}>
+          Retour à la liste des rapports
+        </button>
+      </div>
+    );
+  }
+
+
+
+
   // Afficher le champ de délai d'appareillage seulement si BSAA est coché
   const showDelaiAppareillage = formData.bsaa;
 
   return (
+
+
+
     <div className="rapport-container">
 
 
@@ -1192,60 +1419,24 @@ useEffect(() => {
 
         {/* Boutons d'action */}
         <div className="form-actions">
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => {
-              // Réinitialiser le formulaire
-              setFormData({
-                titre: '',
-                date_evenement: new Date().toISOString().split('T')[0],
-                heure_evenement: new Date().toISOString().split('T')[1].substring(0, 5),
-                description_globale: '',
-                id_type_evenement: '',
-                id_sous_type_evenement: '',
-                id_origine_evenement: '',
-                libelle: '',
-                nom_cible: '',
-                pavillon_cible: '',
-                id_zone: '',
-                details_lieu: '',
-                latitude: '',
-                longitude: '',
-                direction_vent: '',
-                force_vent: '',
-                etat_mer: '',
-                nebulosite: '',
-                cedre_alerte: false,
-                cross_alerte: false,
-                photo: false,
-                message_polrep: false,
-                derive_mothy: false,
-                polmar_terre: false,
-                smp: false,
-                bsaa: false,
-                sensible_proximite: false,
-                moyen_proximite: '',
-                risque_court_terme: '',
-                risque_moyen_long_terme: '',
-                moyen_marine_etat: '',
-                moyen_depeche: '',
-                delai_appareillage: '',
-                immatriculation: '',
-                QuantiteProduit: '',
-                TypeProduit: ''
-              });
-              setSubmitStatus(null);
-            }}
-          >
-            Réinitialiser
-          </button>
+
           <button
             type="submit"
             className={`btn-primary ${isSubmitting ? 'loading' : ''}`}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Enregistrement...' : 'Enregistrer le rapport'}
+            {isSubmitting ? 'Modification ...' : 'Modifier le rapport'}
+          </button>
+        </div>
+
+        <div className="form-actions">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={handleArchiver}
+            style={{ backgroundColor: '#a00', color: 'white', padding: '10px 20px', fontSize: '1rem', marginTop: '1rem' }}
+          >
+            🗃️ Archiver ce rapport
           </button>
         </div>
       </form>

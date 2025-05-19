@@ -46,8 +46,8 @@ const updateRapportC = async (req, res) => {
     // Mise à jour du rapport principal
     console.log('Mise à jour du rapport');
     const updateRapportResult = await connection.query(
-      `UPDATE Rapport SET titre = ?, date_evenement = ?, description_globale = ?, id_type_evenement = ?, id_sous_type_evenement = ?, id_origine_evenement = ?
-       WHERE id_rapport = ?`,
+      `UPDATE Rapport SET titre = ?, date_evenement = ?, description_globale = ?, id_type_evenement = ?, id_sous_type_evenement = ?, id_origine_evenement = ?, archive = ?
+   WHERE id_rapport = ?`,
       [
         rapport.titre,
         new Date(rapport.date_evenement),
@@ -55,10 +55,12 @@ const updateRapportC = async (req, res) => {
         rapport.id_type_evenement,
         rapport.id_sous_type_evenement || null,
         rapport.id_origine_evenement || null,
+        rapport.archive || 0,
         id
       ]
     );
     console.log('Résultat de la mise à jour du rapport:', updateRapportResult);
+
 
     // Mise à jour ou insertion dans Cible
     if (metaData.cible) {
@@ -100,7 +102,7 @@ const updateRapportC = async (req, res) => {
     // Mise à jour ou insertion dans Lieu
     if (metaData.localisation) {
       console.log('Mise à jour de la localisation');
-      
+
       // Vérifier si une entrée Lieu existe déjà pour ce rapport
       const [existingLieu] = await connection.query(
         `SELECT id_lieu FROM Lieu WHERE id_rapport = ?`,
@@ -244,7 +246,10 @@ const updateRapportC = async (req, res) => {
   }
 };
 
-  
+
+
+
+
 
 module.exports = {
   updateRapportC,

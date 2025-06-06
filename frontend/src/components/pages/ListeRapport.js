@@ -298,10 +298,14 @@ const ListeRapport = () => {
     await fetchRapports();
   };
 
-  const voirDetails = (rapport) => {
+  const voirDetails = async (rapport) => {
     setRapportSelectionne(rapport);
     setAfficherHistorique(false);
     setAfficherGestionAcces(false);
+
+    // Charger l'historique du rapport sélectionné
+    const historique = await fetchHistorique(rapport.id_rapport);
+    setHistoriqueData(historique);
 
     // Ouvrir la modal
     if (modalRef.current) {
@@ -611,6 +615,7 @@ const ListeRapport = () => {
                     getSousTypeEvenementLibelle={getSousTypeEvenementLibelle}
                     getOrigineEvenementLibelle={getOrigineEvenementLibelle}
                     getZoneNom={getZoneNom}
+                    historique={historiqueData} // <-- Ajout ici
                   />
                 )}
               </>

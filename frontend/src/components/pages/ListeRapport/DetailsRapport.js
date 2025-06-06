@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import 'leaflet/dist/leaflet.css';
 
 const DetailsRapport = ({
   rapportSelectionne,
@@ -8,7 +9,78 @@ const DetailsRapport = ({
   getSousTypeEvenementLibelle,
   getOrigineEvenementLibelle,
   getZoneNom,
+  historique,
 }) => {
+  const mapRef = useRef(null);
+  const leafletMapRef = useRef(null);
+
+  // Ajout : fonction pour charger Leaflet si besoin
+  const loadLeaflet = () => {
+    return new Promise((resolve) => {
+      if (window.L) {
+        resolve();
+      } else {
+        const script = document.createElement('script');
+        script.src = "https://unpkg.com/leaflet/dist/leaflet.js";
+        script.onload = resolve;
+        document.body.appendChild(script);
+      }
+    });
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    async function initMap() {
+      if (
+        mapRef.current &&
+        rapportSelectionne &&
+        rapportSelectionne.metaData &&
+        rapportSelectionne.metaData.localisation &&
+        rapportSelectionne.metaData.localisation.latitude &&
+        rapportSelectionne.metaData.localisation.longitude
+      ) {
+        await loadLeaflet();
+        if (!isMounted) return;
+        // Nettoyer la carte précédente si elle existe
+        if (leafletMapRef.current) {
+          leafletMapRef.current.remove();
+        }
+        const lat = parseFloat(rapportSelectionne.metaData.localisation.latitude);
+        const lng = parseFloat(rapportSelectionne.metaData.localisation.longitude);
+        leafletMapRef.current = window.L.map(mapRef.current, { 
+          zoomControl: false, 
+          dragging: false, 
+          scrollWheelZoom: false, 
+          doubleClickZoom: false, 
+          boxZoom: false, 
+          keyboard: false, 
+          tap: false, 
+          touchZoom: false 
+        }).setView([lat, lng], 10);
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(leafletMapRef.current);
+        window.L.marker([lat, lng]).addTo(leafletMapRef.current);
+        // Désactive toutes les interactions
+        leafletMapRef.current.dragging.disable();
+        leafletMapRef.current.touchZoom.disable();
+        leafletMapRef.current.doubleClickZoom.disable();
+        leafletMapRef.current.scrollWheelZoom.disable();
+        leafletMapRef.current.boxZoom.disable();
+        leafletMapRef.current.keyboard.disable();
+        if (leafletMapRef.current.tap) leafletMapRef.current.tap.disable();
+      }
+    }
+    initMap();
+    return () => {
+      isMounted = false;
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, [rapportSelectionne]);
+
   if (!rapportSelectionne) return null;
 
   // Récupération des metaData si présents
@@ -123,6 +195,16 @@ const DetailsRapport = ({
               <span className="info-value">{localisation.longitude}</span>
             </div>
           </div>
+          {/* Carte Leaflet affichant la position */}
+          {localisation.latitude && localisation.longitude && (
+            <div style={{ height: "250px", width: "100%", marginTop: "10px" }}>
+              <div
+                ref={mapRef}
+                style={{ height: "100%", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
+                id="map-details-rapport"
+              />
+            </div>
+          )}
         </div>
 
         {/* Conditions météorologiques */}
@@ -266,6 +348,37 @@ const DetailsRapport = ({
             </div>
           </div>
         )}
+
+        {/* Historique des actions */}
+        <div className="rapport-section historique">
+          <h4>Historique des actions</h4>
+          <div className="historique-list">
+            {historique && historique.length > 0 ? (
+              historique.map((action, idx) => (
+                <div key={idx} className="historique-item">
+                  <div>
+                    <strong>
+                      {new Date(action.date_action).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                      {" : "}
+                      {action.type_action}
+                    </strong>
+                  </div>
+                  <div>
+                    {action.detail_action}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div>Aucun historique disponible.</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

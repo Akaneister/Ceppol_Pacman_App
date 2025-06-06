@@ -84,13 +84,6 @@ const RapportsTable = ({
                     <EyeIcon />
                   </button>
 
-                  <button
-                    className="btn-icon text-secondary"
-                    onClick={() => voirHistorique(rapport)}
-                    title="Voir historique"
-                  >
-                    <ClockIcon />
-                  </button>
 
                   {userPeutModifier(rapport) && (
                     <button

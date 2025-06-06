@@ -11,7 +11,10 @@ import {
 } from 'lucide-react'
 
 
-
+import Filtres from './ListeRapport/Filtres';
+import RapportsTable from "./ListeRapport/RapportsTable";
+import DetailsRapport from './ListeRapport/DetailsRapport';
+import GestionAccesModal from './ListeRapport/GestionAccessModal';
 
 
 const ListeRapport = () => {
@@ -504,190 +507,36 @@ const ListeRapport = () => {
       </div>
 
       {/* Filtres */}
-      <div className="filtres-section">
-        {/* Bouton pour basculer l'affichage des filtres */}
-        <button
-          onClick={toggleFiltres}
-          className="toggle-filtres-btn"
-          title={filtresOuverts ? "Masquer les filtres" : "Afficher les filtres"}
-        >
-          {filtresOuverts ? "Masquer les filtres ▲" : "Afficher les filtres ▼"}
-        </button>
-
-        {/* Section des filtres qui se déplie ou se replie */}
-        {filtresOuverts && (
-          <div>
-            <div className="filtres-grid">
-              <div className="filtre-groupe">
-                <label htmlFor="type">Type d'événement:</label>
-                <select name="type" id="type" value={filtres.type} onChange={handleFiltreChange}>
-                  <option value="">Tous</option>
-                  {typeEvenements.map(type => (
-                    <option key={type.id_type_evenement} value={type.id_type_evenement}>
-                      {type.libelle}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="filtre-groupe">
-                <label htmlFor="sousType">Sous-type:</label>
-                <select name="sousType" id="sousType" value={filtres.sousType} onChange={handleFiltreChange}>
-                  <option value="">Tous</option>
-                  {sousTypeEvenements
-                    .filter(st => !filtres.type || st.id_type_evenement === parseInt(filtres.type))
-                    .map(sousType => (
-                      <option key={sousType.id_sous_type_evenement} value={sousType.id_sous_type_evenement}>
-                        {sousType.libelle}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              <div className="filtre-groupe">
-                <label htmlFor="origine">Origine:</label>
-                <select name="origine" id="origine" value={filtres.origine} onChange={handleFiltreChange}>
-                  <option value="">Toutes</option>
-                  {origineEvenements.map(origine => (
-                    <option key={origine.id_origine_evenement} value={origine.id_origine_evenement}>
-                      {origine.libelle}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="filtre-groupe">
-                <label htmlFor="zone">Zone:</label>
-                <select name="zone" id="zone" value={filtres.zone} onChange={handleFiltreChange}>
-                  <option value="">Toutes</option>
-                  {zones.map(zone => (
-                    <option key={zone.id_zone} value={zone.id_zone}>
-                      {zone.nom_zone}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="filtre-groupe">
-                <label htmlFor="dateDebut">Date début:</label>
-                <input
-                  type="date"
-                  name="dateDebut"
-                  id="dateDebut"
-                  value={filtres.dateDebut}
-                  onChange={handleFiltreChange}
-                />
-              </div>
-
-              <div className="filtre-groupe">
-                <label htmlFor="dateFin">Date fin:</label>
-                <input
-                  type="date"
-                  name="dateFin"
-                  id="dateFin"
-                  value={filtres.dateFin}
-                  onChange={handleFiltreChange}
-                />
-              </div>
-
-              <div className="filtre-groupe">
-                <label htmlFor="archive">Archiver:</label>
-                <select name="archive" id="archive" value={filtres.archive} onChange={handleFiltreChange}>
-                  <option value="">Tous</option>
-                  <option value="1">Oui</option>
-                  <option value="0">Non</option>
-                </select>
-              </div>
-            </div>
-            <div className="filtres-actions">
-              <button className="btn btn-secondary" onClick={reinitialiserFiltres}>
-                Réinitialiser
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Actions pour appliquer ou réinitialiser les filtres */}
-
-
-        {/* Message pour les filtres appliqués */}
-        {filtreActif && <div className="filtres-actifs">Filtres appliqués</div>}
-      </div>
+      <Filtres
+        filtres={filtres}
+        handleFiltreChange={handleFiltreChange}
+        toggleFiltres={toggleFiltres}
+        filtresOuverts={filtresOuverts}
+        reinitialiserFiltres={reinitialiserFiltres}
+        filtreActif={filtreActif}
+        typeEvenements={typeEvenements}
+        sousTypeEvenements={sousTypeEvenements}
+        origineEvenements={origineEvenements}
+        zones={zones}
+      />
 
       {/* Liste des rapports */}
-      <div className="rapports-container">
-        {loading ? (
-          <div className="loading">Chargement des rapports...</div>
-        ) : error ? (
-          <div className="error">{error}</div>
-        ) : rapportsFiltres.length === 0 ? (
-          <div className="no-data">Aucun rapport trouvé</div>
-        ) : (
-          <table className="rapports-table">
-            <thead>
-              <tr>
-                <th>Titre</th>
-                <th>Type</th>
-                <th>Sous-type</th>
-                <th>Origine</th>
-                <th>Date de l'événement</th>
-                <th>Opérateur</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rapportsFiltres.map(rapport => (
-                <tr key={rapport.id_rapport}>
-                  <td>{rapport.titre}</td>
-                  <td>{getTypeEvenementLibelle(rapport.id_type_evenement)}</td>
-                  <td>{getSousTypeEvenementLibelle(rapport.id_sous_type_evenement)}</td>
-                  <td>{getOrigineEvenementLibelle(rapport.id_origine_evenement)}</td>
-                  <td>{formatDate(rapport.date_evenement)}</td>
-                  <td>{getOperateurNom(rapport.id_operateur)}</td>
-                  <td className="actions-cell flex gap-2">
-                    <button
-                      className="btn-icon text-info"
-                      onClick={() => voirDetails(rapport)}
-                      title="Voir détails"
-                    >
-                      <Eye size={18} />
-                    </button>
-
-                    <button
-                      className="btn-icon text-secondary"
-                      onClick={() => voirHistorique(rapport)}
-                      title="Voir historique"
-                    >
-                      <History size={18} />
-                    </button>
-
-                    {userPeutModifier(rapport) && (
-                      <button
-                        className="btn-icon text-primary"
-                        onClick={() => modifierRapport(rapport.id_rapport)}
-                        title="Modifier le rapport"
-                      >
-                        <Pencil size={18} />
-                      </button>
-                    )}
-                    
-
-                    {authData && rapport.id_operateur === authData.Opid && (
-                      <button
-                        className="btn-icon text-warning"
-                        onClick={() => ouvrirGestionAcces(rapport)}
-                        title="Gérer l'accès"
-                      >
-                        <Share2 size={18} />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <RapportsTable
+        loading={loading}
+        error={error}
+        rapportsFiltres={rapportsFiltres}
+        getTypeEvenementLibelle={getTypeEvenementLibelle}
+        getSousTypeEvenementLibelle={getSousTypeEvenementLibelle}
+        getOrigineEvenementLibelle={getOrigineEvenementLibelle}
+        formatDate={formatDate}
+        getOperateurNom={getOperateurNom}
+        voirDetails={voirDetails}
+        voirHistorique={voirHistorique}
+        userPeutModifier={userPeutModifier}
+        modifierRapport={modifierRapport}
+        authData={authData}
+        ouvrirGestionAcces={ouvrirGestionAcces}
+      />
 
       {/* Modal pour détails et historique */}
       <div className="modal" ref={modalRef}>
@@ -754,103 +603,15 @@ const ListeRapport = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="details-rapport">
-                    {/* Garder tout le contenu existant des détails du rapport */}
-                    <div className="rapport-header">
-                      <h3>{rapportSelectionne.titre}</h3>
-                      <span className="rapport-id">ID: {rapportSelectionne.id_rapport}</span>
-                    </div>
-
-                    <div className="rapport-sections">
-                      <div className="rapport-section infos-principales">
-                        <h4>Informations principales</h4>
-                        <div className="info-grid">
-                          <div className="info-item">
-                            <span className="info-label">Date de l'événement:</span>
-                            <span className="info-value">{formatDate(rapportSelectionne.date_evenement)}</span>
-                          </div>
-                          <div className="info-item">
-                            <span className="info-label">Type:</span>
-                            <span className="info-value info-tag type">{getTypeEvenementLibelle(rapportSelectionne.id_type_evenement)}</span>
-                          </div>
-                          <div className="info-item">
-                            <span className="info-label">Sous-type:</span>
-                            <span className="info-value info-tag sous-type">{getSousTypeEvenementLibelle(rapportSelectionne.id_sous_type_evenement)}</span>
-                          </div>
-                          <div className="info-item">
-                            <span className="info-label">Origine:</span>
-                            <span className="info-value info-tag origine">{getOrigineEvenementLibelle(rapportSelectionne.id_origine_evenement)}</span>
-                          </div>
-                          {rapportSelectionne.id_zone && (
-                            <div className="info-item">
-                              <span className="info-label">Zone géographique:</span>
-                              <span className="info-value info-tag zone">{getZoneNom(rapportSelectionne.id_zone)}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="rapport-section description">
-                        <h4>Description globale</h4>
-                        <div className="description-content">
-                          {rapportSelectionne.description_globale}
-                        </div>
-                      </div>
-                      //
-
-                      <div className="rapport-section responsable">
-                        <h4>Responsable</h4>
-                        <div className="responsable-info">
-                          <div className="avatar">
-                            {getOperateurNom(rapportSelectionne.id_operateur).substring(0, 1).toUpperCase()}
-                          </div>
-                          <div className="responsable-details">
-                            <div className="responsable-nom">{getOperateurNom(rapportSelectionne.id_operateur)}</div>
-                            <div className="responsable-date">Créé le {formatDate(rapportSelectionne.date_creation)}</div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {rapportSelectionne.operateurs_acces && rapportSelectionne.operateurs_acces.length > 0 && (
-                        <div className="rapport-section acces">
-                          <h4>Accès partagés</h4>
-                          <div className="acces-liste">
-                            {rapportSelectionne.operateurs_acces.map(opId => (
-                              <div key={opId} className="acces-item">
-                                <span className="acces-avatar">{getOperateurNom(opId).substring(0, 1).toUpperCase()}</span>
-                                <span className="acces-nom">{getOperateurNom(opId)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {rapportSelectionne.latitude && rapportSelectionne.longitude && (
-                        <div className="rapport-section coords">
-                          <h4>Coordonnées géographiques</h4>
-                          <div className="coords-info">
-                            <div className="coord-item">
-                              <span className="coord-label">Latitude:</span>
-                              <span className="coord-value">{rapportSelectionne.latitude}</span>
-                            </div>
-                            <div className="coord-item">
-                              <span className="coord-label">Longitude:</span>
-                              <span className="coord-value">{rapportSelectionne.longitude}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {rapportSelectionne.informations_supplementaires && (
-                        <div className="rapport-section infos-supp">
-                          <h4>Informations supplémentaires</h4>
-                          <div className="infos-supp-content">
-                            {rapportSelectionne.informations_supplementaires}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <DetailsRapport
+                    rapportSelectionne={rapportSelectionne}
+                    formatDate={formatDate}
+                    getOperateurNom={getOperateurNom}
+                    getTypeEvenementLibelle={getTypeEvenementLibelle}
+                    getSousTypeEvenementLibelle={getSousTypeEvenementLibelle}
+                    getOrigineEvenementLibelle={getOrigineEvenementLibelle}
+                    getZoneNom={getZoneNom}
+                  />
                 )}
               </>
             )}
@@ -922,146 +683,26 @@ const ListeRapport = () => {
       </div>
 
       {/* Modal pour la gestion des accès */}
-      <div className="modal" ref={accessModalRef}>
-        <div className="modal-content">
-          <div className="modal-header">
-            <h2>Gestion des accès au rapport</h2>
-            <button className="close-btn" onClick={fermerGestionAcces}>&times;</button>
-          </div>
-          <div className="modal-body">
-            {rapportSelectionne && (
-              <div>
-                <h3>Rapport: {rapportSelectionne.titre}</h3>
-                <div className="acces-form">
-                  <label htmlFor="nouvelOperateur">Ajouter un opérateur:</label>
-                  <div className="acces-form-row">
-                    <select
-                      id="nouvelOperateur"
-                      value={nouvelOperateurAcces}
-                      onChange={handleNouvelOperateurChange}
-                      className="select-operateur"
-                    >
-                      <option value="">Sélectionner un opérateur</option>
-                      {operateurs
-                        .filter(op =>
-                          op.id_operateur !== rapportSelectionne.id_operateur &&
-                          !operateursAvecAcces.some(acc => acc.id_operateur === op.id_operateur)
-                        )
-                        .map(op => (
-                          <option key={op.id_operateur} value={op.id_operateur}>
-                            {op.prenom} {op.nom}
-                          </option>
-                        ))
-                      }
-                    </select>
-                    <button
-                      className="btn btn-primary"
-                      onClick={ajouterAccesOperateur}
-                      disabled={!nouvelOperateurAcces}
-                    >
-                      Ajouter
-                    </button>
-                  </div>
-                </div>
-
-                <div className="operateurs-acces-liste">
-                  <h3>Opérateurs ayant accès</h3>
-                  {operateursAvecAcces.length === 0 ? (
-                    <p>Aucun opérateur supplémentaire n'a accès à ce rapport.</p>
-                  ) : (
-                    <table className="acces-table">
-                      <thead>
-                        <tr>
-                          <th>Opérateur</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {operateursAvecAcces
-                          .filter(op => op.id_operateur !== rapportSelectionne.id_operateur) // Filtrer l'utilisateur connecté
-                          .map(op => (
-                            <tr key={op.id_operateur}>
-                              <td>{op.prenom} {op.nom}</td>
-                              <td>
-                                <button
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() => retirerAccesOperateur(op.id_operateur)}
-                                >
-                                  Retirer
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-              </div>
-            )}
-
-
-            {rapportSelectionne && afficherAjoutHistorique && (
-              <div className="ajout-historique-form">
-                <h3>Ajouter un élément d'historique</h3>
-                <div className="form-group">
-                  <label htmlFor="type_action">Type d'action:</label>
-                  <input
-                    type="text"
-                    id="type_action"
-                    name="type_action"
-                    value={nouvelHistorique.type_action}
-                    onChange={handleHistoriqueChange}
-                    className="form-control"
-                    placeholder="Ex: OBSERVATION, INTERVENTION, SUIVI..."
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="detail_action">Détails:</label>
-                  <textarea
-                    id="detail_action"
-                    name="detail_action"
-                    value={nouvelHistorique.detail_action}
-                    onChange={handleHistoriqueChange}
-                    className="form-control"
-                    rows="4"
-                    placeholder="Décrivez l'action ou l'observation en détail..."
-                  ></textarea>
-                </div>
-                <div className="form-actions">
-                  <button className="btn btn-primary" onClick={ajouterHistoriqueManuel}>
-                    Enregistrer
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setAfficherAjoutHistorique(false);
-                      setAfficherHistorique(true);
-                    }}
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-primary" onClick={fermerGestionAcces}>Fermer</button>
-            {rapportSelectionne && !afficherHistorique && !afficherAjoutHistorique && (
-              <button
-                className="btn btn-secondary"
-                onClick={async () => {
-                  setAfficherHistorique(true);
-                  const historique = await fetchHistorique(rapportSelectionne.id_rapport);
-                  setHistoriqueData(historique);
-                }}
-              >
-                Voir l'historique
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <GestionAccesModal
+        accessModalRef={accessModalRef}
+        rapportSelectionne={rapportSelectionne}
+        operateurs={operateurs}
+        operateursAvecAcces={operateursAvecAcces}
+        nouvelOperateurAcces={nouvelOperateurAcces}
+        handleNouvelOperateurChange={handleNouvelOperateurChange}
+        ajouterAccesOperateur={ajouterAccesOperateur}
+        retirerAccesOperateur={retirerAccesOperateur}
+        fermerGestionAcces={fermerGestionAcces}
+        afficherAjoutHistorique={afficherAjoutHistorique}
+        afficherHistorique={afficherHistorique}
+        setAfficherAjoutHistorique={setAfficherAjoutHistorique}
+        setAfficherHistorique={setAfficherHistorique}
+        nouvelHistorique={nouvelHistorique}
+        handleHistoriqueChange={handleHistoriqueChange}
+        ajouterHistoriqueManuel={ajouterHistoriqueManuel}
+        fetchHistorique={fetchHistorique}
+        setHistoriqueData={setHistoriqueData}
+      />
     </div>
   );
 };

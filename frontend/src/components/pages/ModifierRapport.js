@@ -304,8 +304,8 @@ const ModifierRapport = () => {
 
         // Position initiale basée sur les coordonnées du rapport si disponibles
         const initialPosition = [
-          parseFloat(formData.latitude) || 43.2965,
-          parseFloat(formData.longitude) || 5.3698
+          parseFloat(formData.latitude) ,
+          parseFloat(formData.longitude) 
         ];
 
         // Créer la nouvelle carte

@@ -47,8 +47,13 @@ h3 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   border-radius: 6px;
   overflow: hidden;
-    justify-content: space-around; /* Ajouté */
+  justify-content: space-around; /* Ajouté */
   align-items: center;           /* (optionnel) Pour bien centrer verticalement */
+  min-height: 64px; /* Augmente la taille verticale */
+  min-width: 300px; /* Augmente la taille horizontale */
+  padding: 0 10px; /* Ajout d'un padding pour le confort */
+  
+  
 }
 
 .search-input {
@@ -61,6 +66,7 @@ h3 {
   outline: none;
   transition: border-color 0.2s;
   max-width: 1200px;
+  justify-content: space-around;
 }
 
 
@@ -71,14 +77,16 @@ h3 {
 
 .search-btn {
   border-radius: 0 6px 6px 0;
-  padding: 10px 18px; /* Réduction ici */
+  padding: 6px 12px; /* Diminue la taille */
   border: none;
   background-color: #1a3875;
   color: white;
   cursor: pointer;
   transition: background-color 0.2s;
   font-weight: 500;
-  font-size: 14px; /* Réduction optionnelle */
+  font-size: 13px; /* Diminue la taille de police */
+  margin-left: 8px; /* Espace à gauche */
+  margin-right: 4px; /* Espace à droite */
 }
 
 .search-btn:hover {
@@ -99,7 +107,7 @@ h3 {
   FILTERS - UPDATED FOR BETTER FIT
   ========================================== */
   .filtres-section {
-    background-color: #ffffff;
+    background-color: rgb(220, 220, 220);
     padding: 18px; /* Reduced from 25px */
     border-radius: 8px; /* Reduced from 10px */
     margin-bottom: 25px; /* Reduced from 35px */
@@ -278,7 +286,7 @@ h3 {
   REPORTS TABLE
   ========================================== */
 .rapports-container {
-  background-color: white;
+  background-color: rgb(220, 220, 220);
   border-radius: 10px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
   overflow: hidden;
@@ -295,15 +303,17 @@ h3 {
   padding: 16px 20px;
   text-align: left;
   /*border-bottom: 1px solid #e2e8f0;*/
+  
 }
 
 .rapports-table th {
   background-color: #f8fafc;
   font-weight: 600;
-  color: #4a5568;
+  color: #ffffff;
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background-color: rgb(2, 2, 85);
 }
 
 .rapports-table tr:last-child td {
@@ -812,61 +822,201 @@ h3 {
   to { opacity: 1; }
 }
 
-/* ==========================================
-  RESPONSIVE STYLES
-  ========================================== */
+
+
+/* Responsive design pour tablettes et mobiles */
 @media (max-width: 768px) {
+  /* Container principal */
   .liste-rapport-container {
-    padding: 20px;
+    padding: 15px;
+    max-width: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
   
+  /* Zone de recherche */
   .search-container {
     flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    margin-bottom: 15px;
+   
   }
   
   .search-input {
     border-radius: 6px;
     margin-bottom: 10px;
     border: 1px solid #e2e8f0;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
   }
   
   .search-btn {
     border-radius: 6px;
     width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    margin-top: 5px;
   }
   
+  /* Grille de filtres */
   .filtres-grid {
     grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
   }
   
+  /* Formulaire d'accès */
   .acces-form-row {
     flex-direction: column;
     gap: 15px;
+    width: 100%;
   }
   
   .select-operateur {
     width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Table des rapports */
+  .rapports-table-container {
+    width: 100%;
+    overflow-x: auto; /* Permet un défilement horizontal uniquement pour la table */
+    -webkit-overflow-scrolling: touch; /* Améliore le défilement sur iOS */
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
   
   .rapports-table {
-    display: block;
-    overflow-x: auto;
+    width: 100%;
+    min-width: 100%; /* S'assure que la table ne rétrécit pas */
+    border-collapse: collapse;
+  }
+
+  /* Gestion des colonnes visibles/invisibles */
+  .rapports-table thead th,
+  .rapports-table tbody td {
+    display: none;
+    padding: 10px;
+  }
+
+  /* Afficher la 1ère colonne */
+  .rapports-table thead th:nth-child(1),
+  .rapports-table tbody td:nth-child(1) {
+    display: table-cell;
+    font-weight: 600;
+    width: 30%; /* Réduction pour donner plus d'espace à la colonne d'actions */
+  }
+
+  /* Afficher la 2e colonne */
+  .rapports-table thead th:nth-child(2),
+  .rapports-table tbody td:nth-child(2) {
+    display: table-cell;
+    width: 40%;
+  }
+
+  /* Afficher la dernière colonne (actions) */
+  .rapports-table thead th:last-child,
+  .rapports-table tbody td:last-child {
+    display: table-cell;
+    width: 30%; /* Plus d'espace pour la colonne d'actions */
+    min-width: 120px; /* Largeur minimale pour la colonne d'actions */
   }
   
+  /* Cellule d'actions */
+  .actions-cell {
+    display: flex !important;
+    flex-direction: row !important; /* Actions en ligne pour une meilleure ergonomie */
+    justify-content: flex-start !important;
+    align-items: center !important;
+    padding: 8px 4px !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    min-width: 120px !important; /* Largeur minimale pour s'assurer que les boutons aient de l'espace */
+  }
+  
+  /* Boutons dans les actions */
+  .actions-cell button {
+    padding: 6px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important; /* Empêche les boutons de rétrécir */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Modal */
   .modal-content {
     width: 95%;
-    margin: 1rem;
+    max-width: 450px;
+    margin: 10px auto;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  /* Grilles d'informations */
+  .info-grid,
+  .coords-info {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+  /* Très petites écrans (moins de 480px) */
+@media (max-width: 480px) {
+  .liste-rapport-container {
+    padding: 10px;
   }
   
   .actions-cell {
-    flex-direction: column;
+    padding: 4px !important;
+    gap: 3px !important; /* Espacement réduit entre les boutons */
   }
   
-  .info-grid {
-    grid-template-columns: 1fr;
+  .actions-cell button {
+    padding: 4px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    font-size: 0.75rem !important;
   }
   
-  .coords-info {
-    grid-template-columns: 1fr;
+  /* Ajustement des largeurs de colonnes pour très petits écrans */
+  .rapports-table thead th:nth-child(1),
+  .rapports-table tbody td:nth-child(1) {
+    width: 25%; /* Réduit pour donner plus d'espace aux actions */
+  }
+  
+  .rapports-table thead th:nth-child(2),
+  .rapports-table tbody td:nth-child(2) {
+    width: 35%; /* Réduit pour donner plus d'espace aux actions */
+  }
+  
+  .rapports-table thead th:last-child,
+  .rapports-table tbody td:last-child {
+    width: 40%; /* Plus d'espace pour les actions sur très petits écrans */
+  }
+  
+  .modal-content {
+    width: 98%;
+    padding: 10px;
+  }
+  
+  /* Réduire les marges et espacements pour les très petits écrans */
+  .search-input, 
+  .search-btn {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .filtres-grid,
+  .acces-form-row {
+    gap: 10px;
+    margin-bottom: 15px;
   }
 }

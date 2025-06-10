@@ -195,13 +195,13 @@ const DetailsRapport = ({
               <span className="info-value">{localisation.longitude}</span>
             </div>
           </div>
-          {/* Carte Leaflet affichant la position */}
+          {/* Mini carte Leaflet */}
           {localisation.latitude && localisation.longitude && (
-            <div style={{ height: "250px", width: "100%", marginTop: "10px" }}>
+            <div style={{ height: "200px", width: "100%", marginTop: "10px" }}>
               <div
                 ref={mapRef}
                 style={{ height: "100%", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
-                id="map-details-rapport"
+                id={`map-details-rapport-${rapportSelectionne.id_rapport}`}
               />
             </div>
           )}
@@ -356,8 +356,8 @@ const DetailsRapport = ({
             {historique && historique.length > 0 ? (
               historique.map((action, idx) => (
                 <div key={idx} className="historique-item">
-                  <div>
-                    <strong>
+                  <div className="historique-item-header">
+                    <span>
                       {new Date(action.date_action).toLocaleDateString('fr-FR', {
                         day: '2-digit',
                         month: '2-digit',
@@ -367,7 +367,13 @@ const DetailsRapport = ({
                       })}
                       {" : "}
                       {action.type_action}
-                    </strong>
+                    </span>
+                    {/* Affichage du nom de l'opérateur si disponible */}
+                    {action.id_operateur && (
+                      <span className="historique-operateur">
+                        {getOperateurNom(action.id_operateur)}
+                      </span>
+                    )}
                   </div>
                   <div>
                     {action.detail_action}

@@ -1,14 +1,14 @@
 /* Variables globales */
 :root {
-    --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
+    --primary-color: #00205B; /* Bleu marine officiel Marine nationale */
+    --primary-hover: #254080; /* Bleu plus clair pour hover */
     --secondary-color: #64748b;
-    --text-color: #334155;
+    --text-color: #00205B;    /* Texte principal en bleu marine */
     --light-text: #94a3b8;
     --background-color: #f8fafc;
     --card-bg: #ffffff;
     --border-color: #e2e8f0;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow: 0 4px 6px -1px rgba(0, 32, 91, 0.10), 0 2px 4px -1px rgba(0, 32, 91, 0.06);
     --transition: all 0.3s ease;
   }
   
@@ -20,7 +20,7 @@
   }
   
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'DIN', Arial, sans-serif;
     color: var(--text-color);
     background-color: var(--background-color);
     line-height: 1.6;

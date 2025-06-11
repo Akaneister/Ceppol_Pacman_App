@@ -84,7 +84,7 @@ const AjouterRapport = () => {
   const [typesEvenement, setTypesEvenement] = useState([]);
   const [sousTypesEvenement, setSousTypesEvenement] = useState([]);
   const [originesEvenement, setOriginesEvenement] = useState([]);
-  const [typesCible, setTypesCible] = useState([]);
+  // const [typesCible, setTypesCible] = useState([]); // SUPPRIMÉ car inutilisé
   const [zonesGeographiques, setZonesGeographiques] = useState([]);
   const [filteredSousTypes, setFilteredSousTypes] = useState([]);
 
@@ -92,19 +92,19 @@ const AjouterRapport = () => {
   useEffect(() => {
     const fetchOptionsData = async () => {
       try {
-        const [typesRes, sousTypesRes, originesRes, zonesRes, typesCibleRes] = await Promise.all([
+        const [typesRes, sousTypesRes, originesRes, zonesRes/*, typesCibleRes*/] = await Promise.all([
           axios.get(`${API}/rapports/type-evenement`),
           axios.get(`${API}/rapports/sous-type-pollution`),
           axios.get(`${API}/rapports/origine-evenement`),
-          axios.get(`${API}/rapports/zone-geographique`),
-          axios.get(`${API}/rapports/type-cible`)
+          axios.get(`${API}/rapports/zone-geographique`)
+          // axios.get(`${API}/rapports/type-cible`) // SUPPRIMÉ car inutilisé
         ]);
 
         setTypesEvenement(typesRes.data);
         setSousTypesEvenement(sousTypesRes.data);
         setOriginesEvenement(originesRes.data);
         setZonesGeographiques(zonesRes.data);
-        setTypesCible(typesCibleRes.data);
+        // setTypesCible(typesCibleRes.data); // SUPPRIMÉ car inutilisé
       } catch (error) {
         console.error('Erreur lors de la récupération des données:', error);
       }
@@ -225,7 +225,7 @@ const AjouterRapport = () => {
         }
       }
     }
-  }, [formData.latitude, formData.longitude, mapInitialized, marker]);
+  }, [formData.latitude, formData.longitude, mapInitialized, marker]); // Ajout de mapInitialized et marker
 
   // Filtrer les sous-types en fonction du type sélectionné
   useEffect(() => {
@@ -242,10 +242,10 @@ const AjouterRapport = () => {
       setFilteredSousTypes([]);
       setFormData(prev => ({ ...prev, id_sous_type_evenement: '' }));
     }
-  }, [formData.id_type_evenement, sousTypesEvenement]);
+  }, [formData.id_type_evenement, sousTypesEvenement, formData.id_sous_type_evenement]); // Ajout de formData.id_sous_type_evenement
 
   // Afficher le champ de délai d'appareillage seulement si BSAA est coché
-  const showDelaiAppareillage = formData.bsaa;
+  //const showDelaiAppareillage = formData.bsaa;
 
   // Gérer les changements dans le formulaire
   const handleChange = (e) => {
@@ -285,7 +285,7 @@ const AjouterRapport = () => {
 
     try {
       // Combiner la date et l'heure pour le backend
-      const dateTimeString = `${formData.date_evenement}T${formData.heure_evenement}:00`;
+      //const dateTimeString = `${formData.date_evenement}T${formData.heure_evenement}:00`;
 
       // Créer une date locale
       const localDate = new Date(`${formData.date_evenement}T${formData.heure_evenement}:00`);

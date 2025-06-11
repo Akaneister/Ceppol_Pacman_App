@@ -110,13 +110,11 @@ const createRapport = async (req, res) => {
     console.log('Début de la transaction');
     await connection.beginTransaction();
 
-    //Insertion dans la table type cibmle
-
+    // Insertion dans la table Rapport
     console.log('Insertion dans la table Rapport');
     const [rapportResult] = await connection.query(
       `INSERT INTO Rapport (titre, date_evenement, description_globale, id_operateur, id_type_evenement, id_sous_type_evenement, id_origine_evenement)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-
       [
         rapport.titre,
         new Date(rapport.date_evenement), // Conversion en objet Date
@@ -148,7 +146,7 @@ const createRapport = async (req, res) => {
       console.log('Insertion dans la table Cible');
       await connection.query(
         `INSERT INTO Cible (id_rapport, nom, pavillon, immatriculation, QuantiteProduit, TypeProduit, id_type_cible)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           id_rapport,
           metaData.cible.nom_cible || null,
@@ -182,7 +180,6 @@ const createRapport = async (req, res) => {
     // Insertion dans la table Meteo si des données sont présentes
     if (metaData.meteo) {
       console.log('Insertion dans la table Meteo');
-      console.log('Météo:', metaData.meteo);
       await connection.query(
         `INSERT INTO Meteo (id_rapport, direction_vent, force_vent, etat_mer, nebulosite, maree)
          VALUES (?, ?, ?, ?, ?, ?)`,
@@ -228,7 +225,7 @@ const createRapport = async (req, res) => {
           alertes.cross_alerte ? 1 : 0,
           alertes.smp ? 1 : 0,
           alertes.bsaa ? 1 : 0,
-          alertes.delai_appareillage ? new Date(alertes.delai_appareillage) : null,
+          alertes.delai_appareillage || null,
           alertes.polrep ? 1 : 0,
           alertes.message_polrep || null,
           alertes.photo ? 1 : 0,
@@ -242,7 +239,6 @@ const createRapport = async (req, res) => {
           alertes.risque_moyen_long_terme || null,
         ]
       );
-
       console.log('Alerte insérée avec succès');
     }
 

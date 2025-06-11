@@ -3,10 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../css/ListeRapport.css';
 import {
-  Eye,              // Détails
-  History,          // Historique
-  Pencil,           // Modifier
-  Share2,           // Gérer accès
   Download,        // Télécharger
 } from 'lucide-react'
 
@@ -467,10 +463,10 @@ const ListeRapport = () => {
   // Filtrer les rapports en fonction du terme de recherche
   const rapportsFiltres = rapports.filter(rapport => {
     const correspond = (
-      (!filtres.type || rapport.id_type_evenement == filtres.type) &&
-      (!filtres.sousType || rapport.id_sous_type_evenement == filtres.sousType) &&
-      (!filtres.origine || rapport.id_origine_evenement == filtres.origine) &&
-      (!filtres.zone || rapport.id_zone == filtres.zone) &&
+      (!filtres.type || rapport.id_type_evenement === filtres.type) &&
+      (!filtres.sousType || rapport.id_sous_type_evenement === filtres.sousType) &&
+      (!filtres.origine || rapport.id_origine_evenement === filtres.origine) &&
+      (!filtres.zone || rapport.id_zone === filtres.zone) &&
       (!filtres.dateDebut || new Date(rapport.date_evenement) >= new Date(filtres.dateDebut)) &&
       (!filtres.dateFin || new Date(rapport.date_evenement) <= new Date(filtres.dateFin)) &&
       (!filtres.archive || rapport.archive == filtres.archive)

@@ -1,5 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import 'leaflet/dist/leaflet.css';
+import axios from 'axios';
+
+const API = process.env.REACT_APP_API_URL;
 
 const DetailsRapport = ({
   rapportSelectionne,
@@ -13,6 +16,56 @@ const DetailsRapport = ({
 }) => {
   const mapRef = useRef(null);
   const leafletMapRef = useRef(null);
+  const [detailedRapport, setDetailedRapport] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    infos: true,
+    description: true,
+    cible: false,
+    localisation: false,
+    meteo: false,
+    alertes: false,
+    responsable: false,
+    acces: false,
+    infosSupp: false,
+    historique: false
+  });
+
+  // Fonction pour basculer l'état d'une section
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Fonction pour charger les détails complets du rapport
+  const loadDetailedRapport = async (rapportId) => {
+    if (!rapportId) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/rapports/${rapportId}`);
+      const rapportData = response.data.rapport || response.data;
+      const metaData = response.data.metaData || {};
+      
+      console.log('📄 Données détaillées du rapport :', rapportData);
+      console.log('📄 MetaData associées :', metaData);
+      
+      setDetailedRapport({ ...rapportData, metaData });
+    } catch (error) {
+      console.error('Erreur lors du chargement des détails du rapport:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Charger les détails quand le rapport sélectionné change
+  useEffect(() => {
+    if (rapportSelectionne?.id_rapport) {
+      loadDetailedRapport(rapportSelectionne.id_rapport);
+    }
+  }, [rapportSelectionne?.id_rapport]);
 
   // Ajout : fonction pour charger Leaflet si besoin
   const loadLeaflet = () => {
@@ -28,47 +81,75 @@ const DetailsRapport = ({
     });
   };
 
+  // Fonction pour vérifier si on a des coordonnées valides
+  const hasValidCoordinates = () => {
+    const rapport = detailedRapport || rapportSelectionne;
+    const latitude = detailedRapport?.metaData?.localisation?.latitude || rapportSelectionne?.latitude;
+    const longitude = detailedRapport?.metaData?.localisation?.longitude || rapportSelectionne?.longitude;
+    
+    return latitude && longitude && 
+           !isNaN(parseFloat(latitude)) && 
+           !isNaN(parseFloat(longitude)) &&
+           latitude !== "Non définie" && 
+           longitude !== "Non définie";
+  };
+
   useEffect(() => {
     let isMounted = true;
     async function initMap() {
-      if (
-        mapRef.current &&
-        rapportSelectionne &&
-        rapportSelectionne.metaData &&
-        rapportSelectionne.metaData.localisation &&
-        rapportSelectionne.metaData.localisation.latitude &&
-        rapportSelectionne.metaData.localisation.longitude
-      ) {
+      if (!hasValidCoordinates()) return;
+      
+      const rapport = detailedRapport || rapportSelectionne;
+      const latitude = detailedRapport?.metaData?.localisation?.latitude || rapportSelectionne?.latitude;
+      const longitude = detailedRapport?.metaData?.localisation?.longitude || rapportSelectionne?.longitude;
+      
+      if (mapRef.current && rapport) {
         await loadLeaflet();
         if (!isMounted) return;
-        // Nettoyer la carte précédente si elle existe
+        
         if (leafletMapRef.current) {
           leafletMapRef.current.remove();
         }
-        const lat = parseFloat(rapportSelectionne.metaData.localisation.latitude);
-        const lng = parseFloat(rapportSelectionne.metaData.localisation.longitude);
-        leafletMapRef.current = window.L.map(mapRef.current, { 
-          zoomControl: false, 
-          dragging: false, 
-          scrollWheelZoom: false, 
-          doubleClickZoom: false, 
-          boxZoom: false, 
-          keyboard: false, 
-          tap: false, 
-          touchZoom: false 
-        }).setView([lat, lng], 10);
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(leafletMapRef.current);
-        window.L.marker([lat, lng]).addTo(leafletMapRef.current);
-        // Désactive toutes les interactions
-        leafletMapRef.current.dragging.disable();
-        leafletMapRef.current.touchZoom.disable();
-        leafletMapRef.current.doubleClickZoom.disable();
-        leafletMapRef.current.scrollWheelZoom.disable();
-        leafletMapRef.current.boxZoom.disable();
-        leafletMapRef.current.keyboard.disable();
-        if (leafletMapRef.current.tap) leafletMapRef.current.tap.disable();
+        
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+        
+        setTimeout(() => {
+          if (!isMounted || !mapRef.current) return;
+          
+          leafletMapRef.current = window.L.map(mapRef.current, { 
+            zoomControl: false, 
+            dragging: false, 
+            scrollWheelZoom: false, 
+            doubleClickZoom: false, 
+            boxZoom: false, 
+            keyboard: false, 
+            tap: false, 
+            touchZoom: false 
+          }).setView([lat, lng], 10);
+          
+          window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 18
+          }).addTo(leafletMapRef.current);
+          
+          window.L.marker([lat, lng]).addTo(leafletMapRef.current);
+          
+          leafletMapRef.current.dragging.disable();
+          leafletMapRef.current.touchZoom.disable();
+          leafletMapRef.current.doubleClickZoom.disable();
+          leafletMapRef.current.scrollWheelZoom.disable();
+          leafletMapRef.current.boxZoom.disable();
+          leafletMapRef.current.keyboard.disable();
+          if (leafletMapRef.current.tap) leafletMapRef.current.tap.disable();
+          
+          setTimeout(() => {
+            if (leafletMapRef.current && isMounted) {
+              leafletMapRef.current.invalidateSize();
+            }
+          }, 100);
+          
+        }, 100);
       }
     }
     initMap();
@@ -79,311 +160,479 @@ const DetailsRapport = ({
         leafletMapRef.current = null;
       }
     };
-  }, [rapportSelectionne]);
+  }, [detailedRapport, rapportSelectionne]);
+
+  // Fonction pour obtenir l'icône de statut
+  const getStatusIcon = (value) => {
+    if (value === "Oui" || value === 1 || value === true) {
+      return <span className="status-icon status-yes">✓</span>;
+    }
+    return <span className="status-icon status-no">✗</span>;
+  };
 
   if (!rapportSelectionne) return null;
 
-  // Récupération des metaData si présents
-  const metaData = rapportSelectionne.metaData || {};
-  const cible = metaData.cible || {};
-  const localisation = metaData.localisation || {};
-  const meteo = metaData.meteo || {};
-  const alertes = metaData.alertes || {};
+  const rapport = detailedRapport || rapportSelectionne;
+  const metaData = detailedRapport?.metaData || {};
+
+  if (loading && !detailedRapport) {
+    return (
+      <div className="details-rapport">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Chargement des détails du rapport...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="details-rapport">
+      {/* En-tête simplifié sans priorité */}
       <div className="rapport-header">
-        <h3>{rapportSelectionne.titre}</h3>
-        <span className="rapport-id">ID: {rapportSelectionne.id_rapport}</span>
-      </div>
-
-      <div className="rapport-sections">
-        {/* Informations principales */}
-        <div className="rapport-section infos-principales">
-          <h4>Informations principales</h4>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Date de l'événement:</span>
-              <span className="info-value">{formatDate(rapportSelectionne.date_evenement)}</span>
+        <div className="rapport-title-section">
+          <h3>{rapport.titre}</h3>
+          <div className="rapport-meta">
+            <span className="rapport-id">ID: {rapport.id_rapport}</span>
+          </div>
+        </div>
+        <div className="rapport-status">
+          <div className="rapport-dates">
+            <div className="date-item">
+              <span className="date-label">Créé le</span>
+              <span className="date-value">{formatDate(rapport.date_creation)}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Type:</span>
-              <span className="info-value info-tag type">
-                {getTypeEvenementLibelle(rapportSelectionne.id_type_evenement)}
-              </span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Sous-type:</span>
-              <span className="info-value info-tag sous-type">
-                {getSousTypeEvenementLibelle(rapportSelectionne.id_sous_type_evenement)}
-              </span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Origine:</span>
-              <span className="info-value info-tag origine">
-                {getOrigineEvenementLibelle(rapportSelectionne.id_origine_evenement)}
-              </span>
-            </div>
-            {localisation.id_zone && (
-              <div className="info-item">
-                <span className="info-label">Zone géographique:</span>
-                <span className="info-value info-tag zone">
-                  {getZoneNom(localisation.id_zone)}
-                </span>
+            {rapport.date_modification && (
+              <div className="date-item">
+                <span className="date-label">Modifié le</span>
+                <span className="date-value">{formatDate(rapport.date_modification)}</span>
               </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Description globale */}
-        <div className="rapport-section description">
-          <h4>Description globale</h4>
-          <div className="description-content">
-            {rapportSelectionne.description_globale}
+      <div className="rapport-sections">
+        {/* Informations principales */}
+        <div className="rapport-section">
+          <div className="section-header" onClick={() => toggleSection('infos')}>
+            <h4>
+              <span className="section-icon">📋</span>
+              Informations principales
+            </h4>
+            <span className={`expand-icon ${expandedSections.infos ? 'expanded' : ''}`}>▼</span>
           </div>
+          {expandedSections.infos && (
+            <div className="section-content">
+              <div className="info-grid">
+                <div className="info-card">
+                  <span className="info-label">Date de l'événement</span>
+                  <span className="info-value">{formatDate(rapport.date_evenement)}</span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Type d'événement</span>
+                  <span className="info-value info-tag type">
+                    {getTypeEvenementLibelle(rapport.id_type_evenement)}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Sous-type</span>
+                  <span className="info-value info-tag sous-type">
+                    {getSousTypeEvenementLibelle(rapport.id_sous_type_evenement)}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Origine</span>
+                  <span className="info-value info-tag origine">
+                    {getOrigineEvenementLibelle(rapport.id_origine_evenement)}
+                  </span>
+                </div>
+                {(metaData.localisation?.id_zone || rapport.id_zone_lieu) && (
+                  <div className="info-card">
+                    <span className="info-label">Zone géographique</span>
+                    <span className="info-value info-tag zone">
+                      {getZoneNom(metaData.localisation?.id_zone || rapport.id_zone_lieu)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Cible de l'événement */}
-        <div className="rapport-section cible">
-          <h4>Cible de l'événement</h4>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Type de cible:</span>
-              <span className="info-value">{cible.libelle}</span>
+        {/* Description globale */}
+        {rapport.description_globale && (
+          <div className="rapport-section">
+            <div className="section-header" onClick={() => toggleSection('description')}>
+              <h4>
+                <span className="section-icon">📝</span>
+                Description globale
+              </h4>
+              <span className={`expand-icon ${expandedSections.description ? 'expanded' : ''}`}>▼</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Nom de la cible:</span>
-              <span className="info-value">{cible.nom || cible.nom_cible}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Pavillon:</span>
-              <span className="info-value">{cible.pavillon || cible.pavillon_cible}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Immatriculation:</span>
-              <span className="info-value">{cible.immatriculation}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Type Produit:</span>
-              <span className="info-value">{cible.TypeProduit}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Quantité Produit:</span>
-              <span className="info-value">{cible.QuantiteProduit}</span>
-            </div>
+            {expandedSections.description && (
+              <div className="section-content">
+                <div className="description-content">
+                  {rapport.description_globale}
+                </div>
+              </div>
+            )}
           </div>
+        )}
+
+        {/* Cible de l'événement */}
+        <div className="rapport-section">
+          <div className="section-header" onClick={() => toggleSection('cible')}>
+            <h4>
+              <span className="section-icon">🎯</span>
+              Cible de l'événement
+            </h4>
+            <span className={`expand-icon ${expandedSections.cible ? 'expanded' : ''}`}>▼</span>
+          </div>
+          {expandedSections.cible && (
+            <div className="section-content">
+              <div className="info-grid">
+                <div className="info-card">
+                  <span className="info-label">Type de cible</span>
+                  <span className="info-value">
+                    {metaData.typeCible?.libelle || rapport.type_cible_libelle || "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Nom de la cible</span>
+                  <span className="info-value">
+                    {metaData.cible?.nom || rapport.nom_cible || "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Pavillon</span>
+                  <span className="info-value">
+                    {metaData.cible?.pavillon || rapport.pavillon_cible || "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Immatriculation</span>
+                  <span className="info-value">
+                    {metaData.cible?.immatriculation || rapport.immatriculation || "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Type de produit</span>
+                  <span className="info-value">
+                    {metaData.cible?.TypeProduit || rapport.TypeProduit || "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Quantité de produit</span>
+                  <span className="info-value">
+                    {metaData.cible?.QuantiteProduit || rapport.QuantiteProduit || "Non définie"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Localisation */}
-        <div className="rapport-section localisation">
-          <h4>Localisation</h4>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Zone géographique:</span>
-              <span className="info-value">{getZoneNom(localisation.id_zone)}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Précision sur le lieu:</span>
-              <span className="info-value">{localisation.details_lieu}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Latitude:</span>
-              <span className="info-value">{localisation.latitude}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Longitude:</span>
-              <span className="info-value">{localisation.longitude}</span>
-            </div>
+        <div className="rapport-section">
+          <div className="section-header" onClick={() => toggleSection('localisation')}>
+            <h4>
+              <span className="section-icon">📍</span>
+              Localisation
+            </h4>
+            <span className={`expand-icon ${expandedSections.localisation ? 'expanded' : ''}`}>▼</span>
           </div>
-          {/* Mini carte Leaflet */}
-          {localisation.latitude && localisation.longitude && (
-            <div style={{ height: "200px", width: "100%", marginTop: "10px" }}>
-              <div
-                ref={mapRef}
-                style={{ height: "100%", width: "100%", borderRadius: "8px", border: "1px solid #ccc" }}
-                id={`map-details-rapport-${rapportSelectionne.id_rapport}`}
-              />
+          {expandedSections.localisation && (
+            <div className="section-content">
+              <div className="info-grid">
+                <div className="info-card">
+                  <span className="info-label">Zone géographique</span>
+                  <span className="info-value">
+                    {getZoneNom(metaData.localisation?.id_zone || rapport.id_zone_lieu) || "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Précision sur le lieu</span>
+                  <span className="info-value">
+                    {metaData.localisation?.details_lieu || rapport.details_lieu || "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Coordonnées</span>
+                  <span className="info-value coordinates">
+                    {hasValidCoordinates() ? 
+                      `${metaData.localisation?.latitude || rapport.latitude}, ${metaData.localisation?.longitude || rapport.longitude}` : 
+                      "Non définies"
+                    }
+                  </span>
+                </div>
+              </div>
+              {/* Afficher la carte seulement si on a des coordonnées valides */}
+              {hasValidCoordinates() && (
+                <div className="map-container">
+                  <div
+                    ref={mapRef}
+                    className="map-display"
+                    id={`map-details-rapport-${rapport.id_rapport}`}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Conditions météorologiques */}
-        <div className="rapport-section meteo">
-          <h4>Conditions météorologiques</h4>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Direction du vent:</span>
-              <span className="info-value">{meteo.direction_vent}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Force du vent:</span>
-              <span className="info-value">{meteo.force_vent}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">État de la mer:</span>
-              <span className="info-value">{meteo.etat_mer}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Nébulosité:</span>
-              <span className="info-value">{meteo.nebulosite}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Marée:</span>
-              <span className="info-value">{meteo.maree}</span>
-            </div>
+        <div className="rapport-section">
+          <div className="section-header" onClick={() => toggleSection('meteo')}>
+            <h4>
+              <span className="section-icon">🌤️</span>
+              Conditions météorologiques
+            </h4>
+            <span className={`expand-icon ${expandedSections.meteo ? 'expanded' : ''}`}>▼</span>
           </div>
+          {expandedSections.meteo && (
+            <div className="section-content">
+              <div className="info-grid">
+                <div className="info-card">
+                  <span className="info-label">Direction du vent</span>
+                  <span className="info-value">
+                    {metaData.meteo?.direction_vent || rapport.direction_vent || "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Force du vent</span>
+                  <span className="info-value">
+                    {metaData.meteo?.force_vent ?? rapport.force_vent ?? "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">État de la mer</span>
+                  <span className="info-value">
+                    {metaData.meteo?.etat_mer ?? rapport.etat_mer ?? "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Nébulosité</span>
+                  <span className="info-value">
+                    {metaData.meteo?.nebulosite ?? rapport.nebulosite ?? "Non définie"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">Marée</span>
+                  <span className="info-value">
+                    {metaData.meteo?.maree || rapport.maree || "Non définie"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Alertes et contacts */}
-        <div className="rapport-section alertes">
-          <h4>Contacts et alertes</h4>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">CEDRE alerté:</span>
-              <span className="info-value">{alertes.cedre_alerte ? "Oui" : "Non"}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">CROSS alerté:</span>
-              <span className="info-value">{alertes.cross_alerte ? "Oui" : "Non"}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Photo:</span>
-              <span className="info-value">{alertes.photo ? "Oui" : "Non"}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">POLREP:</span>
-              <span className="info-value">{alertes.polrep ? "Oui" : "Non"}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Dérive MOTHY:</span>
-              <span className="info-value">{alertes.derive_mothy ? "Oui" : "Non"}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">POLMAR Terre:</span>
-              <span className="info-value">{alertes.polmar_terre ? "Oui" : "Non"}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">SMP:</span>
-              <span className="info-value">{alertes.smp ? "Oui" : "Non"}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">BSAA:</span>
-              <span className="info-value">{alertes.bsaa ? "Oui" : "Non"}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Site sensible à proximité:</span>
-              <span className="info-value">{alertes.sensible_proximite ? "Oui" : "Non"}</span>
-            </div>
-            {alertes.bsaa && (
-              <div className="info-item">
-                <span className="info-label">Délai d'appareillage:</span>
-                <span className="info-value">{alertes.delai_appareillage}</span>
+        <div className="rapport-section">
+          <div className="section-header" onClick={() => toggleSection('alertes')}>
+            <h4>
+              <span className="section-icon">🚨</span>
+              Contacts et alertes
+            </h4>
+            <span className={`expand-icon ${expandedSections.alertes ? 'expanded' : ''}`}>▼</span>
+          </div>
+          {expandedSections.alertes && (
+            <div className="section-content">
+              <div className="alertes-grid">
+                <div className="alerte-card">
+                  <span className="alerte-label">CEDRE alerté</span>
+                  {getStatusIcon((metaData.alertes?.cedre === 1 || rapport.cedre) ? "Oui" : "Non")}
+                </div>
+                <div className="alerte-card">
+                  <span className="alerte-label">CROSS alerté</span>
+                  {getStatusIcon((metaData.alertes?.cross_contact === 1 || rapport.cross_contact) ? "Oui" : "Non")}
+                </div>
+                <div className="alerte-card">
+                  <span className="alerte-label">Photo</span>
+                  {getStatusIcon((metaData.alertes?.photo === 1 || rapport.photo) ? "Oui" : "Non")}
+                </div>
+                <div className="alerte-card">
+                  <span className="alerte-label">POLREP</span>
+                  {getStatusIcon((metaData.alertes?.polrep === 1 || rapport.polrep) ? "Oui" : "Non")}
+                </div>
+                <div className="alerte-card">
+                  <span className="alerte-label">Dérive MOTHY</span>
+                  {getStatusIcon((metaData.alertes?.derive_mothy === 1 || rapport.derive_mothym) ? "Oui" : "Non")}
+                </div>
+                <div className="alerte-card">
+                  <span className="alerte-label">POLMAR Terre</span>
+                  {getStatusIcon((metaData.alertes?.pne === 1 || rapport.pne) ? "Oui" : "Non")}
+                </div>
+                <div className="alerte-card">
+                  <span className="alerte-label">SMP</span>
+                  {getStatusIcon((metaData.alertes?.smp === 1 || rapport.smp) ? "Oui" : "Non")}
+                </div>
+                <div className="alerte-card">
+                  <span className="alerte-label">BSAA</span>
+                  {getStatusIcon((metaData.alertes?.bsaa === 1 || rapport.bsaa) ? "Oui" : "Non")}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Moyens et risques */}
-        <div className="rapport-section moyens">
-          <h4>Moyens et risques</h4>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Moyens à proximité:</span>
-              <span className="info-value">{alertes.moyen_proximite}</span>
+              
+              {/* Informations supplémentaires sur les moyens */}
+              <div className="moyens-section">
+                <h5>Moyens et risques</h5>
+                <div className="info-grid">
+                  <div className="info-card">
+                    <span className="info-label">Moyens à proximité</span>
+                    <span className="info-value">
+                      {metaData.alertes?.moyen_proximite || rapport.moyen_proximite || "Non défini"}
+                    </span>
+                  </div>
+                  <div className="info-card">
+                    <span className="info-label">Moyens dépêchés</span>
+                    <span className="info-value">
+                      {metaData.alertes?.moyen_depeche || rapport.moyen_depeche || "Non défini"}
+                    </span>
+                  </div>
+                  <div className="info-card">
+                    <span className="info-label">Risque court terme</span>
+                    <span className="info-value">
+                      {metaData.alertes?.risque_court_terme || rapport.risque_court_terme || "Non défini"}
+                    </span>
+                  </div>
+                  <div className="info-card">
+                    <span className="info-label">Risque moyen/long terme</span>
+                    <span className="info-value">
+                      {metaData.alertes?.risque_moyen_long_terme || rapport.risque_moyen_long_terme || "Non défini"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="info-item">
-              <span className="info-label">Moyens dépêchés sur zone:</span>
-              <span className="info-value">{alertes.moyen_depeche}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Moyens maritimes ou de l’État:</span>
-              <span className="info-value">{alertes.moyen_marine_etat}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Risque court terme:</span>
-              <span className="info-value">{alertes.risque_court_terme}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Risque moyen/long terme:</span>
-              <span className="info-value">{alertes.risque_moyen_long_terme}</span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Responsable */}
-        <div className="rapport-section responsable">
-          <h4>Responsable</h4>
-          <div className="responsable-info">
-            <div className="avatar">
-              {getOperateurNom(rapportSelectionne.id_operateur).substring(0, 1).toUpperCase()}
-            </div>
-            <div className="responsable-details">
-              <div className="responsable-nom">{getOperateurNom(rapportSelectionne.id_operateur)}</div>
-              <div className="responsable-date">Créé le {formatDate(rapportSelectionne.date_creation)}</div>
-            </div>
+        <div className="rapport-section">
+          <div className="section-header" onClick={() => toggleSection('responsable')}>
+            <h4>
+              <span className="section-icon">👤</span>
+              Responsable
+            </h4>
+            <span className={`expand-icon ${expandedSections.responsable ? 'expanded' : ''}`}>▼</span>
           </div>
+          {expandedSections.responsable && (
+            <div className="section-content">
+              <div className="responsable-card">
+                <div className="avatar">
+                  {getOperateurNom(rapport.id_operateur).substring(0, 1).toUpperCase()}
+                </div>
+                <div className="responsable-details">
+                  <div className="responsable-nom">{getOperateurNom(rapport.id_operateur)}</div>
+                  <div className="responsable-date">Créé le {formatDate(rapport.date_creation)}</div>
+                  {rapport.id_operateur_modification && (
+                    <div className="responsable-modification">
+                      Modifié par {getOperateurNom(rapport.id_operateur_modification)} le {formatDate(rapport.date_modification)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Accès partagés */}
-        {rapportSelectionne.operateurs_acces && rapportSelectionne.operateurs_acces.length > 0 && (
-          <div className="rapport-section acces">
-            <h4>Accès partagés</h4>
-            <div className="acces-liste">
-              {rapportSelectionne.operateurs_acces.map((opId) => (
-                <div key={opId} className="acces-item">
-                  <span className="acces-avatar">{getOperateurNom(opId).substring(0, 1).toUpperCase()}</span>
-                  <span className="acces-nom">{getOperateurNom(opId)}</span>
-                </div>
-              ))}
+        {rapport.operateurs_acces && rapport.operateurs_acces.length > 0 && (
+          <div className="rapport-section">
+            <div className="section-header" onClick={() => toggleSection('acces')}>
+              <h4>
+                <span className="section-icon">👥</span>
+                Accès partagés
+              </h4>
+              <span className={`expand-icon ${expandedSections.acces ? 'expanded' : ''}`}>▼</span>
             </div>
+            {expandedSections.acces && (
+              <div className="section-content">
+                <div className="acces-liste">
+                  {rapport.operateurs_acces.map((opId) => (
+                    <div key={opId} className="acces-item">
+                      <span className="acces-avatar">{getOperateurNom(opId).substring(0, 1).toUpperCase()}</span>
+                      <span className="acces-nom">{getOperateurNom(opId)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Informations supplémentaires */}
-        {rapportSelectionne.informations_supplementaires && (
-          <div className="rapport-section infos-supp">
-            <h4>Informations supplémentaires</h4>
-            <div className="infos-supp-content">
-              {rapportSelectionne.informations_supplementaires}
+        {rapport.informations_supplementaires && (
+          <div className="rapport-section">
+            <div className="section-header" onClick={() => toggleSection('infosSupp')}>
+              <h4>
+                <span className="section-icon">ℹ️</span>
+                Informations supplémentaires
+              </h4>
+              <span className={`expand-icon ${expandedSections.infosSupp ? 'expanded' : ''}`}>▼</span>
             </div>
+            {expandedSections.infosSupp && (
+              <div className="section-content">
+                <div className="infos-supp-content">
+                  {rapport.informations_supplementaires}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Historique des actions */}
-        <div className="rapport-section historique">
-          <h4>Historique des actions</h4>
-          <div className="historique-list">
-            {historique && historique.length > 0 ? (
-              historique.map((action, idx) => (
-                <div key={idx} className="historique-item">
-                  <div className="historique-item-header">
-                    <span>
-                      {new Date(action.date_action).toLocaleDateString('fr-FR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                      {" : "}
-                      {action.type_action}
-                    </span>
-                    {/* Affichage du nom de l'opérateur si disponible */}
-                    {action.id_operateur && (
-                      <span className="historique-operateur">
-                        {getOperateurNom(action.id_operateur)}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    {action.detail_action}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div>Aucun historique disponible.</div>
-            )}
+        <div className="rapport-section">
+          <div className="section-header" onClick={() => toggleSection('historique')}>
+            <h4>
+              <span className="section-icon">📊</span>
+              Historique des actions
+              <span className="historique-count">({historique?.length || 0})</span>
+            </h4>
+            <span className={`expand-icon ${expandedSections.historique ? 'expanded' : ''}`}>▼</span>
           </div>
+          {expandedSections.historique && (
+            <div className="section-content">
+              <div className="historique-timeline">
+                {historique && historique.length > 0 ? (
+                  historique.map((action, idx) => (
+                    <div key={idx} className="timeline-item">
+                      <div className="timeline-marker"></div>
+                      <div className="timeline-content">
+                        <div className="timeline-header">
+                          <span className="timeline-date">
+                            {new Date(action.date_action).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                          {action.type_action && (
+                            <span className="timeline-type">{action.type_action}</span>
+                          )}
+                          {action.id_operateur && (
+                            <span className="timeline-operator">
+                              {getOperateurNom(action.id_operateur)}
+                            </span>
+                          )}
+                        </div>
+                        {action.detail_action && (
+                          <div className="timeline-detail">
+                            {action.detail_action}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-historique">Aucun historique disponible.</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

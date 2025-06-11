@@ -27,14 +27,53 @@ const getRapport = async (req, res) => {
   try {
     const id_operateur = req.user?.id_operateur;
 
-    // Construire la requête de base
     let query = `
-        SELECT r.*, 
-               (SELECT GROUP_CONCAT(ra.id_operateur) 
-                FROM AccesRapport ra 
-                WHERE ra.id_rapport = r.id_rapport) as operateurs_acces
-        FROM Rapport r
-      `;
+      SELECT 
+        r.*,
+        -- Lieu avec zone géographique
+        l.details_lieu, l.latitude, l.longitude, l.id_zone as id_zone_lieu,
+        zg.nom_zone as nom_zone_lieu,
+        -- Meteo
+        m.direction_vent, m.force_vent, m.etat_mer, m.nebulosite, m.maree,
+        -- Alerte (toutes les colonnes nécessaires)
+        a.cedre, a.cross_contact, a.smp, a.bsaa, a.delai_appareillage_bsaa, 
+        a.polrep, a.photo, a.derive_mothym, a.pne, a.message_polrep,
+        a.moyen_proximite, a.moyen_depeche, a.moyen_marine_etat,
+        a.risque_court_terme, a.risque_moyen_long_terme,
+        -- Cible avec TOUS les champs
+        c.id_cible,
+        c.nom as nom_cible, 
+        c.pavillon as pavillon_cible, 
+        c.immatriculation, 
+        c.TypeProduit, 
+        c.QuantiteProduit,
+        c.id_type_cible,
+        tc.libelle as type_cible_libelle,
+        -- Libellés des types d'événements
+        te.libelle as type_evenement_libelle,
+        ste.libelle as sous_type_evenement_libelle,
+        oe.libelle as origine_evenement_libelle,
+        -- Informations de l'opérateur créateur
+        op_createur.nom as operateur_createur_nom,
+        op_createur.prenom as operateur_createur_prenom,
+        -- Informations de l'opérateur modificateur
+        op_modif.nom as operateur_modificateur_nom,
+        op_modif.prenom as operateur_modificateur_prenom,
+        -- Accès
+        (SELECT GROUP_CONCAT(ra.id_operateur) FROM AccesRapport ra WHERE ra.id_rapport = r.id_rapport) as operateurs_acces
+      FROM Rapport r
+      LEFT JOIN Lieu l ON l.id_rapport = r.id_rapport
+      LEFT JOIN ZoneGeographique zg ON l.id_zone = zg.id_zone
+      LEFT JOIN Meteo m ON m.id_rapport = r.id_rapport
+      LEFT JOIN Alerte a ON a.id_rapport = r.id_rapport
+      LEFT JOIN Cible c ON c.id_rapport = r.id_rapport
+      LEFT JOIN TypeCible tc ON c.id_type_cible = tc.id_type_cible
+      LEFT JOIN TypeEvenement te ON r.id_type_evenement = te.id_type_evenement
+      LEFT JOIN SousTypeEvenement ste ON r.id_sous_type_evenement = ste.id_sous_type_evenement
+      LEFT JOIN OrigineEvenement oe ON r.id_origine_evenement = oe.id_origine_evenement
+      LEFT JOIN Operateur op_createur ON r.id_operateur = op_createur.id_operateur
+      LEFT JOIN Operateur op_modif ON r.id_operateur_modification = op_modif.id_operateur
+    `;
 
     // Ajouter les filtres si présents
     const whereConditions = [];
@@ -57,7 +96,7 @@ const getRapport = async (req, res) => {
     }
 
     if (req.query.id_zone) {
-      whereConditions.push('r.id_zone = ?');
+      whereConditions.push('l.id_zone = ?');
       queryParams.push(req.query.id_zone);
     }
 
@@ -78,20 +117,103 @@ const getRapport = async (req, res) => {
 
     query += ' ORDER BY r.date_evenement DESC';
 
+    console.log("Requête SQL générée pour getRapport :");
+    console.log(query);
+    console.log("Paramètres de la requête :");
+    console.log(queryParams);
+
     // Exécuter la requête
     const [result] = await db.query(query, queryParams);
 
-    // Transformer les chaînes d'opérateurs en tableaux
-    const rapportsWithAccess = result.map(rapport => {
-      if (rapport.operateurs_acces) {
-        rapport.operateurs_acces = rapport.operateurs_acces.split(',').map(id => parseInt(id));
-      } else {
-        rapport.operateurs_acces = [];
-      }
-      return rapport;
+    // Log complet des résultats récupérés
+    console.log("Résultats bruts récupérés depuis la base de données :");
+    console.dir(result, { depth: null });
+
+    // Formatage pour le frontend
+    const rapportsWithMeta = result.map(rapport => {
+      const metaData = {
+        localisation: {
+          details_lieu: rapport.details_lieu,
+          latitude: rapport.latitude,
+          longitude: rapport.longitude,
+          id_zone_lieu: rapport.id_zone_lieu,
+          nom_zone_lieu: rapport.nom_zone_lieu,
+        },
+        meteo: {
+          direction_vent: rapport.direction_vent,
+          force_vent: rapport.force_vent,
+          etat_mer: rapport.etat_mer,
+          nebulosite: rapport.nebulosite,
+          maree: rapport.maree,
+        },
+        alertes: {
+          cedre_alerte: !!rapport.cedre,
+          cross_alerte: !!rapport.cross_contact,
+          smp: !!rapport.smp,
+          bsaa: !!rapport.bsaa,
+          delai_appareillage: rapport.delai_appareillage_bsaa,
+          polrep: !!rapport.polrep,
+          photo: !!rapport.photo,
+          derive_mothy: !!rapport.derive_mothym,
+          polmar_terre: !!rapport.pne,
+          message_polrep: rapport.message_polrep,
+          moyen_proximite: rapport.moyen_proximite,
+          moyen_depeche: rapport.moyen_depeche,
+          moyen_marine_etat: rapport.moyen_marine_etat,
+          risque_court_terme: rapport.risque_court_terme,
+          risque_moyen_long_terme: rapport.risque_moyen_long_terme,
+        },
+        cible: {
+          id_cible: rapport.id_cible,
+          nom_cible: rapport.nom_cible,
+          pavillon_cible: rapport.pavillon_cible,
+          immatriculation: rapport.immatriculation,
+          TypeProduit: rapport.TypeProduit,
+          QuantiteProduit: rapport.QuantiteProduit,
+          id_type_cible: rapport.id_type_cible,
+          type_cible_libelle: rapport.type_cible_libelle,
+        }
+      };
+
+      // IMPORTANT : On ajoute aussi ces champs directement au niveau racine du rapport
+      // pour que DetailsRapport puisse les utiliser
+      return {
+        ...rapport,
+        // Zone géographique au niveau racine
+        nom_zone_lieu: rapport.nom_zone_lieu,
+        // Champs cible au niveau racine - TOUS LES CHAMPS
+        id_cible: rapport.id_cible,
+        nom_cible: rapport.nom_cible,
+        pavillon_cible: rapport.pavillon_cible,
+        immatriculation: rapport.immatriculation,
+        TypeProduit: rapport.TypeProduit,
+        QuantiteProduit: rapport.QuantiteProduit,
+        id_type_cible: rapport.id_type_cible,
+        type_cible_libelle: rapport.type_cible_libelle,
+        // Libellés des types d'événements
+        type_evenement_libelle: rapport.type_evenement_libelle,
+        sous_type_evenement_libelle: rapport.sous_type_evenement_libelle,
+        origine_evenement_libelle: rapport.origine_evenement_libelle,
+        // Nom complet des opérateurs
+        operateur_createur_nom_complet: rapport.operateur_createur_nom && rapport.operateur_createur_prenom 
+          ? `${rapport.operateur_createur_prenom} ${rapport.operateur_createur_nom}` 
+          : 'Inconnu',
+        operateur_modificateur_nom_complet: rapport.operateur_modificateur_nom && rapport.operateur_modificateur_prenom 
+          ? `${rapport.operateur_modificateur_prenom} ${rapport.operateur_modificateur_nom}` 
+          : null,
+        // Garder metaData pour ModifierRapport
+        metaData,
+        operateurs_acces: rapport.operateurs_acces
+          ? rapport.operateurs_acces.split(',').map(id => parseInt(id))
+          : [],
+      };
     });
 
-    res.json(rapportsWithAccess);
+    // Log final de la structure envoyée au frontend
+    console.log("Rapports formatés envoyés au frontend :");
+    console.dir(rapportsWithMeta, { depth: null });
+
+    res.json(rapportsWithMeta);
   } catch (err) {
     console.error("Erreur lors de la récupération des rapports:", err);
     res.status(500).json({ error: "Erreur serveur" });

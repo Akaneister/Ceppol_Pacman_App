@@ -8,13 +8,14 @@ import '../css/AuthPage.css';
 const API = process.env.REACT_APP_API_URL;
 
 const AuthPage = () => {
-    const { login } = useAuth();
+    const { login, loginAdmin } = useAuth();
     const [motdepasse, setMotdepasse] = useState('');
     const [operateurs, setOperateurs] = useState([]);
     const [selectedOperateur, setSelectedOperateur] = useState('');
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [userType, setUserType] = useState(''); // 'operateur' ou 'admin'
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -37,22 +38,37 @@ const AuthPage = () => {
             // Tentative de connexion avec le mot de passe
             const res = await axios.post(`${API}/auth/login`, { motdepasse });
 
-            // Si la réponse contient une erreur (ex: "Accès refusé")
-            if (res.data.success === false || res.data.message !== 'Accès autorisé') {
-                setError('Mot de passe incorrect');
+            console.log('Réponse de l\'API:', res.data);
+
+            // Si la réponse contient une erreur
+            if (res.data.success === false) {
+                setError(res.data.error || 'Mot de passe incorrect');
                 setLoading(false);
-                return; // Empêche la progression
+                return;
             }
 
-            // Si le mot de passe est correct, récupérer les opérateurs
-            const opsRes = await axios.get(`${API}/auth/operateurs`);
-            const operateursData = opsRes.data.data[0]; // Accéder au premier tableau de opérateurs
-            setOperateurs(operateursData);
-            setStep(2); // Passer à l'étape 2 (choisir un opérateur)
+            // Vérifier le type d'utilisateur selon la réponse de l'API
+            const typeUtilisateur = res.data.userType || res.data.type;
+            
+            if (typeUtilisateur === 'admin' || res.data.info === 'Admin') {
+                // Connexion directe pour l'admin
+                console.log('Connexion admin détectée');
+                setUserType('admin');
+                loginAdmin(motdepasse);
+                navigate('/admin'); // Rediriger vers le dashboard admin
+            } else {
+                // Pour les opérateurs, récupérer la liste des opérateurs
+                console.log('Connexion opérateur détectée');
+                setUserType('operateur');
+                const opsRes = await axios.get(`${API}/auth/operateurs`);
+                const operateursData = opsRes.data.data[0]; // Accéder au premier tableau de opérateurs
+                setOperateurs(operateursData);
+                setStep(2); // Passer à l'étape 2 (choisir un opérateur)
+            }
         } catch (err) {
             console.error("Erreur lors de la connexion", err);
             if (err.response) {
-                setError(`Erreur ${err.response.status}: ${err.response.data.message || "Erreur lors de la connexion"}`);
+                setError(`Erreur ${err.response.status}: ${err.response.data.error || err.response.data.message || "Erreur lors de la connexion"}`);
             } else {
                 setError('Erreur de connexion');
             }
@@ -72,7 +88,8 @@ const AuthPage = () => {
         if (operateur) {
             login(motdepasse, {
                 nom: `${operateur.prenom} ${operateur.nom}`,
-                id_operateur: operateur.id_operateur
+                id_operateur: operateur.id_operateur,
+                type: 'operateur'
             });
             navigate('/'); // Rediriger après connexion réussie
         } else {
@@ -100,18 +117,15 @@ const AuthPage = () => {
                             borderRadius: '50%',
                             objectFit: 'cover',
                             border: '2px solid #ccc',
-                            animation: 'coinFlip 3s infinite linear',
-                            transformStyle: 'preserve-3d',
-                            transform: 'perspective(1000px)'
+                            transition: 'transform 0.3s ease'
                         }}
+                        className="auth-logo-img"
                     />
                 </div>
 
                 <style jsx>{`
-                    @keyframes coinFlip {
-                        0% { transform: perspective(1000px) rotateY(0deg); }
-                        50% { transform: perspective(1000px) rotateY(180deg); }
-                        100% { transform: perspective(1000px) rotateX(360deg); }
+                    .auth-logo-img:hover {
+                        transform: scale(1.08);
                     }
                 `}</style>
 
@@ -130,6 +144,7 @@ const AuthPage = () => {
                                         onChange={e => setMotdepasse(e.target.value)}
                                         onKeyPress={handleKeyPress}
                                         autoFocus
+                                        placeholder="Entrez votre mot de passe"
                                     />
                                 </div>
                                 {error && <div className="error-message">{error}</div>}
@@ -145,7 +160,7 @@ const AuthPage = () => {
                         </div>
                     )}
 
-                    {step === 2 && (
+                    {step === 2 && userType === 'operateur' && (
                         <div className="auth-step auth-step-2">
                             <h2 className="auth-title">Sélectionnez un opérateur</h2>
                             <div className="auth-form">
@@ -172,6 +187,7 @@ const AuthPage = () => {
                                         onClick={() => {
                                             setStep(1);
                                             setError('');
+                                            setUserType('');
                                         }}
                                     >
                                         Retour

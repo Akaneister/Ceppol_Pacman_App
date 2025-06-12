@@ -9,6 +9,8 @@ export const AuthProvider = ({ children }) => {
     motdepasse: null,
     selectedOperateur: null, // Nom de l'opérateur pour l'affichage
     Opid: null,              // ID de l'opérateur
+    userType: null,          // 'admin' ou 'operateur'
+    isAdmin: false,          // Booléen pour vérifier si c'est un admin
   });
 
   const [loading, setLoading] = useState(true);
@@ -32,6 +34,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Fonction de connexion pour les opérateurs
   const login = (motdepasse, operateur) => {
     console.log("Fonction login appelée avec les paramètres:", { motdepasse: "***", operateur });
     
@@ -45,6 +48,8 @@ export const AuthProvider = ({ children }) => {
       selectedOperateur: operateur.nom,  // Nom pour l'affichage
       Opid: operateur.id_operateur,      // ID de l'opérateur
       isAuthenticated: true,
+      userType: operateur.type || 'operateur',
+      isAdmin: operateur.type === 'admin',
     };
   
     console.log("Nouvelles données d'authentification:", { ...auth, motdepasse: "***" });
@@ -60,6 +65,33 @@ export const AuthProvider = ({ children }) => {
       console.error("Erreur lors de la sauvegarde des données d'authentification:", error);
     }
   };
+
+  // Fonction de connexion pour les admins
+  const loginAdmin = (motdepasse) => {
+    console.log("Fonction loginAdmin appelée");
+    
+    const auth = {
+      motdepasse,
+      selectedOperateur: 'Administrateur',  // Nom pour l'affichage
+      Opid: 'admin',                        // ID spécial pour admin
+      isAuthenticated: true,
+      userType: 'admin',
+      isAdmin: true,
+    };
+  
+    console.log("Nouvelles données d'authentification admin:", { ...auth, motdepasse: "***" });
+    
+    // Mettre à jour l'état local
+    setAuthData(auth);
+    
+    // Mettre à jour le localStorage
+    try {
+      localStorage.setItem('authData', JSON.stringify(auth));
+      console.log("Données d'authentification admin sauvegardées dans le localStorage");
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde des données d'authentification admin:", error);
+    }
+  };
   
   const logout = () => {
     console.log("Déconnexion de l'utilisateur");
@@ -70,6 +102,8 @@ export const AuthProvider = ({ children }) => {
       motdepasse: null,
       selectedOperateur: null,
       Opid: null,
+      userType: null,
+      isAdmin: false,
     });
     
     // Supprimer du localStorage
@@ -85,12 +119,15 @@ export const AuthProvider = ({ children }) => {
   const contextValue = {
     authData,
     login,
+    loginAdmin,
     logout,
     loading,
     // Ajouter des getters pratiques
     isAuthenticated: authData.isAuthenticated,
     operateurNom: authData.selectedOperateur,
-    operateurId: authData.Opid
+    operateurId: authData.Opid,
+    userType: authData.userType,
+    isAdmin: authData.isAdmin
   };
 
   return (

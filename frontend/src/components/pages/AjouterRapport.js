@@ -444,7 +444,7 @@ const AjouterRapport = () => {
 
 
       <div className="rapport-header">
-        <h1 >Nouveau Rapport d'Événement</h1>
+        
         <p className="rapport-subtitle" style={{ fontSize: '0.9em', fontStyle: 'italic' }}>
           Complétez tous les champs obligatoires (*) pour soumettre un nouveau rapport
         </p>

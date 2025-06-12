@@ -8,21 +8,24 @@ const db = require('./db');
 // Initialisation de l'application Express
 const app = express();
 
+app.use(express.json());
+
 // Middleware global
 app.use(cors());
-app.use(express.json());
 
 // Importation des routes
 const rapportRoutes = require('./routes/rapports');
 const authRoutes = require('./routes/auth');
 const carteRoutes = require('./routes/carte'); // Importation de la route pour la carte
 const ressourceRoutes = require('./routes/home'); // Importation de la route pour les ressources
+const adminRoutes = require('./routes/admin');
 
 // Définition des routes
 // Routes d'authentification
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
-app.use('/api/lieu', carteRoutes ); // Route pour obtenir les lieux
+// app.use('/api/lieu', carteRoutes ); // Route pour obtenir les lieux
 
 // Routes des rapports
 app.use('/api/rapports', rapportRoutes);

@@ -9,6 +9,7 @@ import ListeRapport from './components/pages/ListeRapport'; // Importer la page 
 import ModifierRapport from './components/pages/ModifierRapport'; // Import
 import Carte from './components/pages/carte.js'; // Importer la page "Carte"
 import NotFound from './components/pages/NotFound'; // Importer la page "Not Found"
+import AdminDashboard from './components/pages/AdminDashboard'; // Importer le dashboard admin
 
 const App = () => {
   return (
@@ -25,8 +26,8 @@ const AppContent = () => {
   
   return (
     <>
-      {/* Affiche la Navbar uniquement si on n'est pas sur la page de login */}
-      {location.pathname !== '/login' && <Navbar />}
+      {/* Affiche la Navbar uniquement si on n'est pas sur la page de login ou admin */}
+      {location.pathname !== '/login' && location.pathname !== '/admin' && <Navbar />}
       <Routes>
         <Route path="/login" element={<AuthPage />} />
         <Route path="/" element={
@@ -34,6 +35,14 @@ const AppContent = () => {
             <AjouterRapport />
           </PrivateRoute>
         } />
+        
+        {/* Route pour le dashboard admin */}
+        <Route path="/admin" element={
+          <PrivateRoute>
+            <AdminDashboard />
+          </PrivateRoute>
+        } />
+        
         <Route path="/doc" element={
           <PrivateRoute>
             <Documentation />
@@ -61,7 +70,7 @@ const AppContent = () => {
             <Carte />
           </PrivateRoute>
         } /> 
-        {/*Ereeur  */}
+        {/*Erreur  */}
         <Route path="*" element={
           <PrivateRoute>
             <NotFound />

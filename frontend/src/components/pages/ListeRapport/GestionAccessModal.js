@@ -70,33 +70,28 @@ const GestionAccesModal = ({
               {operateursAvecAcces.length === 0 ? (
                 <p>Aucun opérateur supplémentaire n'a accès à ce rapport.</p>
               ) : (
-                <table className="acces-table">
-                  <thead>
-                    <tr>
-                      <th>Opérateur</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {operateursAvecAcces
-                      .filter((op) => op.id_operateur !== rapportSelectionne.id_operateur) // exclure l'opérateur principal
-                      .map((op) => (
-                        <tr key={op.id_operateur}>
-                          <td>
-                            {op.prenom} {op.nom}
-                          </td>
-                          <td>
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() => retirerAccesOperateur(op.id_operateur)}
-                            >
-                              Retirer
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+                <div className="acces-liste">
+                  {operateursAvecAcces
+                    .filter((op) => op.id_operateur !== rapportSelectionne.id_operateur)
+                    .map((op) => (
+                      <div className="acces-item" key={op.id_operateur}>
+                        <span className="acces-avatar">
+                          {op.prenom[0]}
+                          {op.nom[0]}
+                        </span>
+                        <span className="acces-nom">
+                          {op.prenom} {op.nom}
+                        </span>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => retirerAccesOperateur(op.id_operateur)}
+                          title="Retirer l'accès"
+                        >
+                          Retirer
+                        </button>
+                      </div>
+                    ))}
+                </div>
               )}
             </div>
           </div>
@@ -149,18 +144,7 @@ const GestionAccesModal = ({
           <button className="btn btn-primary" onClick={fermerGestionAcces}>
             Fermer
           </button>
-          {!afficherHistorique && !afficherAjoutHistorique && (
-            <button
-              className="btn btn-secondary"
-              onClick={async () => {
-                setAfficherHistorique(true);
-                const historique = await fetchHistorique(rapportSelectionne.id_rapport);
-                setHistoriqueData(historique);
-              }}
-            >
-              Voir l'historique
-            </button>
-          )}
+          
         </div>
       </div>
     </div>

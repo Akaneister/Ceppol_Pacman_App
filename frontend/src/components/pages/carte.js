@@ -18,6 +18,7 @@ const Carte = () => {
   const mapRef = useRef(null); // Référence pour la carte
   const mapContainerRef = useRef(null); // Référence pour le container de la carte
   const [pointActuel, setPointActuel] = useState(null);
+  const markerRefs = useRef([]); // Ajoutez ceci en haut du composant Carte
 
   const API_BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -76,18 +77,15 @@ const Carte = () => {
   // Ajouter les marqueurs une fois que les lieux et les titres des rapports sont disponibles
   useEffect(() => {
     if (mapRef.current && lieux.length > 0) {
-      // Nettoyer les marqueurs existants
-      if (mapRef.current.eachLayer) {
-        mapRef.current.eachLayer(layer => {
-          if (layer instanceof L.Marker) {
-            mapRef.current.removeLayer(layer);
-          }
-        });
-      }
-      
+      // Supprimer uniquement les anciens marqueurs
+      markerRefs.current.forEach(marker => {
+        mapRef.current.removeLayer(marker);
+      });
+      markerRefs.current = [];
+
       // Créer un dictionnaire pour regrouper les lieux par coordonnées
       const coordsMap = {};
-      
+
       lieux.forEach(lieu => {
         const coordKey = `${lieu.latitude},${lieu.longitude}`;
         if (!coordsMap[coordKey]) {
@@ -95,27 +93,27 @@ const Carte = () => {
         }
         coordsMap[coordKey].push(lieu);
       });
-      
+
       // Ajouter un marqueur pour chaque coordonnée unique
       Object.entries(coordsMap).forEach(([coords, lieuxAtCoord]) => {
         const [lat, lng] = coords.split(',');
-        
+
         // Ne pas ajouter de marqueur si les coordonnées sont invalides
         if (isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
           console.warn('Coordonnées invalides:', coords);
           return;
         }
-        
+
         const marker = L.marker([parseFloat(lat), parseFloat(lng)]).addTo(mapRef.current);
-        
+
         // Créer le contenu du popup avec les détails des lieux et les titres des rapports
         let popupContent = '<b>Détails du lieu:</b><br/>';
-        
+
         // Ajouter les détails du lieu et le titre du rapport associé pour chaque lieu à cette coordonnée
         lieuxAtCoord.forEach(lieu => {
           popupContent += `<div style="margin-bottom: 10px;">`;
           popupContent += `<b>${lieu.details_lieu || 'Sans détails'}</b><br/>`;
-          
+
           // Ajouter le titre du rapport si disponible
           const rapportTitre = rapportTitres[lieu.id_rapport];
           if (rapportTitre) {
@@ -123,19 +121,21 @@ const Carte = () => {
           } else {
             popupContent += `Rapport ID: ${lieu.id_rapport}<br/>`;
           }
-          
+
           popupContent += `ID Lieu: ${lieu.id_lieu}<br/>`;
           popupContent += `</div>`;
         });
-        
+
         popupContent += `<br/>Latitude: ${lat}<br/>Longitude: ${lng}`;
-        
+
         marker.bindPopup(popupContent);
-        
+
         // Ouvrir le popup si c'est le point actuel
         if (pointActuel && lieuxAtCoord.some(lieu => lieu.id_lieu === pointActuel.id_lieu)) {
           marker.openPopup();
         }
+
+        markerRefs.current.push(marker); // Stocker le marqueur pour le nettoyage futur
       });
     }
   }, [lieux, rapportTitres, pointActuel]);

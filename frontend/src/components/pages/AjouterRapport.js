@@ -115,16 +115,19 @@ const AjouterRapport = () => {
 
   // Initialisation de la carte Leaflet
   useEffect(() => {
-    // S'assurer que la carte est initialisée une seule fois et correctement
+    /**
+     * Initialise la carte Leaflet si ce n'est pas déjà fait.
+     * Charge dynamiquement la librairie si nécessaire.
+     */
     if (mapRef.current && !mapInitialized && typeof window !== 'undefined') {
-      // S'assurer que Leaflet est disponible
+      // Charger Leaflet dynamiquement si absent
       if (!window.L) {
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
         script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
         script.crossOrigin = '';
 
-        // Ajouter la feuille de style Leaflet si elle n'est pas déjà présente
+        // Charger la feuille de style si absente
         if (!document.querySelector('link[href*="leaflet.css"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
@@ -141,49 +144,71 @@ const AjouterRapport = () => {
       }
     }
 
+    /**
+     * Fonction d'initialisation de la carte.
+     * Centre la carte, ajoute la couche OSM et gère le clic utilisateur.
+     */
     function initMap() {
       try {
         console.log("🗺️ Initialisation de la carte...");
 
-        // Nettoyer la carte précédente si elle existe
         if (leafletMapRef.current) {
           leafletMapRef.current.remove();
         }
 
-        // Centre par défaut - 
         const defaultCenter = [48.3904, -4.4861];
-
-        // Créer la nouvelle carte
         leafletMapRef.current = window.L.map(mapRef.current).setView(defaultCenter, 10);
 
-        // Ajouter la couche de tuiles OpenStreetMap
         window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(leafletMapRef.current);
 
-        // Ajouter un gestionnaire de clic sur la carte
-        leafletMapRef.current.on('click', function (e) {
+        // Fonction pour activer le clic sur la carte
+        function enableMapClick() {
+          leafletMapRef.current.on('click', onMapClick);
+        }
+
+        // Fonction pour désactiver le clic sur la carte
+        function disableMapClick() {
+          leafletMapRef.current.off('click', onMapClick);
+        }
+
+        // Gestion du clic sur la carte
+        const onMapClick = function (e) {
           const { lat, lng } = e.latlng;
 
-          // Mettre à jour les champs de latitude et longitude dans le formulaire
           setFormData(prev => ({
             ...prev,
             latitude: lat.toFixed(6),
             longitude: lng.toFixed(6)
           }));
 
-          // Mettre à jour ou créer le marqueur
+          // Ajout ou déplacement du marqueur
           if (marker) {
             marker.setLatLng([lat, lng]);
           } else {
             const newMarker = window.L.marker([lat, lng]).addTo(leafletMapRef.current);
             setMarker(newMarker);
+
+            // Ajoute un gestionnaire de clic sur le marqueur pour le supprimer
+            newMarker.on('click', function () {
+              leafletMapRef.current.removeLayer(newMarker);
+              setMarker(null);
+              setFormData(prev => ({
+                ...prev,
+                latitude: '',
+                longitude: ''
+              }));
+              enableMapClick(); // Réactive le clic sur la carte
+            });
           }
 
+          disableMapClick(); // Désactive le clic sur la carte après sélection
           console.log(`Position sélectionnée: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-        });
+        };
 
-        // Force la mise à jour de la carte après l'initialisation
+        enableMapClick();
+
         setTimeout(() => {
           if (leafletMapRef.current) {
             leafletMapRef.current.invalidateSize();
@@ -197,26 +222,31 @@ const AjouterRapport = () => {
       }
     }
 
-    // Nettoyer la carte au démontage du composant
+    // Nettoyage de la carte au démontage du composant
     return () => {
       if (leafletMapRef.current) {
         leafletMapRef.current.remove();
         leafletMapRef.current = null;
       }
     };
-  }, []);
+  }, []); // Dépendances vides : exécution une seule fois au montage
 
   // Mettre à jour la carte si les coordonnées sont modifiées manuellement
   useEffect(() => {
-    if (mapInitialized && leafletMapRef.current && formData.latitude && formData.longitude) {
+    if (
+      mapInitialized &&
+      leafletMapRef.current &&
+      formData.latitude &&
+      formData.longitude
+    ) {
       const lat = parseFloat(formData.latitude);
       const lng = parseFloat(formData.longitude);
 
       if (!isNaN(lat) && !isNaN(lng)) {
-        // Centrer la carte sur les coordonnées saisies manuellement
+        // Centre la carte sur les coordonnées saisies
         leafletMapRef.current.setView([lat, lng], 12);
 
-        // Mettre à jour ou créer le marqueur
+        // Ajoute ou déplace le marqueur
         if (marker) {
           marker.setLatLng([lat, lng]);
         } else {

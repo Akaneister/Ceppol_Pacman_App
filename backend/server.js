@@ -32,6 +32,7 @@ app.use('/api/rapports', rapportRoutes);
 
 app.use('/api/ressources', ressourceRoutes); // Route pour obtenir les ressources
 
+app.use('/api/lieu', carteRoutes); // Route pour la carte
 
 app.use('/api/viewressources', express.static('ressources'));
 

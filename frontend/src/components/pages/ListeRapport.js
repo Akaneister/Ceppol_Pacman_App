@@ -2,27 +2,33 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../css/ListeRapport.css';
-import {
-  Download,        // Télécharger
-} from 'lucide-react'
-
+import { Download } from 'lucide-react';
 
 import Filtres from './ListeRapport/Filtres';
 import RapportsTable from "./ListeRapport/RapportsTable";
 import DetailsRapport from './ListeRapport/DetailsRapport';
 import GestionAccesModal from './ListeRapport/GestionAccessModal';
 
-
+/**
+ * Composant principal pour la gestion et l'affichage des rapports.
+ * Permet la recherche, le filtrage, la gestion des accès et l'historique.
+ */
 const ListeRapport = () => {
-
+  // =========================
+  // States principaux
+  // =========================
   const [rapports, setRapports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Données pour les filtres
   const [typeEvenements, setTypeEvenements] = useState([]);
   const [sousTypeEvenements, setSousTypeEvenements] = useState([]);
   const [origineEvenements, setOrigineEvenements] = useState([]);
   const [zones, setZones] = useState([]);
-  const [operateurs, setOperateurs] = useState([]); // Liste des opérateurs pour l'attribution d'accès
+  const [operateurs, setOperateurs] = useState([]);
+
+  // Filtres et recherche
   const [filtreActif, setFiltreActif] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtres, setFiltres] = useState({
@@ -34,168 +40,68 @@ const ListeRapport = () => {
     dateFin: '',
     archive: '0'
   });
+
+  // Sélection et affichage
   const [rapportSelectionne, setRapportSelectionne] = useState(null);
   const [afficherHistorique, setAfficherHistorique] = useState(false);
+  const [afficherAjoutHistorique, setAfficherAjoutHistorique] = useState(false);
   const [afficherGestionAcces, setAfficherGestionAcces] = useState(false);
+
+  // Gestion des accès
   const [operateursAvecAcces, setOperateursAvecAcces] = useState([]);
   const [nouvelOperateurAcces, setNouvelOperateurAcces] = useState('');
-  const [historiqueData, setHistoriqueData] = useState(null);
-  // Ajout d'un état pour stocker les droits d'accès
   const [droitsAcces, setDroitsAcces] = useState({});
-  //new
-  const [afficherAjoutHistorique, setAfficherAjoutHistorique] = useState(false);
+
+  // Historique
+  const [historiqueData, setHistoriqueData] = useState(null);
   const [nouvelHistorique, setNouvelHistorique] = useState({
     type_action: '',
     detail_action: ''
   });
 
-  const { authData } = useAuth();
-
-  const modalRef = useRef(null);
-  const accessModalRef = useRef(null);
-  const API_BASE_URL = process.env.REACT_APP_API_URL;
-
-  // Fonction pour charger tous les rapports
-  const fetchRapports = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/rapports`);
-      setRapports(response.data);
-
-      // Charger les droits d'accès pour tous les rapports
-      await fetchDroitsAcces();
-    } catch (err) {
-      console.error("Erreur lors de la récupération des rapports:", err);
-      setError("Une erreur est survenue lors du chargement des rapports.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchHistorique = async (idRapport) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/rapports/historique/${idRapport}`);
-      return response.data;
-    } catch (err) {
-      console.error("Erreur lors de la récupération de l'historique:", err);
-      setError("Une erreur est survenue lors du chargement de l'historique.");
-      return []; // Retourner un tableau vide en cas d'erreur
-    }
-  };
-
-  // Nouvelle fonction pour charger les droits d'accès
-  const fetchDroitsAcces = async () => {
-    try {
-      // Récupérer tous les droits d'accès (ou filtrer par utilisateur si nécessaire)
-      const response = await axios.get(`${API_BASE_URL}/rapports/acces/all`);
-
-      // Organiser les droits d'accès par rapport
-      const droits = {};
-      response.data.forEach(droit => {
-        if (!droits[droit.id_rapport]) {
-          droits[droit.id_rapport] = [];
-        }
-        droits[droit.id_rapport].push(droit.id_operateur);
-      });
-
-      setDroitsAcces(droits);
-    } catch (err) {
-      console.error("Erreur lors de la récupération des droits d'accès:", err);
-    }
-  };
-
-  const telechargerHistorique = async (rapport) => {
-    try {
-      // Charger l'historique du rapport
-      const historique = await fetchHistorique(rapport.id_rapport);
-
-      if (historique && historique.length > 0) {
-        // Définir l'en-tête du fichier texte
-        let txtContent = "Type d'action       | Détails                             | Opérateur         | Date\n";
-        txtContent += "--------------------|-------------------------------------|-------------------|---------------------\n";
-
-        historique.forEach(action => {
-          const operateurNom = getOperateurNom(action.id_operateur);
-          const dateFormatee = formatDate(action.date_action);
-          const detailAction = action.detail_action
-            ? action.detail_action.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
-            : "";
-
-          // Ajuster les longueurs pour aligner le tout (padding à droite)
-          const typeAction = action.type_action.padEnd(20);
-          const details = detailAction.slice(0, 35).padEnd(35);
-          const operateur = operateurNom.padEnd(19);
-          const date = dateFormatee.padEnd(20);
-
-          txtContent += `${typeAction}| ${details}| ${operateur}| ${date}\n`;
-        });
-
-        // Créer un objet Blob avec le contenu texte
-        const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-
-        // Créer un lien pour télécharger le fichier
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `historique_rapport_${rapport.id_rapport}.txt`);
-        link.style.visibility = 'hidden';
-
-        // Ajouter le lien au DOM, cliquer dessus, puis le supprimer
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // Libérer l'URL
-        URL.revokeObjectURL(url);
-      } else {
-        alert("Aucun historique disponible pour ce rapport.");
-      }
-    } catch (error) {
-      console.error("Erreur lors du téléchargement de l'historique :", error);
-      alert("Une erreur est survenue lors du téléchargement de l'historique.");
-    }
-  };
-
-
-
-
-
-
-
-
-  //new 558
+  // UI
   const [filtresOuverts, setFiltresOuverts] = useState(false);
 
-  // Fonction pour basculer l'état des filtres
-  const toggleFiltres = () => {
-    setFiltresOuverts(prevState => !prevState);
-  };
+  // Authentification
+  const { authData } = useAuth();
 
+  // Références pour les modals
+  const modalRef = useRef(null);
+  const accessModalRef = useRef(null);
 
-  // Charger les données au montage du composant
+  // Base URL API
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
+
+  // =========================
+  // Effets de chargement initial
+  // =========================
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Récupération des données principales
+        const [
+          rapportsRes,
+          typeEvRes,
+          sousTypeEvRes,
+          origineEvRes,
+          zonesRes,
+          operateursRes
+        ] = await Promise.all([
+          axios.get(`${API_BASE_URL}/rapports`),
+          axios.get(`${API_BASE_URL}/rapports/type-evenement`),
+          axios.get(`${API_BASE_URL}/rapports/sous-type-pollution`),
+          axios.get(`${API_BASE_URL}/rapports/origine-evenement`),
+          axios.get(`${API_BASE_URL}/rapports/zone-geographique`),
+          axios.get(`${API_BASE_URL}/rapports/operateurs`)
+        ]);
+        setRapports(rapportsRes.data);
+        setTypeEvenements(typeEvRes.data);
+        setSousTypeEvenements(sousTypeEvRes.data);
+        setOrigineEvenements(origineEvRes.data);
+        setZones(zonesRes.data);
+        setOperateurs(operateursRes.data);
 
-        // Récupérer tous les rapports
-        const rapportsResponse = await axios.get(`${API_BASE_URL}/rapports`);
-
-        // Récupérer les données pour les filtres
-        const typeEvenementsResponse = await axios.get(`${API_BASE_URL}/rapports/type-evenement`);
-        const sousTypeEvenementsResponse = await axios.get(`${API_BASE_URL}/rapports/sous-type-pollution`);
-        const origineEvenementsResponse = await axios.get(`${API_BASE_URL}/rapports/origine-evenement`);
-        const zonesResponse = await axios.get(`${API_BASE_URL}/rapports/zone-geographique`);
-        const operateursResponse = await axios.get(`${API_BASE_URL}/rapports/operateurs`);
-
-        setRapports(rapportsResponse.data);
-        setTypeEvenements(typeEvenementsResponse.data);
-        setSousTypeEvenements(sousTypeEvenementsResponse.data);
-        setOrigineEvenements(origineEvenementsResponse.data);
-        setZones(zonesResponse.data);
-        setOperateurs(operateursResponse.data);
-
-        // Charger les droits d'accès
         await fetchDroitsAcces();
       } catch (err) {
         console.error("Erreur lors de la récupération des données:", err);
@@ -204,53 +110,36 @@ const ListeRapport = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  // Fonctions utilitaires pour obtenir les libellés
-  const getTypeEvenementLibelle = (id) => {
-    const type = typeEvenements.find(t => t.id_type_evenement === id);
-    return type ? type.libelle : 'Non défini';
-  };
+  // =========================
+  // Fonctions utilitaires
+  // =========================
 
-  const getSousTypeEvenementLibelle = (id) => {
-    const sousType = sousTypeEvenements.find(st => st.id_sous_type_evenement === id);
-    return sousType ? sousType.libelle : 'Non défini';
-  };
+  // Récupère le libellé d'un type d'événement
+  const getTypeEvenementLibelle = (id) =>
+    typeEvenements.find(t => t.id_type_evenement === id)?.libelle || 'Non défini';
 
-  const getOrigineEvenementLibelle = (id) => {
-    const origine = origineEvenements.find(o => o.id_origine_evenement === id);
-    return origine ? origine.libelle : 'Non défini';
-  };
+  // Récupère le libellé d'un sous-type d'événement
+  const getSousTypeEvenementLibelle = (id) =>
+    sousTypeEvenements.find(st => st.id_sous_type_evenement === id)?.libelle || 'Non défini';
 
-  const getZoneNom = (id) => {
-    const zone = zones.find(z => z.id_zone === id);
-    return zone ? zone.nom_zone : 'Non définie';
-  };
+  // Récupère le libellé d'une origine d'événement
+  const getOrigineEvenementLibelle = (id) =>
+    origineEvenements.find(o => o.id_origine_evenement === id)?.libelle || 'Non défini';
 
+  // Récupère le nom d'une zone
+  const getZoneNom = (id) =>
+    zones.find(z => z.id_zone === id)?.nom_zone || 'Non définie';
+
+  // Récupère le nom complet d'un opérateur
   const getOperateurNom = (id) => {
-    const operateur = operateurs.find(o => o.id_operateur === id);
-    return operateur ? `${operateur.prenom} ${operateur.nom}` : `Opérateur ID ${id}`;
+    const op = operateurs.find(o => o.id_operateur === id);
+    return op ? `${op.prenom} ${op.nom}` : `Opérateur ID ${id}`;
   };
 
-  // Vérifier si l'utilisateur actuel a accès à la modification d'un rapport
-  const userPeutModifier = (rapport) => {
-    if (!authData || !rapport) return false;
-
-    const userId = authData.Opid;
-
-    // Vérifie si l'utilisateur est le créateur
-    if (rapport.id_operateur === userId) {
-      return true;
-    }
-
-    // Vérifie s'il a reçu un accès dans acces_rapport
-    const operateursAvecAcces = droitsAcces[rapport.id_rapport] || [];
-    return operateursAvecAcces.includes(userId);
-  };
-
-
+  // Formate une date en français
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -262,22 +151,75 @@ const ListeRapport = () => {
     });
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  // Vérifie si l'utilisateur courant peut modifier le rapport
+  const userPeutModifier = (rapport) => {
+    if (!authData || !rapport) return false;
+    const userId = authData.Opid;
+    if (rapport.id_operateur === userId) return true;
+    const acces = droitsAcces[rapport.id_rapport] || [];
+    return acces.includes(userId);
   };
 
+  // =========================
+  // Fonctions de gestion API
+  // =========================
+
+  // Récupère tous les droits d'accès
+  const fetchDroitsAcces = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/rapports/acces/all`);
+      const droits = {};
+      res.data.forEach(droit => {
+        if (!droits[droit.id_rapport]) droits[droit.id_rapport] = [];
+        droits[droit.id_rapport].push(droit.id_operateur);
+      });
+      setDroitsAcces(droits);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des droits d'accès:", err);
+    }
+  };
+
+  // Récupère l'historique d'un rapport
+  const fetchHistorique = async (idRapport) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/rapports/historique/${idRapport}`);
+      return res.data;
+    } catch (err) {
+      console.error("Erreur lors de la récupération de l'historique:", err);
+      setError("Une erreur est survenue lors du chargement de l'historique.");
+      return [];
+    }
+  };
+
+  // Récupère tous les rapports (utile pour réinitialiser)
+  const fetchRapports = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/rapports`);
+      setRapports(res.data);
+      await fetchDroitsAcces();
+    } catch (err) {
+      console.error("Erreur lors de la récupération des rapports:", err);
+      setError("Une erreur est survenue lors du chargement des rapports.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =========================
+  // Handlers UI et actions
+  // =========================
+
+  // Gestion de la recherche
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
+
+  // Gestion des filtres
   const handleFiltreChange = (e) => {
     const { name, value } = e.target;
     setFiltres(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleHistoriqueChange = (e) => {
-    const { name, value } = e.target;
-    setNouvelHistorique(prev => ({ ...prev, [name]: value }));
-  };
-
-
-
+  // Réinitialise tous les filtres
   const reinitialiserFiltres = async () => {
     setFiltres({
       type: '',
@@ -289,94 +231,70 @@ const ListeRapport = () => {
     });
     setSearchTerm('');
     setFiltreActif(false);
-
-    // Recharger tous les rapports
     await fetchRapports();
   };
 
+  // Bascule l'affichage des filtres
+  const toggleFiltres = () => setFiltresOuverts(prev => !prev);
+
+  // Gestion du formulaire d'ajout d'historique
+  const handleHistoriqueChange = (e) => {
+    const { name, value } = e.target;
+    setNouvelHistorique(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Ouvre la modal de détails d'un rapport
   const voirDetails = async (rapport) => {
     setRapportSelectionne(rapport);
     setAfficherHistorique(false);
     setAfficherGestionAcces(false);
-
-    // Charger l'historique du rapport sélectionné
-    const historique = await fetchHistorique(rapport.id_rapport);
-    setHistoriqueData(historique);
-
-    // Ouvrir la modal
-    if (modalRef.current) {
-      modalRef.current.classList.add('active');
-    }
+    setHistoriqueData(await fetchHistorique(rapport.id_rapport));
+    modalRef.current?.classList.add('active');
   };
 
-  // Modifier la fonction voirHistorique pour charger immédiatement l'historique
+  // Ouvre la modal d'historique d'un rapport
   const voirHistorique = async (rapport) => {
     setRapportSelectionne(rapport);
     setAfficherHistorique(true);
     setAfficherGestionAcces(false);
-
-    try {
-      // Charger l'historique dès qu'on clique sur le bouton
-      const historique = await fetchHistorique(rapport.id_rapport);
-      setHistoriqueData(historique);
-    } catch (err) {
-      console.error("Erreur lors du chargement de l'historique:", err);
-    }
-
-    // Ouvrir la modal
-    if (modalRef.current) {
-      modalRef.current.classList.add('active');
-    }
+    setHistoriqueData(await fetchHistorique(rapport.id_rapport));
+    modalRef.current?.classList.add('active');
   };
 
-  const fermerModal = () => {
-    if (modalRef.current) {
-      modalRef.current.classList.remove('active');
-    }
-  };
+  // Ferme la modal principale
+  const fermerModal = () => modalRef.current?.classList.remove('active');
 
-  // Nouvelles fonctions pour la gestion des accès
+  // Ouvre la modal de gestion des accès
   const ouvrirGestionAcces = async (rapport) => {
     setRapportSelectionne(rapport);
-
     try {
-      // Récupérer la liste des opérateurs ayant accès au rapport
-      const response = await axios.get(`${API_BASE_URL}/rapports/${rapport.id_rapport}/acces`);
-      setOperateursAvecAcces(response.data);
-
+      const res = await axios.get(`${API_BASE_URL}/rapports/${rapport.id_rapport}/acces`);
+      setOperateursAvecAcces(res.data);
       setAfficherGestionAcces(true);
-
-      // Ouvrir la modal
-      if (accessModalRef.current) {
-        accessModalRef.current.classList.add('active');
-      }
+      accessModalRef.current?.classList.add('active');
     } catch (err) {
       console.error("Erreur lors de la récupération des accès:", err);
       setError("Une erreur est survenue lors du chargement des accès.");
     }
   };
 
+  // Ferme la modal de gestion des accès
   const fermerGestionAcces = () => {
-    if (accessModalRef.current) {
-      accessModalRef.current.classList.remove('active');
-    }
+    accessModalRef.current?.classList.remove('active');
     setNouvelOperateurAcces('');
   };
 
-  const handleNouvelOperateurChange = (e) => {
-    setNouvelOperateurAcces(e.target.value);
-  };
+  // Gestion du champ opérateur à ajouter
+  const handleNouvelOperateurChange = (e) => setNouvelOperateurAcces(e.target.value);
 
+  // Ajoute un accès opérateur à un rapport
   const ajouterAccesOperateur = async () => {
     if (!nouvelOperateurAcces || !rapportSelectionne) return;
-
     try {
       await axios.post(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`, {
         id_operateur: nouvelOperateurAcces,
-        peut_modifier: true  // Définir à true pour permettre la modification
+        peut_modifier: true
       });
-
-      // Ajouter une entrée dans l'historique
       await axios.post(`${API_BASE_URL}/rapports/historique`, {
         id_rapport: rapportSelectionne.id_rapport,
         id_operateur: nouvelOperateurAcces,
@@ -384,15 +302,9 @@ const ListeRapport = () => {
         date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
         detail_action: ''
       });
-
-
-      // Rafraîchir la liste des opérateurs avec accès
-      const response = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
-      setOperateursAvecAcces(response.data);
-
-      // Mettre à jour les droits d'accès globaux
+      const res = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
+      setOperateursAvecAcces(res.data);
       await fetchDroitsAcces();
-
       setNouvelOperateurAcces('');
     } catch (err) {
       console.error("Erreur lors de l'ajout d'accès:", err);
@@ -400,6 +312,27 @@ const ListeRapport = () => {
     }
   };
 
+  // Retire un accès opérateur d'un rapport
+  const retirerAccesOperateur = async (idOperateur) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces/${idOperateur}`);
+      const res = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
+      setOperateursAvecAcces(res.data);
+      await axios.post(`${API_BASE_URL}/rapports/historique`, {
+        id_rapport: rapportSelectionne.id_rapport,
+        id_operateur: idOperateur,
+        type_action: 'RETRAIT_D_ACCES',
+        date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        detail_action: ''
+      });
+      await fetchDroitsAcces();
+    } catch (err) {
+      console.error("Erreur lors du retrait d'accès:", err);
+      setError("Une erreur est survenue lors du retrait d'accès.");
+    }
+  };
+
+  // Ajoute un historique manuel à un rapport
   const ajouterHistoriqueManuel = async () => {
     try {
       await axios.post(`${API_BASE_URL}/rapports/historique`, {
@@ -409,18 +342,8 @@ const ListeRapport = () => {
         date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
         detail_action: nouvelHistorique.detail_action
       });
-
-      // Recharger l'historique après l'ajout
-      const historique = await fetchHistorique(rapportSelectionne.id_rapport);
-      setHistoriqueData(historique);
-
-      // Réinitialiser le formulaire
-      setNouvelHistorique({
-        type_action: '',
-        detail_action: ''
-      });
-
-      // Revenir à l'affichage de l'historique
+      setHistoriqueData(await fetchHistorique(rapportSelectionne.id_rapport));
+      setNouvelHistorique({ type_action: '', detail_action: '' });
       setAfficherAjoutHistorique(false);
       setAfficherHistorique(true);
     } catch (err) {
@@ -429,49 +352,62 @@ const ListeRapport = () => {
     }
   };
 
-  const retirerAccesOperateur = async (idOperateur) => {
-    try {
-      await axios.delete(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces/${idOperateur}`);
-
-      // Rafraîchir la liste des opérateurs avec accès
-      const response = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
-      setOperateursAvecAcces(response.data);
-
-      // Ajouter une entrée dans l'historique
-      await axios.post(`${API_BASE_URL}/rapports/historique`, {
-        id_rapport: rapportSelectionne.id_rapport,
-        id_operateur: idOperateur,
-        type_action: 'RETRAIT_D_ACCES',
-        date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
-        detail_action: ''
-      });
-
-
-      // Mettre à jour les droits d'accès globaux
-      await fetchDroitsAcces();
-    } catch (err) {
-      console.error("Erreur lors du retrait d'accès:", err);
-      setError("Une erreur est survenue lors du retrait d'accès.");
-    }
-  };
-
-  // Rediriger vers la page de modification du rapport
+  // Redirige vers la page de modification du rapport
   const modifierRapport = (idRapport) => {
     window.location.href = `/modifier-rapport/${idRapport}`;
   };
 
-  // Filtrer les rapports en fonction du terme de recherche
+  // Télécharge l'historique d'un rapport au format texte
+  const telechargerHistorique = async (rapport) => {
+    try {
+      const historique = await fetchHistorique(rapport.id_rapport);
+      if (historique && historique.length > 0) {
+        let txtContent = "Type d'action       | Détails                             | Opérateur         | Date\n";
+        txtContent += "--------------------|-------------------------------------|-------------------|---------------------\n";
+        historique.forEach(action => {
+          const operateurNom = getOperateurNom(action.id_operateur);
+          const dateFormatee = formatDate(action.date_action);
+          const detailAction = action.detail_action
+            ? action.detail_action.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
+            : "";
+          const typeAction = action.type_action.padEnd(20);
+          const details = detailAction.slice(0, 35).padEnd(35);
+          const operateur = operateurNom.padEnd(19);
+          const date = dateFormatee.padEnd(20);
+          txtContent += `${typeAction}| ${details}| ${operateur}| ${date}\n`;
+        });
+        const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `historique_rapport_${rapport.id_rapport}.txt`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        alert("Aucun historique disponible pour ce rapport.");
+      }
+    } catch (error) {
+      console.error("Erreur lors du téléchargement de l'historique :", error);
+      alert("Une erreur est survenue lors du téléchargement de l'historique.");
+    }
+  };
+
+  // =========================
+  // Filtrage des rapports
+  // =========================
   const rapportsFiltres = rapports.filter(rapport => {
     const correspond = (
-      (!filtres.type || rapport.id_type_evenement === filtres.type) &&
-      (!filtres.sousType || rapport.id_sous_type_evenement === filtres.sousType) &&
-      (!filtres.origine || rapport.id_origine_evenement === filtres.origine) &&
-      (!filtres.zone || rapport.id_zone === filtres.zone) &&
+      (!filtres.type || rapport.id_type_evenement === Number(filtres.type)) &&
+      (!filtres.sousType || rapport.id_sous_type_evenement === Number(filtres.sousType)) &&
+      (!filtres.origine || rapport.id_origine_evenement === Number(filtres.origine)) &&
+      (!filtres.zone || rapport.id_zone === Number(filtres.zone)) &&
       (!filtres.dateDebut || new Date(rapport.date_evenement) >= new Date(filtres.dateDebut)) &&
       (!filtres.dateFin || new Date(rapport.date_evenement) <= new Date(filtres.dateFin)) &&
       (!filtres.archive || rapport.archive == filtres.archive)
     );
-
     const rechercheTexte = searchTerm
       ? (
         rapport.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -481,13 +417,12 @@ const ListeRapport = () => {
         getOrigineEvenementLibelle(rapport.id_origine_evenement).toLowerCase().includes(searchTerm.toLowerCase())
       )
       : true;
-
     return correspond && rechercheTexte;
   });
 
-
-
-
+  // =========================
+  // Rendu du composant
+  // =========================
   return (
     <div className="liste-rapport-container">
       <h1>Liste des Rapports</h1>
@@ -611,7 +546,7 @@ const ListeRapport = () => {
                     getSousTypeEvenementLibelle={getSousTypeEvenementLibelle}
                     getOrigineEvenementLibelle={getOrigineEvenementLibelle}
                     getZoneNom={getZoneNom}
-                    historique={historiqueData} // <-- Ajout ici
+                    historique={historiqueData}
                   />
                 )}
               </>
@@ -624,8 +559,7 @@ const ListeRapport = () => {
                 onClick={async () => {
                   setAfficherHistorique(true);
                   setAfficherAjoutHistorique(false);
-                  const historique = await fetchHistorique(rapportSelectionne.id_rapport);
-                  setHistoriqueData(historique);
+                  setHistoriqueData(await fetchHistorique(rapportSelectionne.id_rapport));
                 }}
               >
                 Voir l'historique

@@ -42,16 +42,16 @@ const DetailsRapport = ({
   // Fonction pour charger les détails complets du rapport
   const loadDetailedRapport = async (rapportId) => {
     if (!rapportId) return;
-    
+
     setLoading(true);
     try {
       const response = await axios.get(`${API}/rapports/${rapportId}`);
       const rapportData = response.data.rapport || response.data;
       const metaData = response.data.metaData || {};
-      
+
       console.log('📄 Données détaillées du rapport :', rapportData);
       console.log('📄 MetaData associées :', metaData);
-      
+
       setDetailedRapport({ ...rapportData, metaData });
     } catch (error) {
       console.error('Erreur lors du chargement des détails du rapport:', error);
@@ -86,81 +86,84 @@ const DetailsRapport = ({
     const rapport = detailedRapport || rapportSelectionne;
     const latitude = detailedRapport?.metaData?.localisation?.latitude || rapportSelectionne?.latitude;
     const longitude = detailedRapport?.metaData?.localisation?.longitude || rapportSelectionne?.longitude;
-    
-    return latitude && longitude && 
-           !isNaN(parseFloat(latitude)) && 
-           !isNaN(parseFloat(longitude)) &&
-           latitude !== "Non définie" && 
-           longitude !== "Non définie";
+
+    return latitude && longitude &&
+      !isNaN(parseFloat(latitude)) &&
+      !isNaN(parseFloat(longitude)) &&
+      latitude !== "Non définie" &&
+      longitude !== "Non définie";
   };
 
   useEffect(() => {
-    let isMounted = true;
-    async function initMap() {
-      if (!hasValidCoordinates()) return;
+  let isMounted = true;
+  
+  async function initMap() {
+    if (!hasValidCoordinates() || !mapRef.current || !expandedSections.localisation) return;
+    
+    // Attendre que l'animation d'ouverture soit terminée
+    await new Promise(resolve => setTimeout(resolve, 350));
+    
+    if (!isMounted) return;
+    
+    try {
+      await loadLeaflet();
+      if (!isMounted || !mapRef.current) return;
       
-      const rapport = detailedRapport || rapportSelectionne;
-      const latitude = detailedRapport?.metaData?.localisation?.latitude || rapportSelectionne?.latitude;
-      const longitude = detailedRapport?.metaData?.localisation?.longitude || rapportSelectionne?.longitude;
-      
-      if (mapRef.current && rapport) {
-        await loadLeaflet();
-        if (!isMounted) return;
-        
-        if (leafletMapRef.current) {
-          leafletMapRef.current.remove();
-        }
-        
-        const lat = parseFloat(latitude);
-        const lng = parseFloat(longitude);
-        
-        setTimeout(() => {
-          if (!isMounted || !mapRef.current) return;
-          
-          leafletMapRef.current = window.L.map(mapRef.current, { 
-            zoomControl: false, 
-            dragging: false, 
-            scrollWheelZoom: false, 
-            doubleClickZoom: false, 
-            boxZoom: false, 
-            keyboard: false, 
-            tap: false, 
-            touchZoom: false 
-          }).setView([lat, lng], 10);
-          
-          window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 18
-          }).addTo(leafletMapRef.current);
-          
-          window.L.marker([lat, lng]).addTo(leafletMapRef.current);
-          
-          leafletMapRef.current.dragging.disable();
-          leafletMapRef.current.touchZoom.disable();
-          leafletMapRef.current.doubleClickZoom.disable();
-          leafletMapRef.current.scrollWheelZoom.disable();
-          leafletMapRef.current.boxZoom.disable();
-          leafletMapRef.current.keyboard.disable();
-          if (leafletMapRef.current.tap) leafletMapRef.current.tap.disable();
-          
-          setTimeout(() => {
-            if (leafletMapRef.current && isMounted) {
-              leafletMapRef.current.invalidateSize();
-            }
-          }, 100);
-          
-        }, 100);
-      }
-    }
-    initMap();
-    return () => {
-      isMounted = false;
+      // Nettoyer la carte existante
       if (leafletMapRef.current) {
         leafletMapRef.current.remove();
         leafletMapRef.current = null;
       }
-    };
-  }, [detailedRapport, rapportSelectionne]);
+      
+      const latitude = detailedRapport?.metaData?.localisation?.latitude || rapportSelectionne?.latitude;
+      const longitude = detailedRapport?.metaData?.localisation?.longitude || rapportSelectionne?.longitude;
+      
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      
+      if (isNaN(lat) || isNaN(lng)) return;
+      
+      // Vérifier les dimensions du conteneur
+      const rect = mapRef.current.getBoundingClientRect();
+      console.log('Dimensions du conteneur:', rect);
+      
+      if (rect.height === 0) {
+        console.warn('Conteneur toujours sans hauteur');
+        return;
+      }
+      
+      leafletMapRef.current = window.L.map(mapRef.current).setView([lat, lng], 10);
+      
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(leafletMapRef.current);
+      
+      window.L.marker([lat, lng]).addTo(leafletMapRef.current);
+      
+      // Désactiver les interactions
+      leafletMapRef.current.dragging.disable();
+      leafletMapRef.current.touchZoom.disable();
+      leafletMapRef.current.doubleClickZoom.disable();
+      leafletMapRef.current.scrollWheelZoom.disable();
+      leafletMapRef.current.boxZoom.disable();
+      leafletMapRef.current.keyboard.disable();
+      if (leafletMapRef.current.tap) leafletMapRef.current.tap.disable();
+      
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation de la carte:', error);
+    }
+  }
+  
+  initMap();
+  
+  return () => {
+    isMounted = false;
+    if (leafletMapRef.current) {
+      leafletMapRef.current.remove();
+      leafletMapRef.current = null;
+    }
+  };
+}, [detailedRapport, rapportSelectionne, expandedSections.localisation]);
 
   // Fonction pour obtenir l'icône de statut
   const getStatusIcon = (value) => {
@@ -360,8 +363,8 @@ const DetailsRapport = ({
                 <div className="info-card">
                   <span className="info-label">Coordonnées</span>
                   <span className="info-value coordinates">
-                    {hasValidCoordinates() ? 
-                      `${metaData.localisation?.latitude || rapport.latitude}, ${metaData.localisation?.longitude || rapport.longitude}` : 
+                    {hasValidCoordinates() ?
+                      `${metaData.localisation?.latitude || rapport.latitude}, ${metaData.localisation?.longitude || rapport.longitude}` :
                       "Non définies"
                     }
                   </span>
@@ -473,7 +476,7 @@ const DetailsRapport = ({
                   {getStatusIcon((metaData.alertes?.bsaa === 1 || rapport.bsaa) ? "Oui" : "Non")}
                 </div>
               </div>
-              
+
               {/* Informations supplémentaires sur les moyens */}
               <div className="moyens-section">
                 <h5>Moyens et risques</h5>

@@ -55,9 +55,60 @@ const Carte = () => {
     if (!mapRef.current && mapContainerRef.current) {
       mapRef.current = L.map(mapContainerRef.current).setView([43.3, 5.4], 10); // Centrer la carte
 
-      // Ajouter la couche de tuiles OpenStreetMap
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      // Carte marine principale - représente les éléments indispensables à la navigation maritime
+      // En adéquation avec la signalisation maritime, elle permet de se situer et de se diriger
+      const carteMarineBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; <a href="https://www.esri.com/">Esri</a> - Carte Marine de Navigation',
+        maxZoom: 16
+      });
+
+      // Couche de signalisation maritime (balises, phares, bouées, amers)
+      const signalisationMaritime = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+        attribution: 'Signalisation Maritime &copy; <a href="http://www.openseamap.org">OpenSeaMap</a>',
+        maxZoom: 18,
+        opacity: 0.8
+      });
+
+      // Couche bathymétrique (profondeurs et sondes)
+      const bathymetrie = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Bathymétrie &copy; <a href="https://www.esri.com/">Esri</a>',
+        maxZoom: 16,
+        opacity: 0.7
+      });
+
+      // Ajouter les couches essentielles à la navigation
+      carteMarineBase.addTo(mapRef.current);
+      signalisationMaritime.addTo(mapRef.current);
+      bathymetrie.addTo(mapRef.current);
+
+      // Contrôles de navigation maritime
+      const couchesNavigation = {
+        "Carte Marine Base": carteMarineBase,
+        "Carte Océanique": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
+          maxZoom: 16
+        })
+      };
+
+      const elementsNavigation = {
+        "Signalisation Maritime": signalisationMaritime,
+        "Bathymétrie & Sondes": bathymetrie,
+        "Amers & Repères": L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenSeaMap',
+          maxZoom: 18
+        })
+      };
+
+      L.control.layers(couchesNavigation, elementsNavigation, {
+        position: 'topright',
+        collapsed: false
+      }).addTo(mapRef.current);
+
+      // Ajouter une échelle nautique
+      L.control.scale({
+        metric: true,
+        imperial: false,
+        position: 'bottomleft'
       }).addTo(mapRef.current);
     }
 
@@ -104,29 +155,57 @@ const Carte = () => {
           return;
         }
 
-        const marker = L.marker([parseFloat(lat), parseFloat(lng)]).addTo(mapRef.current);
-
-        // Créer le contenu du popup avec les détails des lieux et les titres des rapports
-        let popupContent = '<b>Détails du lieu:</b><br/>';
-
-        // Ajouter les détails du lieu et le titre du rapport associé pour chaque lieu à cette coordonnée
-        lieuxAtCoord.forEach(lieu => {
-          popupContent += `<div style="margin-bottom: 10px;">`;
-          popupContent += `<b>${lieu.details_lieu || 'Sans détails'}</b><br/>`;
-
-          // Ajouter le titre du rapport si disponible
-          const rapportTitre = rapportTitres[lieu.id_rapport];
-          if (rapportTitre) {
-            popupContent += `Rapport: ${rapportTitre}<br/>`;
-          } else {
-            popupContent += `Rapport ID: ${lieu.id_rapport}<br/>`;
-          }
-
-          popupContent += `ID Lieu: ${lieu.id_lieu}<br/>`;
-          popupContent += `</div>`;
+        // Utiliser une icône de navigation maritime conforme à la signalisation
+        const iconeNavigation = L.divIcon({
+          className: 'marqueur-navigation-maritime',
+          html: `<div style="
+            background: linear-gradient(45deg, #ffffff, #e3f2fd);
+            border: 3px solid #1565c0;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 8px rgba(21,101,192,0.4);
+            font-size: 14px;
+            font-weight: bold;
+            color: #1565c0;
+          ">⚓</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
         });
 
-        popupContent += `<br/>Latitude: ${lat}<br/>Longitude: ${lng}`;
+        const marker = L.marker([parseFloat(lat), parseFloat(lng)], {icon: iconeNavigation}).addTo(mapRef.current);
+
+        // Créer le contenu du popup avec informations de navigation maritime
+        let popupContent = `
+          <div>
+            <strong>POSITION DE NAVIGATION</strong>
+            <div>
+              <strong>Coordonnées :</strong>
+              <ul>
+                <li>Lat: ${parseFloat(lat).toFixed(4)}°</li>
+                <li>Lon: ${parseFloat(lng).toFixed(4)}°</li>
+              </ul>
+            </div>
+            <div>
+              <strong>Points d'intérêt maritime :</strong>
+              <ul>
+                ${lieuxAtCoord.map(lieu => `
+                  <li>
+                    ${lieu.details_lieu || 'Position non définie'}<br/>
+                    Rapport: ${rapportTitres[lieu.id_rapport] || `Réf. ${lieu.id_rapport}`}<br/>
+                    ID: ${lieu.id_lieu}<br/>
+                    <button onclick="window.location.href='/rapport/${lieu.id_rapport}'" style="margin-top:4px;padding:2px 8px;font-size:13px;cursor:pointer;">
+                      Visualiser le rapport
+                    </button>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          </div>
+        `;
 
         marker.bindPopup(popupContent);
 
@@ -141,11 +220,13 @@ const Carte = () => {
   }, [lieux, rapportTitres, pointActuel]);
 
   return (
-    <div>
-      <h2>Carte des lieux</h2>
-      <div 
-        ref={mapContainerRef} 
-        style={{ height: '600px', width: '100%', marginBottom: '10px' }}
+    <div className="page-carte">
+      <div className="carte-header">
+        <h2>Carte Marine </h2>
+      </div>
+      <div
+        ref={mapContainerRef}
+        className="map-container"
       />
     </div>
   );

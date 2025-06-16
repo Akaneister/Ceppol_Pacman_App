@@ -166,7 +166,8 @@
 .operator-item {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: #001f3f;
+
   padding: 2%;
   border-left: 5px solid #001f3f;
   border-radius: 8px;
@@ -175,10 +176,11 @@
   margin-right: 4%;
   margin-bottom: 10px;
   transition: background 0.2s;
+  
 }
 
 .operator-item:hover {
-  background: #f0f4ff;
+  background: linear-gradient(to right, #001f3f7f, #f0f4ff);
 }
 
 .operator-info {
@@ -190,13 +192,13 @@
 
 .operator-name {
   font-weight: bold;
-  color: #0a1a2f;
+  color: #ffffff;
   font-size: 1.05rem;
 }
 
 .operator-meta {
   font-size: 0.92rem;
-  color: #555;
+  color: #ffffff;
 }
 
 .operator-actions {

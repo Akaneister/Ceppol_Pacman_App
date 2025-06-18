@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 const GestionAccesModal = ({
   accessModalRef,
@@ -20,6 +20,17 @@ const GestionAccesModal = ({
   fetchHistorique,
   setHistoriqueData,
 }) => {
+  useEffect(() => {
+    if (accessModalRef?.current) {
+      accessModalRef.current.classList.add('active');
+    }
+    return () => {
+      if (accessModalRef?.current) {
+        accessModalRef.current.classList.remove('active');
+      }
+    };
+  }, [accessModalRef, rapportSelectionne]);
+
   if (!rapportSelectionne) return null;
 
   return (

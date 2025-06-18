@@ -263,18 +263,23 @@ const ListeRapport = () => {
   };
 
   // Ferme la modal principale
-  const fermerModal = () => modalRef.current?.classList.remove('active');
+  const fermerModal = () => {
+    setRapportSelectionne(null);
+    setAfficherHistorique(false);
+    setAfficherAjoutHistorique(false);
+    setAfficherGestionAcces(false);
+    setHistoriqueData(null);
+  };
 
   // Ouvre la modal de gestion des accès
   const ouvrirGestionAcces = async (rapport) => {
-    setRapportSelectionne(rapport);
+    setRapportSelectionne(rapport); // Toujours en premier
     try {
       const res = await axios.get(`${API_BASE_URL}/rapports/${rapport.id_rapport}/acces`);
       setOperateursAvecAcces(res.data);
       setAfficherGestionAcces(true);
       accessModalRef.current?.classList.add('active');
     } catch (err) {
-      console.error("Erreur lors de la récupération des accès:", err);
       setError("Une erreur est survenue lors du chargement des accès.");
     }
   };
@@ -431,21 +436,12 @@ const ListeRapport = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <motion.h1
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
+      <h1>
         Liste des Rapports
-      </motion.h1>
+      </h1>
 
       {/* Barre de recherche */}
-      <motion.div
-        className="search-container"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-      >
+      <div className="search-container">
         <input
           type="text"
           placeholder="Rechercher un rapport..."
@@ -456,14 +452,10 @@ const ListeRapport = () => {
         <button className="btn btn-primary search-btn">
           <i className="search-icon">🔍</i>
         </button>
-      </motion.div>
+      </div>
 
       {/* Filtres */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-      >
+      <div>
         <Filtres
           filtres={filtres}
           handleFiltreChange={handleFiltreChange}
@@ -476,14 +468,10 @@ const ListeRapport = () => {
           origineEvenements={origineEvenements}
           zones={zones}
         />
-      </motion.div>
+      </div>
 
       {/* Liste des rapports */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-      >
+      <div>
         <RapportsTable
           loading={loading}
           error={error}
@@ -500,7 +488,7 @@ const ListeRapport = () => {
           authData={authData}
           ouvrirGestionAcces={ouvrirGestionAcces}
         />
-      </motion.div>
+      </div>
 
       {/* Modal pour détails et historique */}
       <AnimatePresence>
@@ -512,15 +500,8 @@ const ListeRapport = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.4 }}
-            style={{ display: 'block' }}
           >
-            <motion.div
-              className="modal-content"
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
-              transition={{ duration: 0.4 }}
-            >
+            <div className="modal-content">
               <div className="modal-header">
                 <h2>
                   {afficherHistorique
@@ -540,18 +521,15 @@ const ListeRapport = () => {
                         {historiqueData ? (
                           historiqueData.length > 0 ? (
                             historiqueData.map((action, index) => (
-                              <motion.div
+                              <div
                                 key={index}
                                 className="historique-item"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.1 * index }}
                               >
                                 <p><strong>Action:</strong> {action.type_action}</p>
                                 <p><strong>Détails:</strong> {action.detail_action}</p>
                                 <p><strong>Opérateur:</strong> {getOperateurNom(action.id_operateur)}</p>
                                 <p><strong>Date:</strong> {formatDate(action.date_action)}</p>
-                              </motion.div>
+                              </div>
                             ))
                           ) : (
                             <p>Aucun historique disponible.</p>
@@ -561,12 +539,7 @@ const ListeRapport = () => {
                         )}
                       </div>
                     ) : afficherAjoutHistorique ? (
-                      <motion.div
-                        className="ajout-historique-form"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.4 }}
-                      >
+                      <div className="ajout-historique-form">
                         <h3>Ajouter un élément d'historique</h3>
                         <div className="form-group">
                           <label htmlFor="type_action">Type d'action:</label>
@@ -592,7 +565,7 @@ const ListeRapport = () => {
                             placeholder="Décrivez l'action ou l'observation en détail..."
                           ></textarea>
                         </div>
-                      </motion.div>
+                      </div>
                     ) : (
                       <DetailsRapport
                         rapportSelectionne={rapportSelectionne}
@@ -670,32 +643,34 @@ const ListeRapport = () => {
                 )}
                 <button className="btn btn-primary" onClick={fermerModal}>Fermer</button>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Modal pour la gestion des accès */}
-      <GestionAccesModal
-        accessModalRef={accessModalRef}
-        rapportSelectionne={rapportSelectionne}
-        operateurs={operateurs}
-        operateursAvecAcces={operateursAvecAcces}
-        nouvelOperateurAcces={nouvelOperateurAcces}
-        handleNouvelOperateurChange={handleNouvelOperateurChange}
-        ajouterAccesOperateur={ajouterAccesOperateur}
-        retirerAccesOperateur={retirerAccesOperateur}
-        fermerGestionAcces={fermerGestionAcces}
-        afficherAjoutHistorique={afficherAjoutHistorique}
-        afficherHistorique={afficherHistorique}
-        setAfficherAjoutHistorique={setAfficherAjoutHistorique}
-        setAfficherHistorique={setAfficherHistorique}
-        nouvelHistorique={nouvelHistorique}
-        handleHistoriqueChange={handleHistoriqueChange}
-        ajouterHistoriqueManuel={ajouterHistoriqueManuel}
-        fetchHistorique={fetchHistorique}
-        setHistoriqueData={setHistoriqueData}
-      />
+      {afficherGestionAcces && (
+        <GestionAccesModal
+          accessModalRef={accessModalRef}
+          rapportSelectionne={rapportSelectionne}
+          operateurs={operateurs}
+          operateursAvecAcces={operateursAvecAcces}
+          nouvelOperateurAcces={nouvelOperateurAcces}
+          handleNouvelOperateurChange={handleNouvelOperateurChange}
+          ajouterAccesOperateur={ajouterAccesOperateur}
+          retirerAccesOperateur={retirerAccesOperateur}
+          fermerGestionAcces={fermerGestionAcces}
+          afficherAjoutHistorique={afficherAjoutHistorique}
+          afficherHistorique={afficherHistorique}
+          setAfficherAjoutHistorique={setAfficherAjoutHistorique}
+          setAfficherHistorique={setAfficherHistorique}
+          nouvelHistorique={nouvelHistorique}
+          handleHistoriqueChange={handleHistoriqueChange}
+          ajouterHistoriqueManuel={ajouterHistoriqueManuel}
+          fetchHistorique={fetchHistorique}
+          setHistoriqueData={setHistoriqueData}
+        />
+      )}
     </motion.div>
   );
 };

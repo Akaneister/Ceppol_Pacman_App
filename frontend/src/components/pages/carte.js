@@ -19,6 +19,8 @@ const Carte = () => {
   const mapContainerRef = useRef(null); // Référence pour le container de la carte
   const [pointActuel, setPointActuel] = useState(null);
   const markerRefs = useRef([]); // Ajoutez ceci en haut du composant Carte
+  const gifOverlayRef = useRef(null); // Ajoutez ceci pour gérer l'overlay GIF
+  const [pendingGif, setPendingGif] = useState(null); // Ajouté pour stocker le GIF temporairement
 
   const API_BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -32,6 +34,73 @@ const Carte = () => {
       console.error('Erreur lors de la récupération des lieux:', error);
     }
   };
+
+  // Gère la sélection d'un fichier GIF par l'utilisateur
+  const handleGifUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file || !file.name.endsWith('.gif')) return;
+
+    // Utilise FileReader pour lire le fichier GIF en base64
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      setPendingGif(e.target.result); // Stocke le GIF en attente de validation
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Valide et superpose le GIF sur la carte Leaflet
+  // Variables pour ajuster la position et l'étirement du GIF
+  const decalageX = 0.622; // Décalage horizontal (axe X)
+  const decalageY = 0.060; // Décalage vertical (axe Y)
+  const etirementX = 0.60; // Étirement horizontal (largeur)
+  const etirementY = 0.66; // Étirement vertical (hauteur)
+
+  const handleValidateGif = () => {
+    if (!pendingGif || !mapRef.current) return;
+
+    const img = new Image();
+    img.onload = () => {
+      const imageRatio = img.height / img.width;
+
+      // Calcul des coordonnées avec variables
+      const west = -2.18 - etirementX + decalageX;
+      const east = -0.7 + decalageX;
+      const widthDeg = east - west;
+
+      // Hauteur ajustée avec facteur d'étirement vertical
+      const heightDeg = widthDeg * imageRatio * etirementY;
+
+      // Centre vertical ajusté avec variable decalageY
+      let centerLat = 49.87 + decalageY;
+
+      const south = centerLat - heightDeg / 2;
+      const north = centerLat + heightDeg / 2;
+
+      const bounds = [
+        [south, west],
+        [north, east]
+      ];
+
+      // Supprime l’ancien overlay s’il existe
+      if (gifOverlayRef.current) {
+        mapRef.current.removeLayer(gifOverlayRef.current);
+        gifOverlayRef.current = null;
+      }
+
+      const overlay = L.imageOverlay(pendingGif, bounds, {
+        opacity: 0.7,
+        interactive: false
+      });
+      overlay.addTo(mapRef.current);
+      gifOverlayRef.current = overlay;
+
+      setPendingGif(null);
+    };
+
+    img.src = pendingGif;
+  };
+
+
 
   // Fonction pour récupérer les titres des rapports
   const fetchRapportTitres = async () => {
@@ -75,7 +144,7 @@ const Carte = () => {
         }
       );
 
-      mapRef.current = L.map(mapContainerRef.current).setView([43.3, 5.4], 10);
+      mapRef.current = L.map(mapContainerRef.current).setView([48.2, -3.5], 8); // Bretagne
       baseLayer.addTo(mapRef.current);
 
       // Contrôles de navigation maritime (optionnel)
@@ -160,7 +229,7 @@ const Carte = () => {
           iconAnchor: [15, 15]
         });
 
-        const marker = L.marker([parseFloat(lat), parseFloat(lng)], {icon: iconeNavigation}).addTo(mapRef.current);
+        const marker = L.marker([parseFloat(lat), parseFloat(lng)], { icon: iconeNavigation }).addTo(mapRef.current);
 
         // Créer le contenu du popup avec informations de navigation maritime
         let popupContent = `
@@ -208,10 +277,27 @@ const Carte = () => {
       <div className="carte-header">
         <h2>Carte Marine </h2>
       </div>
+      <input
+        type="file"
+        accept="image/gif"
+        onChange={handleGifUpload}
+        style={{ margin: '1em 0' }}
+      />
+
+      {pendingGif && (
+        <div style={{ margin: '1em 0' }}>
+          <span>GIF prêt à être superposé.</span>
+          <button onClick={handleValidateGif} style={{ marginLeft: 10 }}>
+            Valider
+          </button>
+        </div>
+      )}
       <div
         ref={mapContainerRef}
         className="map-container"
       />
+
+
     </div>
   );
 };

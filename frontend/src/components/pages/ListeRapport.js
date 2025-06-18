@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../css/ListeRapport.css';
 import { Download } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import Filtres from './ListeRapport/Filtres';
 import RapportsTable from "./ListeRapport/RapportsTable";
@@ -424,11 +425,27 @@ const ListeRapport = () => {
   // Rendu du composant
   // =========================
   return (
-    <div className="liste-rapport-container">
-      <h1>Liste des Rapports</h1>
+    <motion.div
+      className="liste-rapport-container"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        Liste des Rapports
+      </motion.h1>
 
       {/* Barre de recherche */}
-      <div className="search-container">
+      <motion.div
+        className="search-container"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
         <input
           type="text"
           placeholder="Rechercher un rapport..."
@@ -439,183 +456,224 @@ const ListeRapport = () => {
         <button className="btn btn-primary search-btn">
           <i className="search-icon">🔍</i>
         </button>
-      </div>
+      </motion.div>
 
       {/* Filtres */}
-      <Filtres
-        filtres={filtres}
-        handleFiltreChange={handleFiltreChange}
-        toggleFiltres={toggleFiltres}
-        filtresOuverts={filtresOuverts}
-        reinitialiserFiltres={reinitialiserFiltres}
-        filtreActif={filtreActif}
-        typeEvenements={typeEvenements}
-        sousTypeEvenements={sousTypeEvenements}
-        origineEvenements={origineEvenements}
-        zones={zones}
-      />
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <Filtres
+          filtres={filtres}
+          handleFiltreChange={handleFiltreChange}
+          toggleFiltres={toggleFiltres}
+          filtresOuverts={filtresOuverts}
+          reinitialiserFiltres={reinitialiserFiltres}
+          filtreActif={filtreActif}
+          typeEvenements={typeEvenements}
+          sousTypeEvenements={sousTypeEvenements}
+          origineEvenements={origineEvenements}
+          zones={zones}
+        />
+      </motion.div>
 
       {/* Liste des rapports */}
-      <RapportsTable
-        loading={loading}
-        error={error}
-        rapportsFiltres={rapportsFiltres}
-        getTypeEvenementLibelle={getTypeEvenementLibelle}
-        getSousTypeEvenementLibelle={getSousTypeEvenementLibelle}
-        getOrigineEvenementLibelle={getOrigineEvenementLibelle}
-        formatDate={formatDate}
-        getOperateurNom={getOperateurNom}
-        voirDetails={voirDetails}
-        voirHistorique={voirHistorique}
-        userPeutModifier={userPeutModifier}
-        modifierRapport={modifierRapport}
-        authData={authData}
-        ouvrirGestionAcces={ouvrirGestionAcces}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+      >
+        <RapportsTable
+          loading={loading}
+          error={error}
+          rapportsFiltres={rapportsFiltres}
+          getTypeEvenementLibelle={getTypeEvenementLibelle}
+          getSousTypeEvenementLibelle={getSousTypeEvenementLibelle}
+          getOrigineEvenementLibelle={getOrigineEvenementLibelle}
+          formatDate={formatDate}
+          getOperateurNom={getOperateurNom}
+          voirDetails={voirDetails}
+          voirHistorique={voirHistorique}
+          userPeutModifier={userPeutModifier}
+          modifierRapport={modifierRapport}
+          authData={authData}
+          ouvrirGestionAcces={ouvrirGestionAcces}
+        />
+      </motion.div>
 
       {/* Modal pour détails et historique */}
-      <div className="modal" ref={modalRef}>
-        <div className="modal-content">
-          <div className="modal-header">
-            <h2>
-              {afficherHistorique
-                ? "Historique du rapport"
-                : afficherAjoutHistorique
-                  ? "Ajouter un historique"
-                  : "Détails du rapport"}
-            </h2>
-            <button className="close-btn" onClick={fermerModal}>&times;</button>
-          </div>
-          <div className="modal-body">
-            {rapportSelectionne && (
-              <>
-                {afficherHistorique ? (
-                  <div className="historique-rapport">
-                    <h3>Historique des actions</h3>
-                    {historiqueData ? (
-                      historiqueData.length > 0 ? (
-                        historiqueData.map((action, index) => (
-                          <div key={index} className="historique-item">
-                            <p><strong>Action:</strong> {action.type_action}</p>
-                            <p><strong>Détails:</strong> {action.detail_action}</p>
-                            <p><strong>Opérateur:</strong> {getOperateurNom(action.id_operateur)}</p>
-                            <p><strong>Date:</strong> {formatDate(action.date_action)}</p>
-                          </div>
-                        ))
-                      ) : (
-                        <p>Aucun historique disponible.</p>
-                      )
+      <AnimatePresence>
+        {rapportSelectionne && (
+          <motion.div
+            className="modal"
+            ref={modalRef}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.4 }}
+            style={{ display: 'block' }}
+          >
+            <motion.div
+              className="modal-content"
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="modal-header">
+                <h2>
+                  {afficherHistorique
+                    ? "Historique du rapport"
+                    : afficherAjoutHistorique
+                      ? "Ajouter un historique"
+                      : "Détails du rapport"}
+                </h2>
+                <button className="close-btn" onClick={fermerModal}>&times;</button>
+              </div>
+              <div className="modal-body">
+                {rapportSelectionne && (
+                  <>
+                    {afficherHistorique ? (
+                      <div className="historique-rapport">
+                        <h3>Historique des actions</h3>
+                        {historiqueData ? (
+                          historiqueData.length > 0 ? (
+                            historiqueData.map((action, index) => (
+                              <motion.div
+                                key={index}
+                                className="historique-item"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 * index }}
+                              >
+                                <p><strong>Action:</strong> {action.type_action}</p>
+                                <p><strong>Détails:</strong> {action.detail_action}</p>
+                                <p><strong>Opérateur:</strong> {getOperateurNom(action.id_operateur)}</p>
+                                <p><strong>Date:</strong> {formatDate(action.date_action)}</p>
+                              </motion.div>
+                            ))
+                          ) : (
+                            <p>Aucun historique disponible.</p>
+                          )
+                        ) : (
+                          <p>Chargement de l'historique...</p>
+                        )}
+                      </div>
+                    ) : afficherAjoutHistorique ? (
+                      <motion.div
+                        className="ajout-historique-form"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        <h3>Ajouter un élément d'historique</h3>
+                        <div className="form-group">
+                          <label htmlFor="type_action">Type d'action:</label>
+                          <input
+                            type="text"
+                            id="type_action"
+                            name="type_action"
+                            value={nouvelHistorique.type_action}
+                            onChange={handleHistoriqueChange}
+                            className="form-control"
+                            placeholder="Ex: OBSERVATION, INTERVENTION, SUIVI..."
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="detail_action">Détails:</label>
+                          <textarea
+                            id="detail_action"
+                            name="detail_action"
+                            value={nouvelHistorique.detail_action}
+                            onChange={handleHistoriqueChange}
+                            className="form-control"
+                            rows="4"
+                            placeholder="Décrivez l'action ou l'observation en détail..."
+                          ></textarea>
+                        </div>
+                      </motion.div>
                     ) : (
-                      <p>Chargement de l'historique...</p>
-                    )}
-                  </div>
-                ) : afficherAjoutHistorique ? (
-                  <div className="ajout-historique-form">
-                    <h3>Ajouter un élément d'historique</h3>
-                    <div className="form-group">
-                      <label htmlFor="type_action">Type d'action:</label>
-                      <input
-                        type="text"
-                        id="type_action"
-                        name="type_action"
-                        value={nouvelHistorique.type_action}
-                        onChange={handleHistoriqueChange}
-                        className="form-control"
-                        placeholder="Ex: OBSERVATION, INTERVENTION, SUIVI..."
+                      <DetailsRapport
+                        rapportSelectionne={rapportSelectionne}
+                        formatDate={formatDate}
+                        getOperateurNom={getOperateurNom}
+                        getTypeEvenementLibelle={getTypeEvenementLibelle}
+                        getSousTypeEvenementLibelle={getSousTypeEvenementLibelle}
+                        getOrigineEvenementLibelle={getOrigineEvenementLibelle}
+                        getZoneNom={getZoneNom}
+                        historique={historiqueData}
                       />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="detail_action">Détails:</label>
-                      <textarea
-                        id="detail_action"
-                        name="detail_action"
-                        value={nouvelHistorique.detail_action}
-                        onChange={handleHistoriqueChange}
-                        className="form-control"
-                        rows="4"
-                        placeholder="Décrivez l'action ou l'observation en détail..."
-                      ></textarea>
-                    </div>
-                  </div>
-                ) : (
-                  <DetailsRapport
-                    rapportSelectionne={rapportSelectionne}
-                    formatDate={formatDate}
-                    getOperateurNom={getOperateurNom}
-                    getTypeEvenementLibelle={getTypeEvenementLibelle}
-                    getSousTypeEvenementLibelle={getSousTypeEvenementLibelle}
-                    getOrigineEvenementLibelle={getOrigineEvenementLibelle}
-                    getZoneNom={getZoneNom}
-                    historique={historiqueData}
-                  />
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </div>
-          <div className="modal-footer">
-            {rapportSelectionne && !afficherHistorique && !afficherAjoutHistorique && (
-              <button
-                className="btn btn-secondary"
-                onClick={async () => {
-                  setAfficherHistorique(true);
-                  setAfficherAjoutHistorique(false);
-                  setHistoriqueData(await fetchHistorique(rapportSelectionne.id_rapport));
-                }}
-              >
-                Voir l'historique
-              </button>
-            )}
-            {rapportSelectionne && !afficherAjoutHistorique && userPeutModifier(rapportSelectionne) && (
-              <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  setAfficherHistorique(false);
-                  setAfficherAjoutHistorique(true);
-                }}
-              >
-                Ajouter un historique manuel
-              </button>
-            )}
-            {rapportSelectionne && afficherHistorique && (
-              <button
-                className="btn-icon text-info"
-                onClick={() => telechargerHistorique(rapportSelectionne)}
-                title="Télécharger l'historique"
-              >
-                <Download size={18} />
-              </button>
-            )}
-            {rapportSelectionne && afficherAjoutHistorique && (
-              <>
-                <button
-                  className="btn btn-primary"
-                  onClick={ajouterHistoriqueManuel}
-                >
-                  Enregistrer
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setAfficherAjoutHistorique(false);
-                    setAfficherHistorique(false);
-                  }}
-                >
-                  Annuler
-                </button>
-              </>
-            )}
-            {rapportSelectionne && userPeutModifier(rapportSelectionne) && !afficherAjoutHistorique && !afficherHistorique && (
-              <button
-                className="btn btn-primary"
-                onClick={() => modifierRapport(rapportSelectionne.id_rapport)}
-              >
-                Modifier
-              </button>
-            )}
-            <button className="btn btn-primary" onClick={fermerModal}>Fermer</button>
-          </div>
-        </div>
-      </div>
+              </div>
+              <div className="modal-footer">
+                {rapportSelectionne && !afficherHistorique && !afficherAjoutHistorique && (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={async () => {
+                      setAfficherHistorique(true);
+                      setAfficherAjoutHistorique(false);
+                      setHistoriqueData(await fetchHistorique(rapportSelectionne.id_rapport));
+                    }}
+                  >
+                    Voir l'historique
+                  </button>
+                )}
+                {rapportSelectionne && !afficherAjoutHistorique && userPeutModifier(rapportSelectionne) && (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setAfficherHistorique(false);
+                      setAfficherAjoutHistorique(true);
+                    }}
+                  >
+                    Ajouter un historique manuel
+                  </button>
+                )}
+                {rapportSelectionne && afficherHistorique && (
+                  <button
+                    className="btn-icon text-info"
+                    onClick={() => telechargerHistorique(rapportSelectionne)}
+                    title="Télécharger l'historique"
+                  >
+                    <Download size={18} />
+                  </button>
+                )}
+                {rapportSelectionne && afficherAjoutHistorique && (
+                  <>
+                    <button
+                      className="btn btn-primary"
+                      onClick={ajouterHistoriqueManuel}
+                    >
+                      Enregistrer
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setAfficherAjoutHistorique(false);
+                        setAfficherHistorique(false);
+                      }}
+                    >
+                      Annuler
+                    </button>
+                  </>
+                )}
+                {rapportSelectionne && userPeutModifier(rapportSelectionne) && !afficherAjoutHistorique && !afficherHistorique && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => modifierRapport(rapportSelectionne.id_rapport)}
+                  >
+                    Modifier
+                  </button>
+                )}
+                <button className="btn btn-primary" onClick={fermerModal}>Fermer</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modal pour la gestion des accès */}
       <GestionAccesModal
@@ -638,7 +696,7 @@ const ListeRapport = () => {
         fetchHistorique={fetchHistorique}
         setHistoriqueData={setHistoriqueData}
       />
-    </div>
+    </motion.div>
   );
 };
 

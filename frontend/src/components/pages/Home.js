@@ -1,11 +1,12 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ResourceCategory from './Home/ResourceCategory';
 import Loading from './Home/Loading';
 import ErrorMessage from './Home/ErrorMessage';
+import { motion, AnimatePresence } from 'framer-motion'; // Ajout de framer-motion
 import '../css/home.css';
 
+// Récupère l'URL de base de l'API depuis les variables d'environnement
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 const Home = () => {
@@ -41,35 +42,90 @@ const Home = () => {
   }, {});
 
   return (
-    <div className="home-container">
-      <h1>Tableau de bord</h1>
-      <div className="user-info">
+    <motion.div
+      className="home-container"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        Tableau de bord
+      </motion.h1>
+      <motion.div
+        className="user-info"
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
         <span>Bonjour <strong>{authData.selectedOperateur}</strong></span>
-      </div>
+      </motion.div>
 
       <main className="home-content">
-        {loading ? (
-          <Loading />
-        ) : error ? (
-          <ErrorMessage message={error} />
-        ) : (
-          <div className="resources-container">
-            <h2>Ressources disponibles</h2>
-            {Object.keys(ressourcesByType).length === 0 ? (
-              <p className="no-resources">Aucune ressource disponible.</p>
-            ) : (
-              Object.entries(ressourcesByType).map(([type, items]) => (
-                <ResourceCategory key={type} type={type} items={items} apiUrl={API_BASE_URL} />
-              ))
-            )}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Loading />
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <ErrorMessage message={error} />
+            </motion.div>
+          ) : (
+            <motion.div
+              className="resources-container"
+              key="resources"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <motion.h2
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              >
+                Ressources disponibles
+              </motion.h2>
+              {Object.keys(ressourcesByType).length === 0 ? (
+                <motion.p
+                  className="no-resources"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Aucune ressource disponible.
+                </motion.p>
+              ) : (
+                Object.entries(ressourcesByType).map(([type, items], idx) => (
+                  <motion.div
+                    key={type}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + idx * 0.1, duration: 0.5 }}
+                  >
+                    <ResourceCategory type={type} items={items} apiUrl={API_BASE_URL} />
+                  </motion.div>
+                ))
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
-
-      <footer className="home-footer">
-        <p>© {new Date().getFullYear()} - Portail des ressources</p>
-      </footer>
-    </div>
+    </motion.div>
   );
 };
 

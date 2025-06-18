@@ -53,58 +53,42 @@ const Carte = () => {
   useEffect(() => {
     // Initialiser la carte uniquement si le container existe et que la carte n'est pas encore initialisée
     if (!mapRef.current && mapContainerRef.current) {
-      mapRef.current = L.map(mapContainerRef.current).setView([43.3, 5.4], 10); // Centrer la carte
+      // Utilisation de la couche SHOM Raster Littoral (WMTS)
+      // Documentation : https://data.shom.fr
+      // URL WMTS : https://wxs.ign.fr/essentiels/geoportail/wmts?SERVICE=WMTS&REQUEST=GetCapabilities
+      // Pour la démo, on utilise le proxy du Géoportail (IGN) qui propose la couche SHOM
+      const shomLayer = L.tileLayer(
+        'https://wxs.ign.fr/essentiels/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCANLITTORALE&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image/jpeg&TileMatrix={z}&TileCol={x}&TileRow={y}',
+        {
+          attribution: '&copy; <a href="https://www.shom.fr/">SHOM</a> / <a href="https://www.ign.fr/">IGN</a>',
+          maxZoom: 18,
+          tileSize: 256,
+        }
+      );
 
-      // Carte marine principale - représente les éléments indispensables à la navigation maritime
-      // En adéquation avec la signalisation maritime, elle permet de se situer et de se diriger
-      const carteMarineBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; <a href="https://www.esri.com/">Esri</a> - Carte Marine de Navigation',
-        maxZoom: 16
-      });
+      // Couche OpenStreetMap en attendant une clé SHOM/IGN valide
+      const baseLayer = L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 18,
+        }
+      );
 
-      // Couche de signalisation maritime (balises, phares, bouées, amers)
-      const signalisationMaritime = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
-        attribution: 'Signalisation Maritime &copy; <a href="http://www.openseamap.org">OpenSeaMap</a>',
-        maxZoom: 18,
-        opacity: 0.8
-      });
+      mapRef.current = L.map(mapContainerRef.current).setView([43.3, 5.4], 10);
+      baseLayer.addTo(mapRef.current);
 
-      // Couche bathymétrique (profondeurs et sondes)
-      const bathymetrie = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Bathymétrie &copy; <a href="https://www.esri.com/">Esri</a>',
-        maxZoom: 16,
-        opacity: 0.7
-      });
-
-      // Ajouter les couches essentielles à la navigation
-      carteMarineBase.addTo(mapRef.current);
-      signalisationMaritime.addTo(mapRef.current);
-      bathymetrie.addTo(mapRef.current);
-
-      // Contrôles de navigation maritime
+      // Contrôles de navigation maritime (optionnel)
       const couchesNavigation = {
-        "Carte Marine Base": carteMarineBase,
-        "Carte Océanique": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
-          maxZoom: 16
-        })
+        "Carte OpenStreetMap": baseLayer
       };
 
-      const elementsNavigation = {
-        "Signalisation Maritime": signalisationMaritime,
-        "Bathymétrie & Sondes": bathymetrie,
-        "Amers & Repères": L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenSeaMap',
-          maxZoom: 18
-        })
-      };
-
-      L.control.layers(couchesNavigation, elementsNavigation, {
+      L.control.layers(couchesNavigation, {}, {
         position: 'topright',
         collapsed: false
       }).addTo(mapRef.current);
 
-      // Ajouter une échelle nautique
+      // Ajouter une échelle
       L.control.scale({
         metric: true,
         imperial: false,

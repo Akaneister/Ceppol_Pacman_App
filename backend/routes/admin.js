@@ -24,6 +24,8 @@ router.post('/operateurs', adminController.addOperateur); // Ajout de la route p
 router.delete('/operateurs/:id_operateur', adminController.deleteOperateur);
 router.put('/operateurs/:id_operateur', adminController.updateOperateur);
 
-// À dupliquer pour les autres entités (SousTypeEvenement, TypeCible, ZoneGeographique, etc.)
+//Gestion Mot de passe 
+router.get('/motdepasse',adminController.getPasswords);
+router.put('/motdepasse/:id', adminController.setPasswords);
 
 module.exports = router;

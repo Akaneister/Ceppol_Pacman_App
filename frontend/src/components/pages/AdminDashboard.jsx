@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import '../css/AdminDashboard.css';
+import Password from './Admin/Password';
 
 const AdminDashboard = () => {
     const { isAdmin, isAuthenticated, logout } = useAuth();
@@ -138,7 +139,7 @@ const AdminDashboard = () => {
                 {activeTab === 'passwords' && (
                     <div className="admin-placeholder">
                         <h2>Gestion des mots de passe</h2>
-                        <div>Zone à préparer</div>
+                        <Password />
                     </div>
                 )}
                 {activeTab === 'operateurs' && (

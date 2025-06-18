@@ -260,3 +260,199 @@
 .admin-title {
   background-color: white;
 }
+
+
+/* =======================
+  Mot De de Passe
+  ======================= */
+.passwords-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #f8f9fa; /* Blanc cassé */
+  border-radius: 12px;
+  box-shadow: 0 0 48px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.password-block {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border-left: 4px solid #002147;
+  background-color: #002147;
+  border-radius: 8px;
+}
+
+.password-block h2 {
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.password-row,
+.password-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  justify-content: center;
+}
+
+
+.password-value {
+  font-size: 1.2rem;
+  color: #ffffff;
+  min-width: 120px;
+  letter-spacing: 2px;
+}
+
+.password-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #adb5bd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Boutons plus esthétiques */
+.password-btn {
+  padding: 0.45rem 1.2rem;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(0,33,71,0.08);
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  letter-spacing: 0.5px;
+}
+
+.password-btn:active {
+  transform: scale(0.97);
+}
+
+.password-btn-toggle {
+  background: #ffffff;
+  color: #002147;
+}
+
+.password-btn-edit {
+  background: #d4243c;
+  color: #ffffff;
+}
+
+.password-btn-save {
+  background: #ffffff;
+  color: #002147;
+}
+
+.password-btn-cancel {
+ background: #d4243c;
+  color: #ffffff;
+}
+
+.password-btn:hover,
+.password-btn:focus {
+  opacity: 1;
+  filter: brightness(1.08);
+  box-shadow: 0 4px 16px rgba(0,33,71,0.13);
+  text-decoration: none;
+}
+
+/* =======================
+   Responsive Design
+   ======================= */
+@media (max-width: 900px) {
+  .documents-section,
+  .operators-section,
+  .passwords-container {
+    padding: 12px;
+    margin-top: 12px;
+  }
+  .documents-title,
+  .operators-title {
+    font-size: 1.15rem;
+    padding-bottom: 6px;
+  }
+  .operator-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .operator-actions {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-nav-list {
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 4px;
+  }
+  .admin-nav-list li {
+    margin: 2px 0;
+  }
+  .documents-section,
+  .operators-section,
+  .passwords-container {
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .documents-title,
+  .operators-title {
+    font-size: 1rem;
+    padding-bottom: 4px;
+  }
+  .document-item,
+  .operator-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+  }
+  .document-icon {
+    font-size: 1.3rem;
+    margin-right: 8px;
+  }
+  .operator-actions {
+    flex-direction: row;
+    gap: 4px;
+    margin-left: 0;
+    margin-top: 6px;
+  }
+  .passwords-container {
+    max-width: 100%;
+    padding: 8px;
+  }
+  .password-block {
+    padding: 0.5rem;
+    border-radius: 5px;
+  }
+  .password-row,
+  .password-edit-row {
+    flex-direction: column;
+    gap: 0.3rem;
+    align-items: stretch;
+  }
+  .password-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.95rem;
+    padding: 0.4rem 0.8rem;
+  }
+  .password-value {
+    min-width: 0;
+    font-size: 1rem;
+    letter-spacing: 1px;
+  }
+}

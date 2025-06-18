@@ -213,7 +213,44 @@ async function deleteTypeEvenement(req, res) {
     }
 }
 
-// À dupliquer pour SousTypeEvenement, TypeCible, ZoneGeographique, etc.
+async function getPasswords(req, res) {
+    try {
+        const [rows] = await db.query('SELECT * FROM MotDePasse');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+async function setPasswords(req, res) {
+    const id_motdepasse = req.params.id;
+    const newPassword = req.body.mot_de_passe;
+
+    console.log(`[setPasswords] Reçu: id_motdepasse=${id_motdepasse}, newPassword=${newPassword ? '***' : 'vide'}`);
+
+    if (!id_motdepasse || !newPassword) {
+        console.warn('[setPasswords] id_motdepasse ou newPassword manquant');
+        return res.status(400).json({ error: 'id_motdepasse et newPassword sont requis' });
+    }
+
+    try {
+        const [result] = await db.query(
+            'UPDATE MotDePasse SET mot_de_passe = ? WHERE id_motdepasse = ?',
+            [newPassword, id_motdepasse]
+        );
+        console.log(`[setPasswords] Résultat de la requête:`, result);
+
+        if (result.affectedRows === 0) {
+            console.warn('[setPasswords] Aucun mot de passe mis à jour');
+            return res.status(404).json({ error: 'Mot de passe non trouvé' });
+        }
+
+        res.json({ message: 'Mot de passe mis à jour' });
+    } catch (err) {
+        console.error(`[setPasswords] Erreur:`, err);
+        res.status(500).json({ error: err.message });
+    }
+}
 
 module.exports = {
     getDocuments,
@@ -227,6 +264,7 @@ module.exports = {
     deleteTypeEvenement,
     deleteOperateur,
     updateOperateur,
-    addOperateur // Ajout de l'export
-    // Ajouter ici les autres exports pour les autres entités à gérer dynamiquement
+    addOperateur ,
+    getPasswords,
+    setPasswords
 };

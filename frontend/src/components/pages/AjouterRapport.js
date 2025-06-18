@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../css/AjouterRapport.css';
 import 'leaflet/dist/leaflet.css';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 import GeneralInfoSection from './AjouterRapport/GeneralInfoSection';
@@ -470,52 +471,86 @@ const AjouterRapport = () => {
 
   // Reste du code (rendu du formulaire)...
   return (
-    <div className="rapport-container">
-
-
-      <div className="rapport-header">
-        
+    <motion.div
+      className="rapport-container"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <motion.div
+        className="rapport-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
         <p className="rapport-subtitle" style={{ fontSize: '0.9em', fontStyle: 'italic' }}>
           Complétez tous les champs obligatoires (*) pour soumettre un nouveau rapport
         </p>
-      </div>
+      </motion.div>
 
-
-
-      <form className="rapport-form" onSubmit={handleSubmit}>
-        <GeneralInfoSection formData={formData} handleChange={handleChange} />
-        <ClassificationSection
-          formData={formData}
-          handleChange={handleChange}
-          typesEvenement={typesEvenement}
-          filteredSousTypes={filteredSousTypes}
-          originesEvenement={originesEvenement}
-        />
-        <TargetSection formData={formData} handleChange={handleChange} />
-        <LocalisationSection
-          formData={formData}
-          handleChange={handleChange}
-          mapRef={mapRef}
-          mapInitialized={mapInitialized}
-          zonesGeographiques={zonesGeographiques}
-        />
-        <MeteoSection formData={formData} handleChange={handleChange} />
-        <AlertesSection formData={formData} handleChange={handleChange} />
-        <DescriptionSection formData={formData} handleChange={handleChange} />
-        <FormActions
-          isSubmitting={isSubmitting}
-          handleSubmit={handleSubmit}
-          resetForm={resetForm}
-        />
-      </form>
-      <br></br>
-      {submitStatus && (
-        <div className={`status-message ${submitStatus.type}`}>
-          {submitStatus.message}
-        </div>
-      )}
-    </div>
-
+      <motion.form
+        className="rapport-form"
+        onSubmit={handleSubmit}
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+          <GeneralInfoSection formData={formData} handleChange={handleChange} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
+          <ClassificationSection
+            formData={formData}
+            handleChange={handleChange}
+            typesEvenement={typesEvenement}
+            filteredSousTypes={filteredSousTypes}
+            originesEvenement={originesEvenement}
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
+          <TargetSection formData={formData} handleChange={handleChange} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 }}>
+          <LocalisationSection
+            formData={formData}
+            handleChange={handleChange}
+            mapRef={mapRef}
+            mapInitialized={mapInitialized}
+            zonesGeographiques={zonesGeographiques}
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}>
+          <MeteoSection formData={formData} handleChange={handleChange} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9 }}>
+          <AlertesSection formData={formData} handleChange={handleChange} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}>
+          <DescriptionSection formData={formData} handleChange={handleChange} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.1 }}>
+          <FormActions
+            isSubmitting={isSubmitting}
+            handleSubmit={handleSubmit}
+            resetForm={resetForm}
+          />
+        </motion.div>
+      </motion.form>
+      <br />
+      <AnimatePresence>
+        {submitStatus && (
+          <motion.div
+            className={`status-message ${submitStatus.type}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.5 }}
+          >
+            {submitStatus.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

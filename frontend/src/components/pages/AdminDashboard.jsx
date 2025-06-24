@@ -15,6 +15,7 @@ import {
 
 import '../css/AdminDashboard.css';
 import Password from './Admin/Password';
+import Documents from './Admin/Documents';
 
 const AdminDashboard = () => {
     const { isAdmin, isAuthenticated, logout } = useAuth();
@@ -121,9 +122,7 @@ const AdminDashboard = () => {
                     <div className="admin-header-container">
                         <div className="admin-header-content">
                             <div className="admin-header-left">
-                                <div>
-                                    <h1 className="admin-title">Panneau d'Administration</h1>
-                                </div>
+                                <br></br>
                             </div>
                         </div>
                     </div>
@@ -147,8 +146,8 @@ const AdminDashboard = () => {
                 )}
                 {activeTab === 'documents' && (
                     <div className="admin-placeholder">
-                        <h2>Liste des documents</h2>
-                        <div>Zone à préparer</div>
+                        
+                        <Documents />
                     </div>
                 )}
             </div>

@@ -19,6 +19,8 @@ const authRoutes = require('./routes/auth');
 const carteRoutes = require('./routes/carte'); // Importation de la route pour la carte
 const ressourceRoutes = require('./routes/home'); // Importation de la route pour les ressources
 const adminRoutes = require('./routes/admin');
+const shomRoutes = require('./routes/shom');
+app.use('/api', shomRoutes); // Route pour SHOM
 
 // Définition des routes
 // Routes d'authentification

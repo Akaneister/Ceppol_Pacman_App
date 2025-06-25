@@ -4,6 +4,7 @@ import axios from 'axios';
 import '../css/ListeRapport.css';
 import { Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import jsPDF from 'jspdf';
 
 import Filtres from './ListeRapport/Filtres';
 import RapportsTable from "./ListeRapport/RapportsTable";
@@ -401,6 +402,86 @@ const ListeRapport = () => {
     }
   };
 
+  // Fonction pour générer et télécharger un PDF avec toutes les infos du rapport (plus esthétique)
+  const telechargerPDFRapport = (rapport) => {
+    const doc = new jsPDF();
+    let y = 15;
+    doc.setFontSize(18);
+    doc.setTextColor(0, 70, 140);
+    doc.text('Fiche Rapport - CEPPOL', 105, y, { align: 'center' });
+    y += 10;
+    doc.setDrawColor(0, 70, 140);
+    doc.setLineWidth(0.8);
+    doc.line(10, y, 200, y);
+    y += 8;
+    doc.setFontSize(12);
+    doc.setTextColor(0,0,0);
+    doc.text(`ID Rapport : ${rapport.id_rapport || ''}`, 10, y);
+    y += 8;
+    doc.text(`Titre : ${rapport.titre || ''}`, 10, y);
+    y += 8;
+    doc.text(`Type d'événement : ${getTypeEvenementLibelle(rapport.id_type_evenement)}`, 10, y);
+    y += 8;
+    doc.text(`Sous-type : ${getSousTypeEvenementLibelle(rapport.id_sous_type_evenement)}`, 10, y);
+    y += 8;
+    doc.text(`Origine : ${getOrigineEvenementLibelle(rapport.id_origine_evenement)}`, 10, y);
+    y += 8;
+    doc.text(`Zone : ${getZoneNom(rapport.id_zone)}`, 10, y);
+    y += 8;
+    doc.text(`Date de l'événement : ${formatDate(rapport.date_evenement)}`, 10, y);
+    y += 8;
+    doc.text(`Date de création : ${formatDate(rapport.date_creation)}`, 10, y);
+    y += 8;
+    doc.text(`Dernière modification : ${formatDate(rapport.date_modification)}`, 10, y);
+    y += 8;
+    doc.text(`Opérateur principal : ${getOperateurNom(rapport.id_operateur)}`, 10, y);
+    y += 8;
+    doc.text(`Statut : ${rapport.statut || 'Non défini'}`, 10, y);
+    y += 8;
+    doc.text(`Archivé : ${rapport.archive === 1 ? 'Oui' : 'Non'}`, 10, y);
+    y += 10;
+    doc.setFontSize(13);
+    doc.setTextColor(0, 70, 140);
+    doc.text('Description globale :', 10, y);
+    y += 7;
+    doc.setFontSize(11);
+    doc.setTextColor(0,0,0);
+    const description = rapport.description_globale || '';
+    const splitDesc = doc.splitTextToSize(description, 185);
+    doc.text(splitDesc, 10, y);
+    y += splitDesc.length * 6 + 2;
+    // Ajout d'autres champs si présents
+    if (rapport.autres_infos) {
+      doc.setFontSize(13);
+      doc.setTextColor(0, 70, 140);
+      doc.text('Autres informations :', 10, y);
+      y += 7;
+      doc.setFontSize(11);
+      doc.setTextColor(0,0,0);
+      const autres = doc.splitTextToSize(rapport.autres_infos, 185);
+      doc.text(autres, 10, y);
+      y += autres.length * 6 + 2;
+    }
+    // Historique (si chargé)
+    if (Array.isArray(historiqueData) && historiqueData.length > 0) {
+      doc.setFontSize(13);
+      doc.setTextColor(0, 70, 140);
+      doc.text('Historique :', 10, y);
+      y += 7;
+      doc.setFontSize(10);
+      doc.setTextColor(0,0,0);
+      historiqueData.forEach((action, idx) => {
+        if (y > 270) { doc.addPage(); y = 15; }
+        doc.text(`- [${formatDate(action.date_action)}] ${action.type_action} par ${getOperateurNom(action.id_operateur)} :`, 12, y);
+        y += 5;
+        const details = doc.splitTextToSize(action.detail_action || '', 180);
+        doc.text(details, 14, y);
+        y += details.length * 5 + 2;
+      });
+    }
+    doc.save(`rapport_${rapport.id_rapport}.pdf`);
+  };
+
   // =========================
   // Filtrage des rapports
   // =========================
@@ -583,16 +664,26 @@ const ListeRapport = () => {
               </div>
               <div className="modal-footer">
                 {rapportSelectionne && !afficherHistorique && !afficherAjoutHistorique && (
-                  <button
-                    className="btn btn-secondary"
-                    onClick={async () => {
-                      setAfficherHistorique(true);
-                      setAfficherAjoutHistorique(false);
-                      setHistoriqueData(await fetchHistorique(rapportSelectionne.id_rapport));
-                    }}
-                  >
-                    Voir l'historique
-                  </button>
+                  <>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={async () => {
+                        setAfficherHistorique(true);
+                        setAfficherAjoutHistorique(false);
+                        setHistoriqueData(await fetchHistorique(rapportSelectionne.id_rapport));
+                      }}
+                    >
+                      Voir l'historique
+                    </button>
+                    {/* Bouton PDF */}
+                    <button
+                      className="btn btn-info"
+                      onClick={() => telechargerPDFRapport(rapportSelectionne)}
+                      style={{ marginLeft: 8 }}
+                    >
+                      Télécharger le PDF
+                    </button>
+                  </>
                 )}
                 {rapportSelectionne && !afficherAjoutHistorique && userPeutModifier(rapportSelectionne) && (
                   <button

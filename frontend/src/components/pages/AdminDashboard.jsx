@@ -27,6 +27,9 @@ const AdminDashboard = () => {
         return hash || localStorage.getItem('adminActiveTab') || 'operateurs';
     });
 
+    // État du menu mobile
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     // Gestion opérateurs
     const [operateurs, setOperateurs] = useState([]);
     const API = process.env.REACT_APP_API_URL;
@@ -77,45 +80,95 @@ const AdminDashboard = () => {
         };
         window.addEventListener('hashchange', onHashChange);
         return () => window.removeEventListener('hashchange', onHashChange);
-    }, [activeTab]);
-
-    const handleLogout = () => {
+    }, [activeTab]);    const handleLogout = () => {
         logout();
         navigate('/auth');
     };
+
+    // Fonctions pour le menu mobile
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
+    const handleTabChange = (tabId) => {
+        setActiveTab(tabId);
+        setIsMobileMenuOpen(false); // Fermer le menu mobile après sélection
+    };    // Fermer le menu mobile quand on clique en dehors
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isMobileMenuOpen && !event.target.closest('.admin-nav')) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [isMobileMenuOpen]);
+
+    // Gérer le scroll du body quand le menu mobile est ouvert
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.classList.add('mobile-menu-open');
+        } else {
+            document.body.classList.remove('mobile-menu-open');
+        }
+
+        // Nettoyer à la fermeture du composant
+        return () => {
+            document.body.classList.remove('mobile-menu-open');
+        };
+    }, [isMobileMenuOpen]);
 
     if (!isAuthenticated || !isAdmin) {
         return <div className="centered-screen">Chargement...</div>;
     }
 
-    return (
-        <div className="admin-dashboard-root">
+    return (        <div className="admin-dashboard-root">
+            {/* Overlay pour le menu mobile */}
+            <div 
+                className={`mobile-menu-overlay ${isMobileMenuOpen ? 'active' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
+            
             <div className="admin-main">
                 <nav className="admin-nav">
-                    <ul className="admin-nav-list">
-                        {[
-                            { id: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
-                            { id: 'passwords', label: 'Mots de passe', icon: Key },
-                            { id: 'operateurs', label: 'Opérateurs', icon: Users },
-                            { id: 'documents', label: 'Documents', icon: File }
-                        ].map(tab => {
-                            const Icon = tab.icon;
-                            return (
-                                <li key={tab.id}>
-                                    <button
-                                        onClick={() => setActiveTab(tab.id)}
-                                        className={`admin-nav-btn ${activeTab === tab.id ? 'admin-nav-btn-active' : ''}`}
-                                    >
-                                        <Icon className="admin-nav-icon" />
-                                        <span>{tab.label}</span>
-                                    </button>
-                                </li>
-                            );
-                        })}
-                        <li onClick={handleLogout} className="admin-logout-btn">
-                            <button><LogOut className="admin-logout-icon" />Déconnexion</button>
-                        </li>
-                    </ul>
+                    <div className="admin-nav-container">
+                        {/* Menu hamburger */}
+                        <button 
+                            className={`hamburger-menu ${isMobileMenuOpen ? 'active' : ''}`}
+                            onClick={toggleMobileMenu}
+                            aria-label="Toggle navigation menu"
+                        >
+                            <div className="hamburger-bar"></div>
+                            <div className="hamburger-bar"></div>
+                            <div className="hamburger-bar"></div>
+                        </button>
+                        
+                        <ul className={`admin-nav-list ${isMobileMenuOpen ? 'active' : ''}`}>
+                            {[
+                                { id: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
+                                { id: 'passwords', label: 'Mots de passe', icon: Key },
+                                { id: 'operateurs', label: 'Opérateurs', icon: Users },
+                                { id: 'documents', label: 'Documents', icon: File }
+                            ].map(tab => {
+                                const Icon = tab.icon;
+                                return (
+                                    <li key={tab.id}>
+                                        <button
+                                            onClick={() => handleTabChange(tab.id)}
+                                            className={`admin-nav-btn ${activeTab === tab.id ? 'admin-nav-btn-active' : ''}`}
+                                        >
+                                            <Icon className="admin-nav-icon" />
+                                            <span>{tab.label}</span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                            <li onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="admin-logout-btn">
+                                <button><LogOut className="admin-logout-icon" />Déconnexion</button>
+                            </li>
+                        </ul>
+                    </div>
                 </nav>
 
                 <header className="admin-header">

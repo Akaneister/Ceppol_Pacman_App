@@ -24,9 +24,11 @@ const GestionAccesModal = ({
     if (accessModalRef?.current) {
       accessModalRef.current.classList.add('active');
     }
+    // Correction: copie la valeur du ref dans une variable locale pour le cleanup
+    const modalElement = accessModalRef?.current;
     return () => {
-      if (accessModalRef?.current) {
-        accessModalRef.current.classList.remove('active');
+      if (modalElement) {
+        modalElement.classList.remove('active');
       }
     };
   }, [accessModalRef, rapportSelectionne]);

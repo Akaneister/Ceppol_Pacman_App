@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 
-const API_URL = "/api/home"; // adapte si besoin
-
 const Documents = () => {
     const [documents, setDocuments] = useState([]);
     const [dragActive, setDragActive] = useState(false);
     const inputRef = useRef(null);
+    const API = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
         fetchDocuments();
@@ -14,7 +13,7 @@ const Documents = () => {
 
     const fetchDocuments = async () => {
         try {
-            const res = await axios.get(API_URL);
+            const res = await axios.get(`${API}/ressources`);
             setDocuments(res.data);
         } catch (err) {
             console.error(err);
@@ -22,10 +21,16 @@ const Documents = () => {
     };
 
     const handleDelete = async (id) => {
-        // Prépare la suppression (à implémenter côté backend)
-        // await axios.delete(`${API_URL}/${id}`);
-        // fetchDocuments();
-        alert(`Suppression du document id: ${id} (à implémenter)`);
+        if (window.confirm("Êtes-vous sûr de vouloir supprimer ce document ?")) {
+            try {
+                await axios.delete(`${API}/admin/documents/${id}`);
+                fetchDocuments(); // Recharger la liste après suppression
+                alert("Document supprimé avec succès");
+            } catch (err) {
+                console.error("Erreur lors de la suppression:", err);
+                alert("Erreur lors de la suppression du document");
+            }
+        }
     };
 
     const handleEdit = (doc) => {
@@ -43,20 +48,56 @@ const Documents = () => {
         }
     };
 
+    const uploadFiles = async (files) => {
+        for (let file of files) {
+            try {
+                // Remplacer les espaces par des underscores dans le nom du fichier
+                const originalName = file.name;
+                const nameWithoutExtension = originalName.substring(0, originalName.lastIndexOf('.'));
+                const extension = originalName.substring(originalName.lastIndexOf('.'));
+                const cleanName = nameWithoutExtension.replace(/\s+/g, '_') + extension;
+                
+                // Créer FormData pour l'upload
+                const formData = new FormData();
+                formData.append('file', file, cleanName);
+                formData.append('nom', nameWithoutExtension.replace(/\s+/g, '_'));
+                formData.append('type', extension.substring(1)); // Enlever le point de l'extension
+
+                // Upload du fichier
+                const response = await axios.post(`${API}/admin/documents/upload`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+
+                if (response.status === 201) {
+                    console.log(`Document ${cleanName} uploadé avec succès`);
+                } else {
+                    console.error(`Erreur lors de l'upload de ${cleanName}`);
+                }
+            } catch (err) {
+                console.error(`Erreur lors de l'upload de ${file.name}:`, err);
+                alert(`Erreur lors de l'upload de ${file.name}`);
+            }
+        }
+        
+        // Recharger la liste des documents après tous les uploads
+        fetchDocuments();
+        alert('Upload terminé');
+    };
+
     const handleDrop = (e) => {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            // Gérer les fichiers ici
-            console.log(e.dataTransfer.files);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            uploadFiles(Array.from(e.dataTransfer.files));
         }
     };
 
     const handleChange = (e) => {
-        if (e.target.files && e.target.files[0]) {
-            // Gérer les fichiers ici
-            console.log(e.target.files);
+        if (e.target.files && e.target.files.length > 0) {
+            uploadFiles(Array.from(e.target.files));
         }
     };
 

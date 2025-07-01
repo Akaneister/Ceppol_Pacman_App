@@ -8,18 +8,20 @@
   height: 56px; /* Hauteur fixe pour la barre de navigation */
   display: flex;
   align-items: center;
+  padding : 1rem;
 }
 
 .admin-nav-list {
   display: flex;
-  justify-content: center; /* Centre tout le groupe */
+  justify-content: center;
   align-items: center;
   list-style: none;
-  padding: 12px 16px;
+  padding: 0 16px; /* plus de padding vertical */
   background-color: #001f3f; /* Bleu marine */
   gap: 6px;
   flex-wrap: wrap;
-  border-bottom: none; /* Déplacé vers le container */
+  border-bottom: none;
+  height: 100%; /* occupe toute la hauteur du container */
 }
 
 /* Menu hamburger */
@@ -61,6 +63,9 @@
 
 .admin-nav-list li {
   margin: 0 4px;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .admin-nav-list li button {
@@ -77,6 +82,7 @@
   font-size: 0.9rem;
   border-radius: 6px;
   transition: all 0.3s ease;
+  height: 100%;
 }
 
 .admin-nav-list li button:hover,
@@ -85,6 +91,7 @@
   transform: scale(1.03);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   outline: none;
+  padding : 1rem;
 }
 
 .admin-nav-list li button.active {

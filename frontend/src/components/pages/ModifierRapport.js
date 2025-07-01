@@ -1,3 +1,59 @@
+/**
+==================================================================================
+==================================================================================
+@file ModifierRapport.js
+@location frontend/src/components/pages/ModifierRapport.js
+@description Composant de modification d'un rapport d'événement maritime existant
+FONCTIONNALITÉS PRINCIPALES :
+────────────────────────────────────────────────────────────────────────────────
+• Modification complète d'un rapport d'événement maritime existant
+• Vérification des droits d'accès (créateur ou utilisateur autorisé)
+• Préremplissage automatique du formulaire avec les données existantes
+• Carte interactive Leaflet pour sélection/modification des coordonnées GPS
+• Gestion des types/sous-types d'événements avec filtres dynamiques
+• Sauvegarde des modifications avec tracking des changements
+• Archivage du rapport avec confirmation utilisateur
+• Historisation automatique des actions utilisateur
+
+STRUCTURE DU COMPOSANT :
+────────────────────────────────────────────────────────────────────────────────
+• Vérification d'accès : Contrôle des permissions avant affichage
+• Chargement des données : Récupération du rapport et des listes de référence
+• Formulaire complet : 6 sections organisées (Infos générales, Classification, etc.)
+• Carte interactive : Sélection visuelle des coordonnées avec marqueurs
+• Actions : Modification, archivage avec confirmation
+
+GESTION D'ÉTAT :
+────────────────────────────────────────────────────────────────────────────────
+• hasAccess/accessChecked : Contrôle des permissions utilisateur
+• loading/error : États de chargement et gestion d'erreurs
+• formData/ancienRapport : Données actuelles et originales pour comparaison
+• mapInitialized/marker : État de la carte Leaflet et marqueurs
+• isSubmitting/submitStatus : États de soumission et messages de retour
+
+DÉPENDANCES :
+────────────────────────────────────────────────────────────────────────────────
+• React (hooks: useState, useEffect, useRef)
+• AuthContext (authentification et informations utilisateur)
+• React Router (navigation et paramètres d'URL)
+• Axios (requêtes HTTP vers l'API)
+• Leaflet (cartographie interactive)
+
+API UTILISÉE :
+────────────────────────────────────────────────────────────────────────────────
+• GET /rapports/:id/acces - Vérification des droits d'accès
+• GET /rapports/:id - Récupération des données du rapport
+• GET /rapports/type-evenement - Liste des types d'événements
+• GET /rapports/sous-type-pollution - Liste des sous-types
+• GET /rapports/origine-evenement - Liste des origines
+• GET /rapports/zone-geographique - Liste des zones géographiques
+• PUT /rapports/:id/after - Modification du rapport
+• POST /rapports/historique - Ajout d'une entrée d'historique
+
+@author Oscar Vieujean
+==================================================================================
+*/
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -5,37 +61,46 @@ import axios from 'axios';
 import 'leaflet/dist/leaflet.css';
 import '../css/AjouterRapport.css'; // Utilisation du même fichier CSS pour la cohérence visuelle
 
-
-
-
-
+// Configuration de l'URL de l'API depuis les variables d'environnement
 const API = process.env.REACT_APP_API_URL;
 
 const ModifierRapport = () => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RÉCUPÉRATION DES PARAMÈTRES ET HOOKS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  const { id } = useParams(); // récupère l'ID du rapport depuis l'URL
+  const navigate = useNavigate(); // Navigation programmatique
+  const { authData } = useAuth(); // Données d'authentification utilisateur
 
-  const { id } = useParams(); // récupère l'id depuis l'URL
-  const navigate = useNavigate();
-  const { authData } = useAuth();
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTATS DE CONTRÔLE D'ACCÈS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  const [hasAccess, setHasAccess] = useState(false); // Droit de modification
+  const [accessChecked, setAccessChecked] = useState(false); // Vérification effectuée
 
-
-  const [hasAccess, setHasAccess] = useState(false);
-  const [accessChecked, setAccessChecked] = useState(false);
-
+  // Vérification des droits d'accès au rapport
   useEffect(() => {
     const checkAccess = async () => {
       try {
+        // Récupération de la liste des utilisateurs ayant accès au rapport
         const accesResponse = await axios.get(`${API}/rapports/${id}/acces`);
         const accesList = accesResponse.data;
 
+        // Récupération des informations du rapport pour vérifier le créateur
         const rapportResponse = await axios.get(`${API}/rapports/${id}`);
         const rapport = rapportResponse.data.rapport || rapportResponse.data;
 
+        // Vérification si l'utilisateur est le créateur du rapport
         const estCreateur = rapport.id_operateur === authData.Opid;
+        // Vérification si l'utilisateur a un accès explicite au rapport
         const aAccess = accesList.some(acc => acc.id_operateur === authData.Opid);
 
+        // L'utilisateur a accès s'il est créateur OU s'il a un accès explicite
         setHasAccess(estCreateur || aAccess);
 
-
+        // Note : Code dupliqué ci-dessous (à nettoyer)
         if (estCreateur || aAccess) {
           setHasAccess(true);
         } else {
@@ -52,34 +117,50 @@ const ModifierRapport = () => {
   }, [authData, id]);
 
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTATS DE GESTION DU FORMULAIRE ET DE LA CARTE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  const [isSubmitting, setIsSubmitting] = useState(false); // État de soumission
+  const [submitStatus, setSubmitStatus] = useState(null); // Messages de retour
+  const [loading, setLoading] = useState(true); // Chargement des données
+  const [error, setError] = useState(''); // Messages d'erreur
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const mapRef = useRef(null);
-  const leafletMapRef = useRef(null);
-  const [mapInitialized, setMapInitialized] = useState(false);
-  const [marker, setMarker] = useState(null);
+  // Références pour la gestion de la carte Leaflet
+  const mapRef = useRef(null); // Référence du conteneur de la carte
+  const leafletMapRef = useRef(null); // Référence de l'instance Leaflet
+  const [mapInitialized, setMapInitialized] = useState(false); // État d'initialisation
+  const [marker, setMarker] = useState(null); // Marqueur sur la carte
 
-  // États pour les listes déroulantes
-  const [typesEvenement, setTypesEvenement] = useState([]);
-  const [sousTypesEvenement, setSousTypesEvenement] = useState([]);
-  const [originesEvenement, setOriginesEvenement] = useState([]);
-  const [typesCibleRes, setTypesCible] = useState([]);
-  const [zonesGeographiques, setZonesGeographiques] = useState([]);
-  const [filteredSousTypes, setFilteredSousTypes] = useState([]);
-
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTATS POUR LES LISTES DÉROULANTES DE RÉFÉRENCE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  const [typesEvenement, setTypesEvenement] = useState([]); // Types d'événements
+  const [sousTypesEvenement, setSousTypesEvenement] = useState([]); // Sous-types complets
+  const [originesEvenement, setOriginesEvenement] = useState([]); // Origines d'événements
+  const [zonesGeographiques, setZonesGeographiques] = useState([]); // Zones géographiques
+  const [filteredSousTypes, setFilteredSousTypes] = useState([]); // Sous-types filtrés
 
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STRUCTURE INITIALE DU FORMULAIRE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Définition de la structure complète d'un rapport avec valeurs par défaut
   const initialFormData = {
+    // Informations générales
     titre: '',
     date_evenement: '',
     heure_evenement: '',
     description_globale: '',
+    
+    // Classification de l'événement
     id_type_evenement: '',
     id_sous_type_evenement: '',
     id_origine_evenement: '',
+    
+    // Informations sur la cible
     id_cible: '',
     nom_cible: '',
     pavillon_cible: '',
@@ -87,15 +168,21 @@ const ModifierRapport = () => {
     immatriculation: '',
     TypeProduit: '',
     QuantiteProduit: '',
+    
+    // Localisation
     id_zone: '',
     details_lieu: '',
     latitude: '',
     longitude: '',
+    
+    // Conditions météorologiques
     direction_vent: '',
     force_vent: '',
     etat_mer: '',
     nebulosite: '',
     maree: '',
+    
+    // Alertes et contacts (checkboxes)
     cedre_alerte: false,
     cross_alerte: false,
     photo: false,
@@ -105,6 +192,8 @@ const ModifierRapport = () => {
     smp: false,
     bsaa: false,
     sensible_proximite: false,
+    
+    // Moyens et risques
     moyen_proximite: '',
     moyen_depeche: '',
     moyen_marine_etat: '',
@@ -113,15 +202,22 @@ const ModifierRapport = () => {
     delai_appareillage: ''
   };
 
-  const [formData, setFormData] = useState(initialFormData);
-  const [ancienRapport, setAncienRapport] = useState(initialFormData);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTATS DES DONNÉES DU FORMULAIRE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  const [formData, setFormData] = useState(initialFormData); // Données actuelles
+  const [ancienRapport, setAncienRapport] = useState(initialFormData); // Données originales pour comparaison
 
 
 
 
 
 
-  // Chargement des données du rapport et des listes déroulantes
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CHARGEMENT DES DONNÉES DU RAPPORT ET DES LISTES DE RÉFÉRENCE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   useEffect(() => {
     const fetchData = async () => {
       console.log('📥 Début du chargement des données du rapport et des listes déroulantes...');
@@ -130,51 +226,62 @@ const ModifierRapport = () => {
         setError('');
 
         console.log('🔄 Requêtes en cours vers l\'API...');
+        
+        // Chargement parallèle de toutes les données nécessaires
         const [
-          typesRes,
-          sousTypesRes,
-          originesRes,
-          zonesRes,
-          typesCibleRes,
-          rapportRes,
+          typesRes,        // Types d'événements
+          sousTypesRes,    // Sous-types de pollution
+          originesRes,     // Origines d'événements
+          zonesRes,        // Zones géographiques
+          rapportRes,      // Données du rapport à modifier
         ] = await Promise.all([
           axios.get(`${API}/rapports/type-evenement`),
           axios.get(`${API}/rapports/sous-type-pollution`),
           axios.get(`${API}/rapports/origine-evenement`),
           axios.get(`${API}/rapports/zone-geographique`),
-          axios.get(`${API}/rapports/type-cible`),
           axios.get(`${API}/rapports/${id}`),
         ]);
 
         console.log('✅ Données des listes déroulantes récupérées avec succès.');
 
-        // Mise à jour des listes
+        // ─────────────────────────────────────────────────────────────────────
+        // MISE À JOUR DES LISTES DE RÉFÉRENCE
+        // ─────────────────────────────────────────────────────────────────────
         setTypesEvenement(typesRes.data);
         setSousTypesEvenement(sousTypesRes.data);
         setOriginesEvenement(originesRes.data);
         setZonesGeographiques(zonesRes.data);
-        setTypesCible(typesCibleRes.data);
 
         console.log('📦 Récupération et traitement des données du rapport...');
+        
+        // ─────────────────────────────────────────────────────────────────────
+        // EXTRACTION DES DONNÉES DU RAPPORT
+        // ─────────────────────────────────────────────────────────────────────
         const rapportData = rapportRes.data.rapport || rapportRes.data;
         const metaData = rapportRes.data.metaData || {};
 
-        // 🧾 Affichage brut des données récupérées
+        // 🧾 Affichage brut des données récupérées pour débogage
         console.log('📄 Données du rapport récupérées :', rapportData);
         console.log('📄 MetaData associées :', metaData);
 
-        // Formatage date/heure locale
+        // ─────────────────────────────────────────────────────────────────────
+        // FORMATAGE DE LA DATE ET HEURE
+        // ─────────────────────────────────────────────────────────────────────
         let dateEvenement = '';
         let heureEvenement = '';
 
         if (rapportData.date_evenement) {
           const dateObj = new Date(rapportData.date_evenement);
-          dateEvenement = dateObj.toISOString().split('T')[0];
-          heureEvenement = dateObj.toTimeString().substring(0, 5);
+          dateEvenement = dateObj.toISOString().split('T')[0]; // Format YYYY-MM-DD
+          heureEvenement = dateObj.toTimeString().substring(0, 5); // Format HH:MM
           console.log(`🕒 Date UTC reçue : ${rapportData.date_evenement} → affichée : ${dateEvenement} ${heureEvenement}`);
         }
 
+        // ─────────────────────────────────────────────────────────────────────
+        // CONSTRUCTION DE L'OBJET FORMULAIRE PRÉREMPLI
+        // ─────────────────────────────────────────────────────────────────────
         const newFormData = {
+          // Informations générales du rapport
           titre: rapportData.titre || '',
           date_evenement: dateEvenement,
           heure_evenement: heureEvenement,
@@ -183,6 +290,7 @@ const ModifierRapport = () => {
           id_sous_type_evenement: rapportData.id_sous_type_evenement?.toString() || '',
           id_origine_evenement: rapportData.id_origine_evenement?.toString() || '',
 
+          // Informations sur la cible (depuis metaData)
           id_cible: metaData.cible?.id_type_cible?.toString() || '',
           nom_cible: metaData.cible?.nom || '',
           pavillon_cible: metaData.cible?.pavillon || '',
@@ -191,17 +299,20 @@ const ModifierRapport = () => {
           TypeProduit: metaData.cible?.TypeProduit || '',
           QuantiteProduit: metaData.cible?.QuantiteProduit || '',
 
+          // Informations de localisation
           id_zone: metaData.localisation?.id_zone?.toString() || '',
           details_lieu: metaData.localisation?.details_lieu || '',
           latitude: metaData.localisation?.latitude?.toString() || '',
           longitude: metaData.localisation?.longitude?.toString() || '',
 
+          // Conditions météorologiques
           direction_vent: metaData.meteo?.direction_vent || '',
           force_vent: metaData.meteo?.force_vent?.toString() || '',
           etat_mer: metaData.meteo?.etat_mer?.toString() || '',
           nebulosite: metaData.meteo?.nebulosite?.toString() || '',
           maree: metaData.meteo?.maree || '',
 
+          // Alertes et contacts (conversion 1/0 vers boolean)
           cedre_alerte: metaData.alertes?.cedre === 1,
           cross_alerte: metaData.alertes?.cross_contact === 1,
           photo: metaData.alertes?.photo === 1,
@@ -212,19 +323,24 @@ const ModifierRapport = () => {
           bsaa: metaData.alertes?.bsaa === 1,
           sensible_proximite: metaData.alertes?.sensible_proximite === 1,
 
+          // Moyens et autres informations
           moyen_proximite: metaData.alertes?.moyen_proximite || '',
           moyen_depeche: metaData.alertes?.moyen_depeche || '',
           moyen_marine_etat: metaData.alertes?.moyen_marine_etat || '',
 
+          // Évaluation des risques
           risque_court_terme: metaData.alertes?.risque_court_terme || '',
           risque_moyen_long_terme: metaData.alertes?.risque_moyen_long_terme || '',
 
+          // Délai d'appareillage pour BSAA
           delai_appareillage: metaData.alertes?.delai_appareillage_bsaa || ''
         };
 
         console.log('📝 Formulaire prérempli avec :', newFormData);
+        
+        // Mise à jour des états avec les données récupérées
         setFormData(newFormData);
-        setAncienRapport(newFormData);
+        setAncienRapport(newFormData); // Sauvegarde pour comparaison future
 
       } catch (err) {
         console.error('❌ Erreur lors du chargement des données :', err);
@@ -235,18 +351,17 @@ const ModifierRapport = () => {
       }
     };
 
-
-
     fetchData();
   }, [id]);
 
 
 
 
-  // Supprimez le premier useEffect qui fait juste appel à chargerRapport()
-
-
-  // Filtrer les sous-types en fonction du type sélectionné
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FILTRAGE DYNAMIQUE DES SOUS-TYPES D'ÉVÉNEMENTS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Filtre les sous-types en fonction du type d'événement sélectionné
   useEffect(() => {
     if (formData.id_type_evenement) {
       const filtered = sousTypesEvenement.filter(
@@ -259,18 +374,25 @@ const ModifierRapport = () => {
   }, [formData.id_type_evenement, sousTypesEvenement]);
 
 
-  // Initialisation de la carte Leaflet
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INITIALISATION ET GESTION DE LA CARTE LEAFLET
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   useEffect(() => {
-    // S'assurer que la carte est initialisée une seule fois et correctement
+    // Vérifications préalables avant initialisation de la carte
     if (mapRef.current && !mapInitialized && typeof window !== 'undefined' && formData.latitude && formData.longitude) {
-      // S'assurer que Leaflet est disponible
+      
+      // ─────────────────────────────────────────────────────────────────────
+      // CHARGEMENT DYNAMIQUE DE LEAFLET SI NÉCESSAIRE
+      // ─────────────────────────────────────────────────────────────────────
       if (!window.L) {
+        // Création du script Leaflet
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
         script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
         script.crossOrigin = '';
 
-        // Ajouter la feuille de style Leaflet si elle n'est pas déjà présente
+        // Ajout de la feuille de style Leaflet si absente
         if (!document.querySelector('link[href*="leaflet.css"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
@@ -280,60 +402,59 @@ const ModifierRapport = () => {
           document.head.appendChild(link);
         }
 
-        script.onload = initMap;
+        script.onload = initMap; // Initialisation après chargement
         document.head.appendChild(script);
       } else {
-        initMap();
+        initMap(); // Leaflet déjà disponible
       }
     }
 
-
-
-
-
-
-
+    // ─────────────────────────────────────────────────────────────────────
+    // FONCTION D'INITIALISATION DE LA CARTE
+    // ─────────────────────────────────────────────────────────────────────
     function initMap() {
       try {
         console.log("🗺️ Initialisation de la carte...");
 
-        // Nettoyer la carte précédente si elle existe
+        // Nettoyage de l'instance précédente si elle existe
         if (leafletMapRef.current) {
           leafletMapRef.current.remove();
         }
 
-        // Position initiale basée sur les coordonnées du rapport si disponibles
+        // Position initiale basée sur les coordonnées du rapport
         const initialPosition = [
-          parseFloat(formData.latitude) ,
+          parseFloat(formData.latitude),
           parseFloat(formData.longitude) 
         ];
 
-        // Créer la nouvelle carte
+        // Création de la nouvelle instance de carte
         leafletMapRef.current = window.L.map(mapRef.current).setView(initialPosition, 10);
 
-        // Ajouter la couche de tuiles OpenStreetMap
+        // Ajout de la couche de tuiles OpenStreetMap
         window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(leafletMapRef.current);
 
-        // Ajouter un marqueur à la position initiale si des coordonnées sont disponibles
+        // Ajout du marqueur à la position initiale si coordonnées disponibles
         if (formData.latitude && formData.longitude) {
           const newMarker = window.L.marker(initialPosition).addTo(leafletMapRef.current);
           setMarker(newMarker);
         }
 
-        // Ajouter un gestionnaire de clic sur la carte
+        // ───────────────────────────────────────────────────────────────────
+        // GESTIONNAIRE DE CLIC SUR LA CARTE
+        // ───────────────────────────────────────────────────────────────────
         leafletMapRef.current.on('click', function (e) {
           const { lat, lng } = e.latlng;
 
-          // Mettre à jour les champs de latitude et longitude dans le formulaire
+          // Mise à jour des champs de coordonnées dans le formulaire
           setFormData(prev => ({
             ...prev,
             latitude: lat.toFixed(6),
             longitude: lng.toFixed(6)
           }));
 
-          // Mettre à jour ou créer le marqueur
+          // Mise à jour ou création du marqueur
           if (marker) {
             marker.setLatLng([lat, lng]);
           } else {
@@ -344,7 +465,7 @@ const ModifierRapport = () => {
           console.log(`Position sélectionnée: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
         });
 
-        // Force la mise à jour de la carte après l'initialisation
+        // Force la recalculation de la taille de la carte après initialisation
         setTimeout(() => {
           if (leafletMapRef.current) {
             leafletMapRef.current.invalidateSize();
@@ -358,33 +479,43 @@ const ModifierRapport = () => {
       }
     }
 
-    // Nettoyer la carte au démontage du composant
+    // ─────────────────────────────────────────────────────────────────────
+    // NETTOYAGE AU DÉMONTAGE DU COMPOSANT
+    // ─────────────────────────────────────────────────────────────────────
     return () => {
       if (leafletMapRef.current) {
         leafletMapRef.current.remove();
         leafletMapRef.current = null;
       }
     };
-  }, [formData.latitude, formData.longitude]);
+  }, [formData.latitude, formData.longitude, mapInitialized, marker]);
 
-  // Gérer les changements dans le formulaire
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GESTIONNAIRES D'ÉVÉNEMENTS DU FORMULAIRE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Gestionnaire générique des changements dans le formulaire
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
     setFormData(prev => ({ ...prev, [name]: newValue }));
   };
 
-  // Mettre à jour la carte si les coordonnées sont modifiées manuellement
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYNCHRONISATION CARTE ↔ COORDONNÉES MANUELLES
+  // ─────────────────────────────────────────────────────────────────────────
+  
+  // Met à jour la carte si les coordonnées sont modifiées manuellement
   useEffect(() => {
     if (mapInitialized && leafletMapRef.current && formData.latitude && formData.longitude) {
       const lat = parseFloat(formData.latitude);
       const lng = parseFloat(formData.longitude);
 
       if (!isNaN(lat) && !isNaN(lng)) {
-        // Centrer la carte sur les coordonnées saisies manuellement
+        // Centrage de la carte sur les nouvelles coordonnées
         leafletMapRef.current.setView([lat, lng], 12);
 
-        // Mettre à jour ou créer le marqueur
+        // Mise à jour ou création du marqueur
         if (marker) {
           marker.setLatLng([lat, lng]);
         } else {
@@ -395,9 +526,14 @@ const ModifierRapport = () => {
     }
   }, [formData.latitude, formData.longitude, mapInitialized, marker]);
 
-  // Validation du formulaire avant soumission
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VALIDATION DU FORMULAIRE AVANT SOUMISSION
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   const validateForm = () => {
-    // Vérifier les champs obligatoires
+    // ─────────────────────────────────────────────────────────────────────
+    // VÉRIFICATION DES CHAMPS OBLIGATOIRES
+    // ─────────────────────────────────────────────────────────────────────
     if (!formData.titre || !formData.date_evenement || !formData.heure_evenement ||
       !formData.id_type_evenement || !formData.description_globale || !formData.id_zone) {
       setSubmitStatus({
@@ -407,7 +543,9 @@ const ModifierRapport = () => {
       return false;
     }
 
-    // Vérifier si au moins un champ a été modifié
+    // ─────────────────────────────────────────────────────────────────────
+    // VÉRIFICATION DES MODIFICATIONS
+    // ─────────────────────────────────────────────────────────────────────
     const isModified = Object.keys(formData).some(
       key => formData[key] !== ancienRapport[key]
     );
@@ -423,22 +561,26 @@ const ModifierRapport = () => {
   };
 
 
-  // Fonction pour gérer l'envoi du formulaire
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FONCTION D'ARCHIVAGE DU RAPPORT
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   const handleArchiver = async (e) => {
-
+    // Demande de confirmation avant archivage
     const confirmation = window.confirm("Voulez-vous vraiment archiver ce rapport ? Cette action est irréversible.");
-
     if (!confirmation) return;
-    e.preventDefault();
-
     
-
+    e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
 
     try {
+      // ─────────────────────────────────────────────────────────────────────
+      // PRÉPARATION DES DONNÉES POUR L'ARCHIVAGE
+      // ─────────────────────────────────────────────────────────────────────
       const dateTimeString = `${formData.date_evenement}T${formData.heure_evenement}:00`;
 
+      // Structure du rapport avec flag d'archivage
       const rapport = {
         titre: formData.titre,
         date_evenement: dateTimeString,
@@ -447,9 +589,10 @@ const ModifierRapport = () => {
         id_type_evenement: formData.id_type_evenement ? parseInt(formData.id_type_evenement) : null,
         id_sous_type_evenement: formData.id_sous_type_evenement ? parseInt(formData.id_sous_type_evenement) : null,
         id_origine_evenement: formData.id_origine_evenement ? parseInt(formData.id_origine_evenement) : null,
-        archive : 1 // Archiver le rapport
+        archive: 1 // ✅ Flag d'archivage
       };
 
+      // Métadonnées associées au rapport
       const metaData = {
         cible: {
           id_cible: formData.id_cible || null,
@@ -482,60 +625,41 @@ const ModifierRapport = () => {
         }
       };
 
-      // Envoi du PUT vers l'API
+      // ─────────────────────────────────────────────────────────────────────
+      // ENVOI DE LA REQUÊTE D'ARCHIVAGE
+      // ─────────────────────────────────────────────────────────────────────
       const response = await axios.put(`${API}/rapports/${id}/after`, {
         rapport,
         metaData
       });
 
-
+      // ─────────────────────────────────────────────────────────────────────
+      // GÉNÉRATION DU DÉTAIL D'ACTION POUR L'HISTORIQUE
+      // ─────────────────────────────────────────────────────────────────────
       function genererDetailAction(ancien, nouveau) {
         console.log('Ancien rapport:', ancien);
-
         const modifications = [];
 
-        // Parcours des champs du nouveau rapport
+        // Parcours des champs pour détecter les changements
         for (const champ in nouveau) {
           const ancienVal = ancien[champ];
           const nouveauVal = nouveau[champ];
 
-          // Si les valeurs sont différentes, on les ajoute aux modifications
           if (ancienVal !== nouveauVal) {
             modifications.push(`${champ} : "${ancienVal}" → "${nouveauVal}"`);
           }
         }
 
-        // Retourne un message selon qu'il y ait des modifications ou non
         return modifications.length > 0
           ? `Champs modifiés :\n- ${modifications.join('\n- ')}`
           : 'Aucune modification détectée';
       }
 
-      // Fonction pour formater la valeur (en tenant compte des valeurs null/undefined et autres types)
-      function formatValeur(val) {
-        if (val === null || val === undefined) {
-          return ''; // Retourne une chaîne vide si la valeur est null ou undefined
-        }
-
-        // Si la valeur est un booléen, on la transforme en chaîne de caractères
-        if (typeof val === 'boolean') {
-          return val ? 'Oui' : 'Non';
-        }
-
-        // Si la valeur est un nombre, on retourne son formatage
-        if (typeof val === 'number') {
-          return val.toString();
-        }
-
-        // Pour les autres types de valeurs (chaînes, objets, tableaux, etc.), on retourne la valeur sous forme de chaîne
-        return val.toString();
-      }
-
-
-
-      // GÉNÉRATION DU DETAIL_ACTION AVANCÉ
       const detail_action = genererDetailAction(ancienRapport, formData);
 
+      // ─────────────────────────────────────────────────────────────────────
+      // AJOUT D'UNE ENTRÉE D'HISTORIQUE
+      // ─────────────────────────────────────────────────────────────────────
       console.log('detail_action:', detail_action);
       await axios.post(`${API}/rapports/historique`, {
         id_rapport: id,
@@ -548,9 +672,11 @@ const ModifierRapport = () => {
       console.log('Rapport archivé avec succès:', response.data);
       setSubmitStatus({ type: 'success', message: 'Rapport mis à jour avec succès!' });
 
+      // Redirection après succès
       setTimeout(() => {
         navigate('/liste-rapports');
       }, 2000);
+      
     } catch (error) {
       console.error('Erreur lors de la mise à jour du rapport:', error);
       setSubmitStatus({
@@ -562,17 +688,26 @@ const ModifierRapport = () => {
     }
   };
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FONCTION PRINCIPALE DE MODIFICATION DU RAPPORT
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation préalable du formulaire
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     setSubmitStatus(null);
 
     try {
+      // ─────────────────────────────────────────────────────────────────────
+      // PRÉPARATION DES DONNÉES DE MODIFICATION
+      // ─────────────────────────────────────────────────────────────────────
       const dateTimeString = `${formData.date_evenement}T${formData.heure_evenement}:00`;
 
+      // Structure principale du rapport (sans archivage)
       const rapport = {
         titre: formData.titre,
         date_evenement: dateTimeString,
@@ -583,6 +718,7 @@ const ModifierRapport = () => {
         id_origine_evenement: formData.id_origine_evenement ? parseInt(formData.id_origine_evenement) : null,
       };
 
+      // Métadonnées complètes du rapport
       const metaData = {
         cible: {
           id_cible: formData.id_cible || null,
@@ -615,60 +751,41 @@ const ModifierRapport = () => {
         }
       };
 
-      // Envoi du PUT vers l'API
+      // ─────────────────────────────────────────────────────────────────────
+      // ENVOI DE LA REQUÊTE DE MODIFICATION
+      // ─────────────────────────────────────────────────────────────────────
       const response = await axios.put(`${API}/rapports/${id}/after`, {
         rapport,
         metaData
       });
 
-
+      // ─────────────────────────────────────────────────────────────────────
+      // GÉNÉRATION DU DÉTAIL D'ACTION POUR L'HISTORIQUE
+      // ─────────────────────────────────────────────────────────────────────
       function genererDetailAction(ancien, nouveau) {
         console.log('Ancien rapport:', ancien);
-
         const modifications = [];
 
-        // Parcours des champs du nouveau rapport
+        // Détection des changements entre ancien et nouveau
         for (const champ in nouveau) {
           const ancienVal = ancien[champ];
           const nouveauVal = nouveau[champ];
 
-          // Si les valeurs sont différentes, on les ajoute aux modifications
           if (ancienVal !== nouveauVal) {
             modifications.push(`${champ} : "${ancienVal}" → "${nouveauVal}"`);
           }
         }
 
-        // Retourne un message selon qu'il y ait des modifications ou non
         return modifications.length > 0
           ? `Champs modifiés :\n- ${modifications.join('\n- ')}`
           : 'Aucune modification détectée';
       }
 
-      // Fonction pour formater la valeur (en tenant compte des valeurs null/undefined et autres types)
-      function formatValeur(val) {
-        if (val === null || val === undefined) {
-          return ''; // Retourne une chaîne vide si la valeur est null ou undefined
-        }
-
-        // Si la valeur est un booléen, on la transforme en chaîne de caractères
-        if (typeof val === 'boolean') {
-          return val ? 'Oui' : 'Non';
-        }
-
-        // Si la valeur est un nombre, on retourne son formatage
-        if (typeof val === 'number') {
-          return val.toString();
-        }
-
-        // Pour les autres types de valeurs (chaînes, objets, tableaux, etc.), on retourne la valeur sous forme de chaîne
-        return val.toString();
-      }
-
-
-
-      // GÉNÉRATION DU DETAIL_ACTION AVANCÉ
       const detail_action = genererDetailAction(ancienRapport, formData);
 
+      // ─────────────────────────────────────────────────────────────────────
+      // AJOUT D'UNE ENTRÉE D'HISTORIQUE
+      // ─────────────────────────────────────────────────────────────────────
       console.log('detail_action:', detail_action);
       await axios.post(`${API}/rapports/historique`, {
         id_rapport: id,
@@ -681,9 +798,11 @@ const ModifierRapport = () => {
       console.log('Rapport mis à jour avec succès:', response.data);
       setSubmitStatus({ type: 'success', message: 'Rapport mis à jour avec succès!' });
 
+      // Redirection après succès
       setTimeout(() => {
         navigate('/liste-rapports');
       }, 2000);
+      
     } catch (error) {
       console.error('Erreur lors de la mise à jour du rapport:', error);
       setSubmitStatus({
@@ -697,6 +816,11 @@ const ModifierRapport = () => {
 
 
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AFFICHAGE CONDITIONNEL SELON L'ÉTAT DE CHARGEMENT ET D'ACCÈS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // État de chargement initial
   if (loading) return (
     <div className="loading-container">
       <div className="loading-spinner"></div>
@@ -704,6 +828,7 @@ const ModifierRapport = () => {
     </div>
   );
 
+  // État d'erreur de chargement
   if (error) return (
     <div className="error-container">
       <h2>Erreur</h2>
@@ -714,7 +839,7 @@ const ModifierRapport = () => {
     </div>
   );
 
-
+  // Vérification des permissions en cours
   if (!accessChecked) {
     return (
       <div className="loading-container">
@@ -724,11 +849,11 @@ const ModifierRapport = () => {
     );
   }
 
+  // Accès refusé
   if (!hasAccess) {
     return (
       <div className="error-container">
         <h2>Accès refusé</h2>
-
         <p>Vous n'avez pas les droits pour modifier ce rapport.</p>
         <br></br>
         <button className="btn-primary" onClick={() => navigate('/liste-rapports')}>
@@ -738,33 +863,41 @@ const ModifierRapport = () => {
     );
   }
 
-
-
-
-  // Afficher le champ de délai d'appareillage seulement si BSAA est coché
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOGIQUE D'AFFICHAGE CONDITIONNEL DES CHAMPS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Affichage du champ délai d'appareillage seulement si BSAA est coché
   const showDelaiAppareillage = formData.bsaa;
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RENDU PRINCIPAL DU COMPOSANT - FORMULAIRE DE MODIFICATION
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   return (
-
-
-
     <div className="rapport-container">
-
-
+      {/* ───────────────────────────────────────────────────────────────────── */}
+      {/* EN-TÊTE DU FORMULAIRE                                                  */}
+      {/* ───────────────────────────────────────────────────────────────────── */}
       <div className="rapport-header">
-        <h1 >Modifier Un rapport d'Evenement</h1>
+        <h1>Modifier Un rapport d'Evenement</h1>
         <p className="rapport-subtitle" style={{ fontSize: '0.9em', fontStyle: 'italic' }}>
           Complétez tous les champs obligatoires (*) pour soumettre un nouveau rapport
         </p>
       </div>
 
-
-
+      {/* ───────────────────────────────────────────────────────────────────── */}
+      {/* FORMULAIRE PRINCIPAL DE MODIFICATION                                   */}
+      {/* ───────────────────────────────────────────────────────────────────── */}
       <form className="rapport-form" onSubmit={handleSubmit}>
-        {/* Section Informations Générales */}
+        
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 1 : INFORMATIONS GÉNÉRALES                                  */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="form-section">
           <h2>Informations Générales</h2>
 
+          {/* Titre du rapport */}
           <div className="form-group">
             <label htmlFor="titre">
               Titre du rapport *
@@ -783,6 +916,7 @@ const ModifierRapport = () => {
             />
           </div>
 
+          {/* Date et heure de l'événement */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="date_evenement">
@@ -818,11 +952,14 @@ const ModifierRapport = () => {
           </div>
         </div>
 
-        {/* Section Classification de l'Événement */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 2 : CLASSIFICATION DE L'ÉVÉNEMENT                           */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="form-section">
           <h2>Classification de l'Événement</h2>
 
           <div className="form-row">
+            {/* Type d'événement avec filtrage des sous-types */}
             <div className="form-group">
               <label htmlFor="id_type_evenement">
                 Type d'événement *
@@ -845,6 +982,7 @@ const ModifierRapport = () => {
               </select>
             </div>
 
+            {/* Sous-type d'événement (filtré par le type sélectionné) */}
             <div className="form-group">
               <label htmlFor="id_sous_type_evenement">
                 Précision du type d'événement
@@ -868,6 +1006,7 @@ const ModifierRapport = () => {
             </div>
           </div>
 
+          {/* Origine de l'événement */}
           <div className="form-group">
             <label htmlFor="id_origine_evenement">
               Origine de l'événement
@@ -890,10 +1029,14 @@ const ModifierRapport = () => {
           </div>
         </div>
 
-        {/* Section pour la cible */}
+        {/* ...existing code... */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 3 : CIBLE DE L'ÉVÉNEMENT                                    */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="form-section">
           <h2>Cible de l'Événement</h2>
 
+          {/* Type de cible */}
           <div className="form-group">
             <label htmlFor="libelle">
               Type de cible
@@ -907,10 +1050,10 @@ const ModifierRapport = () => {
               onChange={handleChange}
               className="form-control"
               placeholder="Ex: Navire, Installation, etc."
-            >
-            </input>
+            />
           </div>
 
+          {/* Informations détaillées de la cible */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="nom_cible">
@@ -961,8 +1104,7 @@ const ModifierRapport = () => {
             </div>
           </div>
 
-
-
+          {/* Informations sur le produit impliqué */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="TypeProduit">
@@ -996,13 +1138,16 @@ const ModifierRapport = () => {
               />
             </div>
           </div>
-
         </div>
 
-        {/* Section pour la localisation */}
+        {/* ...existing code... */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 4 : LOCALISATION DE L'ÉVÉNEMENT                             */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="form-section">
           <h2>Localisation de l'Événement</h2>
 
+          {/* Zone géographique */}
           <div className="form-group">
             <label htmlFor="id_zone">
               Zone géographique *
@@ -1025,6 +1170,7 @@ const ModifierRapport = () => {
             </select>
           </div>
 
+          {/* Description précise du lieu */}
           <div className="form-group">
             <label htmlFor="details_lieu">
               Précision sur le lieu
@@ -1041,6 +1187,7 @@ const ModifierRapport = () => {
             />
           </div>
 
+          {/* Coordonnées GPS */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="latitude">
@@ -1075,6 +1222,7 @@ const ModifierRapport = () => {
             </div>
           </div>
 
+          {/* Carte interactive pour sélection des coordonnées */}
           <div className="map-container">
             <label>Sélectionnez un point sur la carte (cliquez pour définir les coordonnées)</label>
             <div
@@ -1088,11 +1236,15 @@ const ModifierRapport = () => {
           </div>
         </div>
 
-        {/* Section pour les conditions météorologiques */}
+        {/* ...existing code... */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 5 : CONDITIONS MÉTÉOROLOGIQUES                              */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="form-section">
           <h2>Conditions Météorologiques</h2>
 
           <div className="form-row">
+            {/* Direction du vent et état de la marée */}
             <div className="form-group">
               <label htmlFor="direction_vent">
                 Direction du vent
@@ -1137,7 +1289,7 @@ const ModifierRapport = () => {
               </select>
             </div>
 
-
+            {/* Force du vent avec slider */}
             <div className="form-group">
               <label htmlFor="force_vent">
                 Force du vent (0-12)
@@ -1158,6 +1310,7 @@ const ModifierRapport = () => {
           </div>
 
           <div className="form-row">
+            {/* État de la mer avec slider */}
             <div className="form-group">
               <label htmlFor="etat_mer">
                 État de la mer (0-9)
@@ -1176,6 +1329,7 @@ const ModifierRapport = () => {
               <div className="range-value">{formData.etat_mer || '0'}</div>
             </div>
 
+            {/* Nébulosité avec slider */}
             <div className="form-group">
               <label htmlFor="nebulosite">
                 Nébulosité (0-9)
@@ -1196,7 +1350,7 @@ const ModifierRapport = () => {
           </div>
         </div>
 
-        {/* Section pour les contacts et alertes */}
+        {/* ...existing code... */}
         <div className="form-section">
           <h2>Contacts et Alertes</h2>
 
@@ -1395,7 +1549,9 @@ const ModifierRapport = () => {
 
         </div>
 
-        {/* Section Description Détaillée */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 7 : DESCRIPTION DÉTAILLÉE                                   */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="form-section">
           <h2>Description Détaillée</h2>
 
@@ -1417,9 +1573,10 @@ const ModifierRapport = () => {
           </div>
         </div>
 
-        {/* Boutons d'action */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* BOUTONS D'ACTION                                                     */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="form-actions">
-
           <button
             type="submit"
             className={`btn-primary ${isSubmitting ? 'loading' : ''}`}
@@ -1429,6 +1586,7 @@ const ModifierRapport = () => {
           </button>
         </div>
 
+        {/* Bouton d'archivage avec confirmation */}
         <div className="form-actions">
           <button
             type="button"
@@ -1440,14 +1598,18 @@ const ModifierRapport = () => {
           </button>
         </div>
       </form>
+      
       <br></br>
+      
+      {/* ───────────────────────────────────────────────────────────────────── */}
+      {/* AFFICHAGE DES MESSAGES DE STATUT                                       */}
+      {/* ───────────────────────────────────────────────────────────────────── */}
       {submitStatus && (
         <div className={`status-message ${submitStatus.type}`}>
           {submitStatus.message}
         </div>
       )}
     </div>
-
   );
 
 };

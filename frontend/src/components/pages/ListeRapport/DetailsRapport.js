@@ -163,7 +163,7 @@ const DetailsRapport = ({
       leafletMapRef.current = null;
     }
   };
-}, [detailedRapport, rapportSelectionne, expandedSections.localisation]);
+}, [detailedRapport, rapportSelectionne, expandedSections.localisation, hasValidCoordinates]);
 
   // Fonction pour obtenir l'icône de statut
   const getStatusIcon = (value) => {

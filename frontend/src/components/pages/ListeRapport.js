@@ -1,3 +1,66 @@
+/**
+==================================================================================
+==================================================================================
+@file ListeRapport.js
+@location frontend/src/components/pages/ListeRapport.js
+@description Composant principal pour la gestion complète des rapports CEPPOL
+FONCTIONNALITÉS PRINCIPALES :
+────────────────────────────────────────────────────────────────────────────────
+• Affichage de la liste complète des rapports avec pagination
+• Recherche textuelle avancée dans tous les champs de rapport
+• Système de filtrage multi-critères (type, sous-type, origine, zone, dates)
+• Visualisation détaillée des rapports avec modal interactive
+• Gestion de l'historique des actions sur chaque rapport
+• Système de permissions et gestion des accès utilisateurs
+• Export PDF complet des rapports avec mise en forme
+• Téléchargement de l'historique au format texte
+• Modification en ligne des rapports existants
+• Ajout d'historique manuel par les utilisateurs autorisés
+
+SYSTÈME DE PERMISSIONS :
+────────────────────────────────────────────────────────────────────────────────
+• Opérateur créateur : accès complet au rapport
+• Opérateurs avec droits d'accès : modification autorisée
+• Autres utilisateurs : consultation uniquement
+• Gestion dynamique des accès par rapport
+
+STRUCTURE DU COMPOSANT :
+────────────────────────────────────────────────────────────────────────────────
+• Barre de recherche : Recherche textuelle globale
+• Panneau de filtres : Filtrage par critères multiples
+• Tableau des rapports : Liste paginée avec actions contextuelles
+• Modal détails : Affichage complet d'un rapport
+• Modal historique : Chronologie des actions
+• Modal gestion accès : Attribution/retrait des droits
+
+DÉPENDANCES :
+────────────────────────────────────────────────────────────────────────────────
+• React (hooks: useState, useEffect, useRef)
+• AuthContext (authentification et droits utilisateur)
+• Axios (requêtes API)
+• Framer Motion (animations et transitions)
+• jsPDF (génération de documents PDF)
+• Lucide React (icônes)
+• Composants enfants : Filtres, RapportsTable, DetailsRapport, GestionAccesModal
+
+API UTILISÉE :
+────────────────────────────────────────────────────────────────────────────────
+• GET /rapports - Liste des rapports
+• GET /rapports/type-evenement - Types d'événements
+• GET /rapports/sous-type-pollution - Sous-types de pollution
+• GET /rapports/origine-evenement - Origines d'événements
+• GET /rapports/zone-geographique - Zones géographiques
+• GET /rapports/operateurs - Liste des opérateurs
+• GET /rapports/historique/:id - Historique d'un rapport
+• GET /rapports/:id/acces - Accès d'un rapport
+• POST /rapports/:id/acces - Ajout d'accès
+• DELETE /rapports/:id/acces/:operateur - Suppression d'accès
+• POST /rapports/historique - Ajout d'historique manuel
+
+@author Oscar Vieujean
+==================================================================================
+*/
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -10,78 +73,175 @@ import Filtres from './ListeRapport/Filtres';
 import RapportsTable from "./ListeRapport/RapportsTable";
 import DetailsRapport from './ListeRapport/DetailsRapport';
 import GestionAccesModal from './ListeRapport/GestionAccessModal';
-
-/**
- * Composant principal pour la gestion et l'affichage des rapports.
- * Permet la recherche, le filtrage, la gestion des accès et l'historique.
- */
 const ListeRapport = () => {
   // =========================
-  // States principaux
+  // ÉTATS PRINCIPAUX DU COMPOSANT
   // =========================
+  
+  /** @desc Liste complète des rapports récupérés depuis l'API */
   const [rapports, setRapports] = useState([]);
+  
+  /** @desc État de chargement pour l'affichage du loader */
   const [loading, setLoading] = useState(true);
+  
+  /** @desc Messages d'erreur à afficher à l'utilisateur */
   const [error, setError] = useState(null);
 
-  // Données pour les filtres
+  // =========================
+  // DONNÉES DE RÉFÉRENCE POUR LES FILTRES
+  // =========================
+  
+  /** @desc Liste des types d'événements disponibles (ex: Pollution, Accident) */
   const [typeEvenements, setTypeEvenements] = useState([]);
+  
+  /** @desc Liste des sous-types d'événements (ex: Hydrocarbures, Chimique) */
   const [sousTypeEvenements, setSousTypeEvenements] = useState([]);
+  
+  /** @desc Liste des origines d'événements (ex: Navire, Installation portuaire) */
   const [origineEvenements, setOrigineEvenements] = useState([]);
+  
+  /** @desc Liste des zones géographiques de surveillance */
   const [zones, setZones] = useState([]);
+  
+  /** @desc Liste de tous les opérateurs du système */
   const [operateurs, setOperateurs] = useState([]);
 
-  // Filtres et recherche
+  // =========================
+  // SYSTÈME DE FILTRAGE ET RECHERCHE
+  // =========================
+  
+  /** @desc Indicateur si des filtres sont appliqués */
   const [filtreActif, setFiltreActif] = useState(false);
+  
+  /** @desc Terme de recherche textuelle dans tous les champs */
   const [searchTerm, setSearchTerm] = useState('');
+  
+  /** @desc Objet contenant tous les critères de filtrage actifs */
   const [filtres, setFiltres] = useState({
-    type: '',
-    sousType: '',
-    origine: '',
-    zone: '',
-    dateDebut: '',
-    dateFin: '',
-    archive: '0'
+    type: '',           // ID du type d'événement
+    sousType: '',       // ID du sous-type d'événement  
+    origine: '',        // ID de l'origine d'événement
+    zone: '',           // ID de la zone géographique
+    dateDebut: '',      // Date de début pour filtrage temporel
+    dateFin: '',        // Date de fin pour filtrage temporel
+    archive: '0'        // Statut d'archivage (0=actif, 1=archivé)
   });
 
-  // Sélection et affichage
+  // =========================
+  // GESTION DE L'AFFICHAGE ET SÉLECTION
+  // =========================
+  
+  /** @desc Rapport actuellement sélectionné pour affichage détaillé */
   const [rapportSelectionne, setRapportSelectionne] = useState(null);
+  
+  /** @desc Contrôle l'affichage de la vue historique dans la modal */
   const [afficherHistorique, setAfficherHistorique] = useState(false);
+  
+  /** @desc Contrôle l'affichage du formulaire d'ajout d'historique */
   const [afficherAjoutHistorique, setAfficherAjoutHistorique] = useState(false);
+  
+  /** @desc Contrôle l'affichage de la modal de gestion des accès */
   const [afficherGestionAcces, setAfficherGestionAcces] = useState(false);
 
-  // Gestion des accès
+  // =========================
+  // SYSTÈME DE GESTION DES ACCÈS UTILISATEURS
+  // =========================
+  
+  /** @desc Liste des opérateurs ayant accès au rapport sélectionné */
   const [operateursAvecAcces, setOperateursAvecAcces] = useState([]);
+  
+  /** @desc ID de l'opérateur à ajouter aux accès */
   const [nouvelOperateurAcces, setNouvelOperateurAcces] = useState('');
+  
+  /** @desc Matrice des droits d'accès : {id_rapport: [id_operateur1, id_operateur2...]} */
   const [droitsAcces, setDroitsAcces] = useState({});
 
-  // Historique
+  // =========================
+  // GESTION DE L'HISTORIQUE DES RAPPORTS
+  // =========================
+  
+  /** @desc Données complètes de l'historique du rapport sélectionné */
   const [historiqueData, setHistoriqueData] = useState(null);
+  
+  /** @desc Formulaire pour ajouter un nouvel élément d'historique */
   const [nouvelHistorique, setNouvelHistorique] = useState({
-    type_action: '',
-    detail_action: ''
+    type_action: '',      // Type d'action (ex: OBSERVATION, INTERVENTION)
+    detail_action: ''     // Description détaillée de l'action
   });
 
-  // UI
+  // =========================
+  // CONTRÔLES D'INTERFACE UTILISATEUR
+  // =========================
+  
+  /** @desc Contrôle l'ouverture/fermeture du panneau de filtres */
   const [filtresOuverts, setFiltresOuverts] = useState(false);
 
-  // Authentification
+  // =========================
+  // AUTHENTIFICATION ET AUTORISATIONS
+  // =========================
+  
+  /** @desc Données d'authentification de l'utilisateur courant */
   const { authData } = useAuth();
 
-  // Références pour les modals
+  // =========================
+  // RÉFÉRENCES DOM POUR LES MODALS
+  // =========================
+  
+  /** @desc Référence pour la modal principale (détails/historique) */
   const modalRef = useRef(null);
+  
+  /** @desc Référence pour la modal de gestion des accès */
   const accessModalRef = useRef(null);
 
-  // Base URL API
+  // =========================
+  // CONFIGURATION API
+  // =========================
+  
+  /** @desc URL de base de l'API backend */
   const API_BASE_URL = process.env.REACT_APP_API_URL;
 
   // =========================
-  // Effets de chargement initial
+  // FONCTIONS DE GESTION DES DONNÉES API
   // =========================
+
+  /**
+   * Récupère tous les droits d'accès depuis l'API et les organise par rapport
+   * @desc Construit un objet de la forme {id_rapport: [id_operateur1, id_operateur2...]}
+   * @async
+   */
+  const fetchDroitsAcces = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/rapports/acces/all`);
+      const droits = {};
+      res.data.forEach(droit => {
+        if (!droits[droit.id_rapport]) droits[droit.id_rapport] = [];
+        droits[droit.id_rapport].push(droit.id_operateur);
+      });
+      setDroitsAcces(droits);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des droits d'accès:", err);
+    }
+  };
+
+  // =========================
+  // EFFET DE CHARGEMENT INITIAL - RÉCUPÉRATION DES DONNÉES
+  // =========================
+  
+  /**
+   * Effet principal de chargement des données au montage du composant
+   * @desc Récupère en parallèle toutes les données nécessaires :
+   * - Liste des rapports
+   * - Données de référence pour les filtres (types, sous-types, etc.)
+   * - Droits d'accès utilisateurs
+   */
   useEffect(() => {
+    if (!API_BASE_URL) return; // Vérification de la configuration API
+    
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Récupération des données principales
+        
+        // Récupération en parallèle de toutes les données nécessaires
         const [
           rapportsRes,
           typeEvRes,
@@ -97,6 +257,8 @@ const ListeRapport = () => {
           axios.get(`${API_BASE_URL}/rapports/zone-geographique`),
           axios.get(`${API_BASE_URL}/rapports/operateurs`)
         ]);
+        
+        // Mise à jour des états avec les données récupérées
         setRapports(rapportsRes.data);
         setTypeEvenements(typeEvRes.data);
         setSousTypeEvenements(sousTypeEvRes.data);
@@ -104,6 +266,7 @@ const ListeRapport = () => {
         setZones(zonesRes.data);
         setOperateurs(operateursRes.data);
 
+        // Chargement des droits d'accès
         await fetchDroitsAcces();
       } catch (err) {
         console.error("Erreur lors de la récupération des données:", err);
@@ -112,36 +275,61 @@ const ListeRapport = () => {
         setLoading(false);
       }
     };
+    
     fetchData();
-  }, []);
+  }, [API_BASE_URL]);
 
   // =========================
-  // Fonctions utilitaires
+  // FONCTIONS UTILITAIRES DE TRANSFORMATION DES DONNÉES
   // =========================
 
-  // Récupère le libellé d'un type d'événement
+  /**
+   * Récupère le libellé d'un type d'événement par son ID
+   * @param {number} id - ID du type d'événement
+   * @returns {string} Libellé du type d'événement ou 'Non défini'
+   */
   const getTypeEvenementLibelle = (id) =>
     typeEvenements.find(t => t.id_type_evenement === id)?.libelle || 'Non défini';
 
-  // Récupère le libellé d'un sous-type d'événement
+  /**
+   * Récupère le libellé d'un sous-type d'événement par son ID
+   * @param {number} id - ID du sous-type d'événement
+   * @returns {string} Libellé du sous-type d'événement ou 'Non défini'
+   */
   const getSousTypeEvenementLibelle = (id) =>
     sousTypeEvenements.find(st => st.id_sous_type_evenement === id)?.libelle || 'Non défini';
 
-  // Récupère le libellé d'une origine d'événement
+  /**
+   * Récupère le libellé d'une origine d'événement par son ID
+   * @param {number} id - ID de l'origine d'événement
+   * @returns {string} Libellé de l'origine d'événement ou 'Non défini'
+   */
   const getOrigineEvenementLibelle = (id) =>
     origineEvenements.find(o => o.id_origine_evenement === id)?.libelle || 'Non défini';
 
-  // Récupère le nom d'une zone
+  /**
+   * Récupère le nom d'une zone géographique par son ID
+   * @param {number} id - ID de la zone géographique
+   * @returns {string} Nom de la zone ou 'Non définie'
+   */
   const getZoneNom = (id) =>
     zones.find(z => z.id_zone === id)?.nom_zone || 'Non définie';
 
-  // Récupère le nom complet d'un opérateur
+  /**
+   * Récupère le nom complet d'un opérateur par son ID
+   * @param {number} id - ID de l'opérateur
+   * @returns {string} Nom complet de l'opérateur (prénom + nom) ou ID formaté
+   */
   const getOperateurNom = (id) => {
     const op = operateurs.find(o => o.id_operateur === id);
     return op ? `${op.prenom} ${op.nom}` : `Opérateur ID ${id}`;
   };
 
-  // Formate une date en français
+  /**
+   * Formate une date au format français avec heure
+   * @param {string} dateString - Date au format ISO
+   * @returns {string} Date formatée (DD/MM/YYYY HH:MM)
+   */
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -153,35 +341,36 @@ const ListeRapport = () => {
     });
   };
 
-  // Vérifie si l'utilisateur courant peut modifier le rapport
+  /**
+   * Vérifie si l'utilisateur courant peut modifier le rapport sélectionné
+   * @param {Object} rapport - Objet rapport à vérifier
+   * @returns {boolean} true si l'utilisateur peut modifier, false sinon
+   * @desc Un utilisateur peut modifier s'il est :
+   * - Le créateur du rapport (id_operateur)
+   * - Ou s'il a des droits d'accès explicites sur ce rapport
+   */
   const userPeutModifier = (rapport) => {
     if (!authData || !rapport) return false;
     const userId = authData.Opid;
+    
+    // Vérification si l'utilisateur est le créateur
     if (rapport.id_operateur === userId) return true;
+    
+    // Vérification des droits d'accès explicites
     const acces = droitsAcces[rapport.id_rapport] || [];
     return acces.includes(userId);
   };
 
   // =========================
-  // Fonctions de gestion API
+  // FONCTIONS DE GESTION DES DONNÉES API - OPÉRATIONS CRUD
   // =========================
 
-  // Récupère tous les droits d'accès
-  const fetchDroitsAcces = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/rapports/acces/all`);
-      const droits = {};
-      res.data.forEach(droit => {
-        if (!droits[droit.id_rapport]) droits[droit.id_rapport] = [];
-        droits[droit.id_rapport].push(droit.id_operateur);
-      });
-      setDroitsAcces(droits);
-    } catch (err) {
-      console.error("Erreur lors de la récupération des droits d'accès:", err);
-    }
-  };
-
-  // Récupère l'historique d'un rapport
+  /**
+   * Récupère l'historique complet d'un rapport spécifique
+   * @param {number} idRapport - ID du rapport dont on veut l'historique
+   * @returns {Array} Tableau des actions d'historique ou tableau vide en cas d'erreur
+   * @async
+   */
   const fetchHistorique = async (idRapport) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/rapports/historique/${idRapport}`);
@@ -193,13 +382,17 @@ const ListeRapport = () => {
     }
   };
 
-  // Récupère tous les rapports (utile pour réinitialiser)
+  /**
+   * Récupère tous les rapports depuis l'API et met à jour les droits d'accès
+   * @desc Utilisé pour réinitialiser la vue après modifications
+   * @async
+   */
   const fetchRapports = async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/rapports`);
       setRapports(res.data);
-      await fetchDroitsAcces();
+      await fetchDroitsAcces(); // Mise à jour des droits d'accès
     } catch (err) {
       console.error("Erreur lors de la récupération des rapports:", err);
       setError("Une erreur est survenue lors du chargement des rapports.");
@@ -209,19 +402,30 @@ const ListeRapport = () => {
   };
 
   // =========================
-  // Handlers UI et actions
+  // GESTIONNAIRES D'ÉVÉNEMENTS UI ET ACTIONS UTILISATEUR
   // =========================
 
-  // Gestion de la recherche
+  /**
+   * Gestionnaire de changement du terme de recherche
+   * @param {Event} e - Événement de changement du champ de recherche
+   */
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
-  // Gestion des filtres
+  /**
+   * Gestionnaire de changement des filtres
+   * @param {Event} e - Événement de changement d'un champ de filtre
+   * @desc Met à jour l'objet filtres avec la nouvelle valeur
+   */
   const handleFiltreChange = (e) => {
     const { name, value } = e.target;
     setFiltres(prev => ({ ...prev, [name]: value }));
   };
 
-  // Réinitialise tous les filtres
+  /**
+   * Réinitialise tous les filtres et recharge les rapports
+   * @desc Remet tous les filtres à leur état initial et recharge la liste complète
+   * @async
+   */
   const reinitialiserFiltres = async () => {
     setFiltres({
       type: '',
@@ -236,16 +440,30 @@ const ListeRapport = () => {
     await fetchRapports();
   };
 
-  // Bascule l'affichage des filtres
+  /**
+   * Bascule l'affichage du panneau de filtres (ouvert/fermé)
+   */
   const toggleFiltres = () => setFiltresOuverts(prev => !prev);
 
-  // Gestion du formulaire d'ajout d'historique
+  /**
+   * Gestionnaire de changement des champs du formulaire d'historique
+   * @param {Event} e - Événement de changement d'un champ du formulaire
+   */
   const handleHistoriqueChange = (e) => {
     const { name, value } = e.target;
     setNouvelHistorique(prev => ({ ...prev, [name]: value }));
   };
 
-  // Ouvre la modal de détails d'un rapport
+  // =========================
+  // GESTION DES MODALS ET AFFICHAGE DES DÉTAILS
+  // =========================
+
+  /**
+   * Ouvre la modal de détails d'un rapport
+   * @param {Object} rapport - Objet rapport à afficher en détail
+   * @desc Charge l'historique du rapport et ouvre la modal en mode détails
+   * @async
+   */
   const voirDetails = async (rapport) => {
     setRapportSelectionne(rapport);
     setAfficherHistorique(false);
@@ -254,7 +472,12 @@ const ListeRapport = () => {
     modalRef.current?.classList.add('active');
   };
 
-  // Ouvre la modal d'historique d'un rapport
+  /**
+   * Ouvre la modal en mode historique d'un rapport
+   * @param {Object} rapport - Objet rapport dont on veut voir l'historique
+   * @desc Charge l'historique du rapport et ouvre la modal en mode historique
+   * @async
+   */
   const voirHistorique = async (rapport) => {
     setRapportSelectionne(rapport);
     setAfficherHistorique(true);
@@ -263,7 +486,10 @@ const ListeRapport = () => {
     modalRef.current?.classList.add('active');
   };
 
-  // Ferme la modal principale
+  /**
+   * Ferme la modal principale et remet à zéro tous les états
+   * @desc Nettoie tous les états liés à la modal pour éviter les conflits
+   */
   const fermerModal = () => {
     setRapportSelectionne(null);
     setAfficherHistorique(false);
@@ -272,9 +498,18 @@ const ListeRapport = () => {
     setHistoriqueData(null);
   };
 
-  // Ouvre la modal de gestion des accès
+  // =========================
+  // GESTION DES ACCÈS UTILISATEURS AUX RAPPORTS
+  // =========================
+
+  /**
+   * Ouvre la modal de gestion des accès pour un rapport
+   * @param {Object} rapport - Rapport pour lequel gérer les accès
+   * @desc Charge la liste des opérateurs ayant accès au rapport et ouvre la modal
+   * @async
+   */
   const ouvrirGestionAcces = async (rapport) => {
-    setRapportSelectionne(rapport); // Toujours en premier
+    setRapportSelectionne(rapport); // Définir le rapport en premier
     try {
       const res = await axios.get(`${API_BASE_URL}/rapports/${rapport.id_rapport}/acces`);
       setOperateursAvecAcces(res.data);
@@ -285,23 +520,36 @@ const ListeRapport = () => {
     }
   };
 
-  // Ferme la modal de gestion des accès
+  /**
+   * Ferme la modal de gestion des accès et nettoie le formulaire
+   */
   const fermerGestionAcces = () => {
     accessModalRef.current?.classList.remove('active');
     setNouvelOperateurAcces('');
   };
 
-  // Gestion du champ opérateur à ajouter
+  /**
+   * Gestionnaire de changement du champ opérateur à ajouter
+   * @param {Event} e - Événement de changement du champ select
+   */
   const handleNouvelOperateurChange = (e) => setNouvelOperateurAcces(e.target.value);
 
-  // Ajoute un accès opérateur à un rapport
+  /**
+   * Ajoute un accès opérateur à un rapport
+   * @desc Accorde les droits de modification à un opérateur et enregistre l'action dans l'historique
+   * @async
+   */
   const ajouterAccesOperateur = async () => {
     if (!nouvelOperateurAcces || !rapportSelectionne) return;
+    
     try {
+      // Ajout des droits d'accès
       await axios.post(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`, {
         id_operateur: nouvelOperateurAcces,
         peut_modifier: true
       });
+      
+      // Enregistrement dans l'historique avec décalage horaire (+2h)
       await axios.post(`${API_BASE_URL}/rapports/historique`, {
         id_rapport: rapportSelectionne.id_rapport,
         id_operateur: nouvelOperateurAcces,
@@ -309,6 +557,8 @@ const ListeRapport = () => {
         date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
         detail_action: ''
       });
+      
+      // Mise à jour des données affichées
       const res = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
       setOperateursAvecAcces(res.data);
       await fetchDroitsAcces();
@@ -319,12 +569,22 @@ const ListeRapport = () => {
     }
   };
 
-  // Retire un accès opérateur d'un rapport
+  /**
+   * Retire un accès opérateur d'un rapport
+   * @param {number} idOperateur - ID de l'opérateur dont retirer l'accès
+   * @desc Supprime les droits de modification et enregistre l'action dans l'historique
+   * @async
+   */
   const retirerAccesOperateur = async (idOperateur) => {
     try {
+      // Suppression des droits d'accès
       await axios.delete(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces/${idOperateur}`);
+      
+      // Mise à jour de la liste affichée
       const res = await axios.get(`${API_BASE_URL}/rapports/${rapportSelectionne.id_rapport}/acces`);
       setOperateursAvecAcces(res.data);
+      
+      // Enregistrement dans l'historique avec décalage horaire (+2h)
       await axios.post(`${API_BASE_URL}/rapports/historique`, {
         id_rapport: rapportSelectionne.id_rapport,
         id_operateur: idOperateur,
@@ -332,6 +592,7 @@ const ListeRapport = () => {
         date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
         detail_action: ''
       });
+      
       await fetchDroitsAcces();
     } catch (err) {
       console.error("Erreur lors du retrait d'accès:", err);
@@ -339,7 +600,15 @@ const ListeRapport = () => {
     }
   };
 
-  // Ajoute un historique manuel à un rapport
+  // =========================
+  // GESTION DE L'HISTORIQUE ET MODIFICATIONS
+  // =========================
+
+  /**
+   * Ajoute un historique manuel à un rapport
+   * @desc Permet aux utilisateurs autorisés d'ajouter des entrées d'historique personnalisées
+   * @async
+   */
   const ajouterHistoriqueManuel = async () => {
     try {
       await axios.post(`${API_BASE_URL}/rapports/historique`, {
@@ -349,6 +618,8 @@ const ListeRapport = () => {
         date_action: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
         detail_action: nouvelHistorique.detail_action
       });
+      
+      // Mise à jour de l'affichage de l'historique
       setHistoriqueData(await fetchHistorique(rapportSelectionne.id_rapport));
       setNouvelHistorique({ type_action: '', detail_action: '' });
       setAfficherAjoutHistorique(false);
@@ -359,30 +630,52 @@ const ListeRapport = () => {
     }
   };
 
-  // Redirige vers la page de modification du rapport
+  /**
+   * Redirige vers la page de modification du rapport
+   * @param {number} idRapport - ID du rapport à modifier
+   * @desc Navigation simple vers l'interface de modification
+   */
   const modifierRapport = (idRapport) => {
     window.location.href = `/modifier-rapport/${idRapport}`;
   };
 
-  // Télécharge l'historique d'un rapport au format texte
+  // =========================
+  // FONCTIONS D'EXPORT ET TÉLÉCHARGEMENT
+  // =========================
+
+  /**
+   * Télécharge l'historique d'un rapport au format texte structuré
+   * @param {Object} rapport - Rapport dont télécharger l'historique
+   * @desc Génère un fichier .txt avec l'historique formaté en tableau
+   * @async
+   */
   const telechargerHistorique = async (rapport) => {
     try {
       const historique = await fetchHistorique(rapport.id_rapport);
+      
       if (historique && historique.length > 0) {
+        // Création de l'en-tête du tableau
         let txtContent = "Type d'action       | Détails                             | Opérateur         | Date\n";
         txtContent += "--------------------|-------------------------------------|-------------------|---------------------\n";
+        
+        // Ajout de chaque ligne d'historique
         historique.forEach(action => {
           const operateurNom = getOperateurNom(action.id_operateur);
           const dateFormatee = formatDate(action.date_action);
           const detailAction = action.detail_action
             ? action.detail_action.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
             : "";
+          
+          // Formatage des colonnes avec padding
           const typeAction = action.type_action.padEnd(20);
           const details = detailAction.slice(0, 35).padEnd(35);
           const operateur = operateurNom.padEnd(19);
           const date = dateFormatee.padEnd(20);
+          
           txtContent += `${typeAction}| ${details}| ${operateur}| ${date}\n`;
         });
+        
+        // Création et téléchargement du fichier
         const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -402,10 +695,16 @@ const ListeRapport = () => {
     }
   };
 
-  // Fonction pour générer et télécharger un PDF avec toutes les infos du rapport (plus esthétique)
+  /**
+   * Génère et télécharge un PDF complet avec toutes les informations du rapport
+   * @param {Object} rapport - Rapport à exporter en PDF
+   * @desc Crée un document PDF professionnel avec mise en forme CEPPOL
+   */
   const telechargerPDFRapport = (rapport) => {
     const doc = new jsPDF();
     let y = 15;
+    
+    // En-tête du document avec style CEPPOL
     doc.setFontSize(18);
     doc.setTextColor(0, 70, 140);
     doc.text('Fiche Rapport - CEPPOL', 105, y, { align: 'center' });
@@ -414,6 +713,8 @@ const ListeRapport = () => {
     doc.setLineWidth(0.8);
     doc.line(10, y, 200, y);
     y += 8;
+    
+    // Informations principales du rapport
     doc.setFontSize(12);
     doc.setTextColor(0,0,0);
     doc.text(`ID Rapport : ${rapport.id_rapport || ''}`, 10, y);
@@ -440,6 +741,8 @@ const ListeRapport = () => {
     y += 8;
     doc.text(`Archivé : ${rapport.archive === 1 ? 'Oui' : 'Non'}`, 10, y);
     y += 10;
+    
+    // Description globale
     doc.setFontSize(13);
     doc.setTextColor(0, 70, 140);
     doc.text('Description globale :', 10, y);
@@ -450,7 +753,8 @@ const ListeRapport = () => {
     const splitDesc = doc.splitTextToSize(description, 185);
     doc.text(splitDesc, 10, y);
     y += splitDesc.length * 6 + 2;
-    // Ajout d'autres champs si présents
+    
+    // Autres informations si présentes
     if (rapport.autres_infos) {
       doc.setFontSize(13);
       doc.setTextColor(0, 70, 140);
@@ -462,6 +766,7 @@ const ListeRapport = () => {
       doc.text(autres, 10, y);
       y += autres.length * 6 + 2;
     }
+    
     // Historique (si chargé)
     if (Array.isArray(historiqueData) && historiqueData.length > 0) {
       doc.setFontSize(13);
@@ -470,8 +775,12 @@ const ListeRapport = () => {
       y += 7;
       doc.setFontSize(10);
       doc.setTextColor(0,0,0);
+      
       historiqueData.forEach((action, idx) => {
-        if (y > 270) { doc.addPage(); y = 15; }
+        if (y > 270) { 
+          doc.addPage(); 
+          y = 15; 
+        }
         doc.text(`- [${formatDate(action.date_action)}] ${action.type_action} par ${getOperateurNom(action.id_operateur)} :`, 12, y);
         y += 5;
         const details = doc.splitTextToSize(action.detail_action || '', 180);
@@ -479,13 +788,22 @@ const ListeRapport = () => {
         y += details.length * 5 + 2;
       });
     }
+    
+    // Téléchargement du fichier PDF
     doc.save(`rapport_${rapport.id_rapport}.pdf`);
   };
 
   // =========================
-  // Filtrage des rapports
+  // LOGIQUE DE FILTRAGE ET RECHERCHE DES RAPPORTS
   // =========================
+  
+  /**
+   * Applique tous les filtres et critères de recherche aux rapports
+   * @desc Combine le filtrage par critères spécifiques et la recherche textuelle globale
+   * @returns {Array} Tableau des rapports filtrés selon les critères actifs
+   */
   const rapportsFiltres = rapports.filter(rapport => {
+    // Filtrage par critères spécifiques (dropdowns et dates)
     const correspond = (
       (!filtres.type || rapport.id_type_evenement === Number(filtres.type)) &&
       (!filtres.sousType || rapport.id_sous_type_evenement === Number(filtres.sousType)) &&
@@ -493,8 +811,10 @@ const ListeRapport = () => {
       (!filtres.zone || rapport.id_zone === Number(filtres.zone)) &&
       (!filtres.dateDebut || new Date(rapport.date_evenement) >= new Date(filtres.dateDebut)) &&
       (!filtres.dateFin || new Date(rapport.date_evenement) <= new Date(filtres.dateFin)) &&
-      (!filtres.archive || rapport.archive == filtres.archive)
+      (filtres.archive === '' || rapport.archive === Number(filtres.archive))
     );
+    
+    // Recherche textuelle dans les champs principaux
     const rechercheTexte = searchTerm
       ? (
         rapport.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -504,12 +824,24 @@ const ListeRapport = () => {
         getOrigineEvenementLibelle(rapport.id_origine_evenement).toLowerCase().includes(searchTerm.toLowerCase())
       )
       : true;
+    
+    // Combinaison des deux critères de filtrage
     return correspond && rechercheTexte;
   });
 
   // =========================
-  // Rendu du composant
+  // RENDU DU COMPOSANT PRINCIPAL
   // =========================
+  
+  /**
+   * Rendu principal du composant avec animations Framer Motion
+   * @desc Structure complète de l'interface utilisateur :
+   * - Conteneur principal avec animation d'entrée
+   * - Barre de recherche globale
+   * - Panneau de filtres (collapsible)
+   * - Tableau des rapports avec actions
+   * - Modals pour détails, historique et gestion des accès
+   */
   return (
     <motion.div
       className="liste-rapport-container"
@@ -517,11 +849,12 @@ const ListeRapport = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
+      {/* En-tête principal */}
       <h1>
         Liste des Rapports
       </h1>
 
-      {/* Barre de recherche */}
+      {/* Barre de recherche textuelle globale */}
       <div className="search-container">
         <input
           type="text"
@@ -535,7 +868,7 @@ const ListeRapport = () => {
         </button>
       </div>
 
-      {/* Filtres */}
+      {/* Panneau de filtres avancés */}
       <div>
         <Filtres
           filtres={filtres}
@@ -551,7 +884,7 @@ const ListeRapport = () => {
         />
       </div>
 
-      {/* Liste des rapports */}
+      {/* Tableau principal des rapports */}
       <div>
         <RapportsTable
           loading={loading}
@@ -571,7 +904,7 @@ const ListeRapport = () => {
         />
       </div>
 
-      {/* Modal pour détails et historique */}
+      {/* Modal principale pour détails et historique */}
       <AnimatePresence>
         {rapportSelectionne && (
           <motion.div
@@ -583,6 +916,7 @@ const ListeRapport = () => {
             transition={{ duration: 0.4 }}
           >
             <div className="modal-content">
+              {/* En-tête de la modal */}
               <div className="modal-header">
                 <h2>
                   {afficherHistorique
@@ -593,9 +927,12 @@ const ListeRapport = () => {
                 </h2>
                 <button className="close-btn" onClick={fermerModal}>&times;</button>
               </div>
+              
+              {/* Contenu de la modal selon le mode */}
               <div className="modal-body">
                 {rapportSelectionne && (
                   <>
+                    {/* Mode affichage de l'historique */}
                     {afficherHistorique ? (
                       <div className="historique-rapport">
                         <h3>Historique des actions</h3>
@@ -620,6 +957,7 @@ const ListeRapport = () => {
                         )}
                       </div>
                     ) : afficherAjoutHistorique ? (
+                      /* Mode ajout d'historique manuel */
                       <div className="ajout-historique-form">
                         <h3>Ajouter un élément d'historique</h3>
                         <div className="form-group">
@@ -648,6 +986,7 @@ const ListeRapport = () => {
                         </div>
                       </div>
                     ) : (
+                      /* Mode affichage des détails du rapport */
                       <DetailsRapport
                         rapportSelectionne={rapportSelectionne}
                         formatDate={formatDate}
@@ -662,7 +1001,10 @@ const ListeRapport = () => {
                   </>
                 )}
               </div>
+              
+              {/* Pied de la modal avec boutons d'action */}
               <div className="modal-footer">
+                {/* Boutons pour le mode détails */}
                 {rapportSelectionne && !afficherHistorique && !afficherAjoutHistorique && (
                   <>
                     <button
@@ -685,6 +1027,8 @@ const ListeRapport = () => {
                     </button>
                   </>
                 )}
+                
+                {/* Bouton d'ajout d'historique manuel (si autorisé) */}
                 {rapportSelectionne && !afficherAjoutHistorique && userPeutModifier(rapportSelectionne) && (
                   <button
                     className="btn btn-secondary"
@@ -696,6 +1040,8 @@ const ListeRapport = () => {
                     Ajouter un historique manuel
                   </button>
                 )}
+                
+                {/* Bouton de téléchargement de l'historique */}
                 {rapportSelectionne && afficherHistorique && (
                   <button
                     className="btn-icon text-info"
@@ -705,6 +1051,8 @@ const ListeRapport = () => {
                     <Download size={18} />
                   </button>
                 )}
+                
+                {/* Boutons pour le formulaire d'ajout d'historique */}
                 {rapportSelectionne && afficherAjoutHistorique && (
                   <>
                     <button
@@ -724,6 +1072,8 @@ const ListeRapport = () => {
                     </button>
                   </>
                 )}
+                
+                {/* Bouton de modification (si autorisé) */}
                 {rapportSelectionne && userPeutModifier(rapportSelectionne) && !afficherAjoutHistorique && !afficherHistorique && (
                   <button
                     className="btn btn-primary"
@@ -732,6 +1082,8 @@ const ListeRapport = () => {
                     Modifier
                   </button>
                 )}
+                
+                {/* Bouton de fermeture */}
                 <button className="btn btn-primary" onClick={fermerModal}>Fermer</button>
               </div>
             </div>
@@ -739,7 +1091,7 @@ const ListeRapport = () => {
         )}
       </AnimatePresence>
 
-      {/* Modal pour la gestion des accès */}
+      {/* Modal pour la gestion des accès utilisateurs */}
       {afficherGestionAcces && (
         <GestionAccesModal
           accessModalRef={accessModalRef}

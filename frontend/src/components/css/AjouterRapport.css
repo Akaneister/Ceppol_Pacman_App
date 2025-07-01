@@ -1,57 +1,70 @@
-/* AjouterRapport.css - Professional and corporate style */
+/* AjouterRapport.css - Formulaire d'ajout de rapport */
 
-/* ----------------------------------------------------
-  ROOT VARIABLES - Color scheme and global settings
-  ---------------------------------------------------- */
+/* ========================================
+   Variables CSS
+   ======================================== */
 :root {
-  /* Palette principale issue de la Navbar */
-  --primary-color: #00205B;      /* Bleu marine officiel Marine nationale */
-  --primary-light: #254080;      /* Bleu plus clair pour hover, nuance */
-  --primary-dark: #00153a;       /* Bleu nuit profond */
-  --secondary-color: #5dade2;    /* Bleu clair */
-  --success-color: #0f9d58;
-  --danger-color: #860707;       /* Rouge principal pour alertes */
-  --warning-color: #f4b400;
-  --light-color: #eaf6fb;
-  --dark-color: #0a2239;
-
-  /* UI elements colors */
-  --background-color: #f4faff;
-  --form-background: #ffffff;
-  --text-color: #00153a;         /* Texte principal bleu marine */
-  --text-light: #ffffff;         /* Texte secondaire bleu plus clair */
-  --border-color: #254080;       /* Bordures bleu clair */
+  /* Couleurs principales */
+  --primary-color: #00205B;
+  --primary-light: #254080;
+  --primary-dark: #00153a;
+  --secondary-color: #5dade2;
   
-  /* UI properties */
+  /* Couleurs d'état */
+  --success-color: #0f9d58;
+  --danger-color: #860707;
+  --warning-color: #f4b400;
+  
+  /* Couleurs d'interface */
+  --background-color: #f4faff;
+  --text-color: #00153a;
+  --text-light: #ffffff;
+  --border-color: #254080;
+  --light-color: #eaf6fb;
+  
+  /* Propriétés visuelles */
   --border-radius: 8px;
-  --box-shadow: 0 1px 3px rgba(0, 32, 91, 0.10), 0 2px 8px rgba(0, 32, 91, 0.05);
-  --transition-speed: 0.25s;
+  --box-shadow: 0 1px 3px rgba(0, 32, 91, 0.1), 0 2px 8px rgba(0, 32, 91, 0.05);
+  --box-shadow-hover: 0 4px 8px rgba(0, 21, 58, 0.25);
+  --transition: all 0.25s ease;
   --font-family: 'DIN', Arial, sans-serif;
+  
+  /* Espacements */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 2.5rem;
 }
 
-/* ----------------------------------------------------
-  LAYOUT CONTAINER
-  ---------------------------------------------------- */
+/* ========================================
+   Styles de base
+   ======================================== */
+  
+
+/* ========================================
+   Layout principal
+   ======================================== */
 .rapport-container {
   max-width: 1024px;
-  margin: 2.5rem auto;
-  padding: 0 1.5rem;
+  margin: var(--spacing-2xl) auto;
+  padding: 0 var(--spacing-lg);
   font-family: var(--font-family);
   color: var(--text-color);
 }
 
-/* ----------------------------------------------------
-  HEADER STYLING
-  ---------------------------------------------------- */
+/* ========================================
+   En-tête
+   ======================================== */
 .rapport-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: var(--spacing-2xl);
   text-align: center;
   position: relative;
-  padding-top: 3rem; /* Space for absolute positioned title */
+  padding-top: 3rem;
 }
 
 .rapport-header h1 {
-  color: #00153a;
   font-size: 1.75rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -59,9 +72,8 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  display: inline-block;
   margin: 0;
-  padding: 0.5rem 1.5rem;
+  padding: var(--spacing-xs) var(--spacing-lg);
   background: linear-gradient(to right, var(--border-color), var(--primary-dark));
   background-clip: text;
   -webkit-background-clip: text;
@@ -73,26 +85,25 @@
   font-size: 0.95rem;
   line-height: 1.6;
   max-width: 640px;
-  margin: 0.75rem auto;
+  margin: var(--spacing-sm) auto;
   text-align: center;
 }
 
-/* ----------------------------------------------------
-  FORM CONTAINER
-  ---------------------------------------------------- */
+/* ========================================
+   Conteneur de formulaire
+   ======================================== */
 .rapport-form {
+  background: linear-gradient(135deg, var(--primary-dark) 70%, var(--primary-light) 100%);
   border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
+  box-shadow: 0 4px 24px rgba(255, 255, 255, 0.267), var(--box-shadow);
   padding: 3.5rem 3rem;
-  position: relative;
+  color: var(--text-light);
   animation: fadeIn 0.4s ease-out;
-  background-color : var(--primary-dark);
-  color: var(--text-light); /* <-- Ajouté pour texte blanc */
 }
 
-/* ----------------------------------------------------
-  FORM SECTIONS
-  ---------------------------------------------------- */
+/* ========================================
+   Sections de formulaire
+   ======================================== */
 .form-section {
   margin-bottom: 2.25rem;
   padding-bottom: 1.75rem;
@@ -101,13 +112,13 @@
 
 .form-section:last-of-type {
   border-bottom: none;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-section h2 {
   font-size: 1.125rem;
-  color: var(--text-light); /* <-- Modifié pour texte blanc */
-  margin-bottom: 1.5rem;
+  color: var(--text-light);
+  margin-bottom: var(--spacing-lg);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -120,13 +131,13 @@
   width: 4px;
   height: 20px;
   background: linear-gradient(to bottom, #fff, #eaeaea);
-  margin-right: 0.75rem;
+  margin-right: var(--spacing-sm);
   border-radius: 2px;
 }
 
-/* ----------------------------------------------------
-  FORM LAYOUT - Rows and groups
-  ---------------------------------------------------- */
+/* ========================================
+   Layout de formulaire
+   ======================================== */
 .form-row {
   display: flex;
   gap: 20px;
@@ -139,18 +150,18 @@
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
 }
 
-/* ----------------------------------------------------
-  FORM ELEMENTS - Labels and inputs
-  ---------------------------------------------------- */
+/* ========================================
+   Éléments de formulaire
+   ======================================== */
 .form-group label {
   display: flex;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-xs);
   font-weight: 500;
-  color: var(--text-light); /* <-- Modifié pour texte blanc */
+  color: var(--text-light);
   font-size: 0.875rem;
 }
 
@@ -159,7 +170,7 @@
   font-size: 0.8125rem;
   cursor: help;
   opacity: 0.7;
-  transition: opacity var(--transition-speed);
+  transition: var(--transition);
   color: var(--text-light);
 }
 
@@ -170,11 +181,11 @@
 
 .form-control {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   font-size: 0.9375rem;
-  transition: all var(--transition-speed);
+  transition: var(--transition);
   color: var(--text-color);
   background-color: #fff;
   line-height: 1.4;
@@ -187,7 +198,7 @@
 }
 
 .form-control::placeholder {
-  color: #254080;
+  color: var(--primary-light);
   font-style: italic;
 }
 
@@ -196,34 +207,32 @@
   cursor: not-allowed;
 }
 
-/* ----------------------------------------------------
-  SELECT DROPDOWNS
-  ---------------------------------------------------- */
+/* ========================================
+   Éléments spécialisés
+   ======================================== */
+
+/* Listes déroulantes */
 select.form-control {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 8.825l-4.425-4.4 1.4-1.4L6 6.025l3.025-3L10.4 4.4z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 1rem center;
+  background-position: right var(--spacing-md) center;
   padding-right: 2.5rem;
 }
 
-/* ----------------------------------------------------
-  TEXTAREA STYLING
-  ---------------------------------------------------- */
+/* Zones de texte */
 textarea.form-control {
   resize: vertical;
   min-height: 120px;
   line-height: 1.6;
 }
 
-/* ----------------------------------------------------
-  CHECKBOX GRID
-  ---------------------------------------------------- */
+/* Grille de cases à cocher */
 .checkbox-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.875rem;
-  margin-top: 0.75rem;
+  margin-top: var(--spacing-sm);
 }
 
 .checkbox-item {
@@ -236,8 +245,8 @@ textarea.form-control {
 .checkbox-item input[type="checkbox"] {
   margin-right: 0.625rem;
   cursor: pointer;
-  width: 1rem;
-  height: 1rem;
+  width: var(--spacing-md);
+  height: var(--spacing-md);
   accent-color: var(--primary-color);
 }
 
@@ -248,16 +257,14 @@ textarea.form-control {
   font-size: 0.875rem;
 }
 
-/* ----------------------------------------------------
-  RANGE INPUTS
-  ---------------------------------------------------- */
+/* Curseurs de plage */
 .form-control-range {
   width: 100%;
   height: 6px;
   background: #e2e8f0;
   border-radius: 3px;
   appearance: none;
-  margin: 1rem 0;
+  margin: var(--spacing-md) 0;
   cursor: pointer;
 }
 
@@ -283,12 +290,11 @@ textarea.form-control {
   outline: none;
 }
 
-/* ----------------------------------------------------
-  MAP CONTAINER
-  ---------------------------------------------------- */
+/* ========================================
+   Carte et localisation
+   ======================================== */
 .map-container {
   margin-top: 1.25rem;
-  /* Remove footer spacing for map container */
   margin-bottom: 0;
 }
 
@@ -299,22 +305,19 @@ textarea.form-control {
   height: 300px;
 }
 
-/* ----------------------------------------------------
-  LOCATION BUTTONS
-  ---------------------------------------------------- */
 .location-actions {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .btn-location {
   background-color: var(--light-color);
   border: 1px solid var(--border-color);
   color: var(--text-color);
-  padding: 0.625rem 1rem;
+  padding: 0.625rem var(--spacing-md);
   border-radius: var(--border-radius);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all var(--transition-speed);
+  transition: var(--transition);
   display: inline-flex;
   align-items: center;
   font-weight: 500;
@@ -327,28 +330,28 @@ textarea.form-control {
 
 .btn-location:before {
   content: "📍";
-  margin-right: 0.5rem;
+  margin-right: var(--spacing-xs);
   font-size: 0.9375rem;
 }
 
-/* ----------------------------------------------------
-  FORM ACTIONS - Buttons
-  ---------------------------------------------------- */
+/* ========================================
+   Boutons et actions
+   ======================================== */
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
 }
 
 .btn-primary,
 .btn-secondary {
-  padding: 0.75rem 1.5rem;
+  padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--border-radius);
   font-weight: 500;
   font-size: 0.9375rem;
   cursor: pointer;
-  transition: all var(--transition-speed);
+  transition: var(--transition);
   border: none;
   letter-spacing: 0.01em;
 }
@@ -362,7 +365,7 @@ textarea.form-control {
 .btn-primary:hover {
   background-color: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 21, 58, 0.25);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .btn-secondary {
@@ -372,7 +375,7 @@ textarea.form-control {
 }
 
 .btn-secondary:hover {
-  background-color: #eaf6fb;
+  background-color: var(--light-color);
   color: var(--primary-dark);
 }
 
@@ -381,7 +384,7 @@ textarea.form-control {
   transform: translateY(0);
 }
 
-/* Loading state for buttons */
+/* État de chargement */
 .btn-primary.loading {
   background-color: var(--primary-light);
   cursor: not-allowed;
@@ -391,23 +394,23 @@ textarea.form-control {
 .btn-primary.loading::before {
   content: '';
   display: inline-block;
-  width: 1rem;
-  height: 1rem;
+  width: var(--spacing-md);
+  height: var(--spacing-md);
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: white;
   animation: spin 1s linear infinite;
-  margin-right: 0.5rem;
+  margin-right: var(--spacing-xs);
   vertical-align: middle;
 }
 
-/* ----------------------------------------------------
-  STATUS MESSAGES
-  ---------------------------------------------------- */
+/* ========================================
+   Messages de statut
+   ======================================== */
 .status-message {
-  padding: 1rem;
+  padding: var(--spacing-md);
   border-radius: var(--border-radius);
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
   font-weight: 500;
   animation: slideDown 0.3s ease-out;
   position: relative;
@@ -417,7 +420,7 @@ textarea.form-control {
 
 .status-message::before {
   position: absolute;
-  left: 1rem;
+  left: var(--spacing-md);
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.125rem;
@@ -453,150 +456,148 @@ textarea.form-control {
   content: "ℹ";
 }
 
-/* ----------------------------------------------------
-  ANIMATIONS
-  ---------------------------------------------------- */
+/* ========================================
+   Conteneur d'erreur
+   ======================================== */
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
+
+/* ========================================
+   Animations
+   ======================================== */
 @keyframes fadeIn {
   from {
-   opacity: 0;
-   transform: translateY(10px);
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
-   opacity: 1;
-   transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @keyframes slideDown {
   from {
-   opacity: 0;
-   transform: translateY(-16px);
+    opacity: 0;
+    transform: translateY(-16px);
   }
   to {
-   opacity: 1;
-   transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @keyframes spin {
   0% {
-   transform: rotate(0deg);
+    transform: rotate(0deg);
   }
   100% {
-   transform: rotate(360deg);
+    transform: rotate(360deg);
   }
 }
 
-/* ----------------------------------------------------
-  RESPONSIVE STYLES - Tablet
-  ---------------------------------------------------- */
+/* ========================================
+   Responsive - Tablette
+   ======================================== */
 @media (max-width: 768px) {
   .rapport-form {
-   padding: 1.5rem;
+    padding: var(--spacing-lg);
   }
   
   .form-row {
-   flex-direction: column;
-   gap: 0;
+    flex-direction: column;
+    gap: 0;
   }
   
   .form-row .form-group {
-   min-width: 100%;
+    min-width: 100%;
   }
   
   .checkbox-grid {
-   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
   
   .form-actions {
-   flex-direction: column-reverse;
-   gap: 0.75rem;
+    flex-direction: column-reverse;
+    gap: var(--spacing-sm);
   }
   
   .btn-primary,
   .btn-secondary {
-   width: 100%;
-   padding: 0.875rem;
-   text-align: center;
-   justify-content: center;
+    width: 100%;
+    padding: 0.875rem;
+    text-align: center;
+    justify-content: center;
   }
   
   .rapport-header h1 {
-   width: 90%;
-   font-size: 1.5rem;
+    width: 90%;
+    font-size: 1.5rem;
   }
 }
 
-
-/*-----------------------------------------------------
-  Erreur Modification Rapport pas les droits
-  ---------------------------------------------------- */
-  .error-container{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    flex-direction: column;
-    
-  }
-
-/* ----------------------------------------------------
-  RESPONSIVE STYLES - Mobile
-  ---------------------------------------------------- */
+/* ========================================
+   Responsive - Mobile
+   ======================================== */
 @media (max-width: 480px) {
   .rapport-container {
-   padding: 0 1rem;
-   margin: 1rem auto 2rem;
+    padding: 0 var(--spacing-md);
+    margin: var(--spacing-md) auto var(--spacing-xl);
   }
   
   .rapport-form {
-   padding: 1.25rem 1rem;
-   border-radius: 6px;
+    padding: 1.25rem var(--spacing-md);
+    border-radius: 6px;
   }
   
   .rapport-header h1 {
-   font-size: 1.25rem;
-   width: 95%;
+    font-size: 1.25rem;
+    width: 95%;
   }
   
   .rapport-subtitle {
-   font-size: 0.875rem;
+    font-size: 0.875rem;
   }
   
   .form-section h2 {
-   font-size: 1rem;
+    font-size: var(--spacing-md);
   }
   
   .form-section {
-   margin-bottom: 1.25rem;
-   padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: var(--spacing-md);
   }
   
   .checkbox-grid {
-   grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
   }
   
   .form-group {
-   margin-bottom: 1.125rem;
+    margin-bottom: 1.125rem;
   }
   
   .form-control {
-   padding: 0.625rem 0.875rem;
-   font-size: 0.875rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
   }
   
   .form-actions {
-   margin-top: 1.5rem;
+    margin-top: var(--spacing-lg);
   }
   
   .btn-primary, 
   .btn-secondary {
-   padding: 0.75rem;
-   font-size: 0.875rem;
+    padding: var(--spacing-sm);
+    font-size: 0.875rem;
   }
   
   .status-message {
-   padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-   font-size: 0.875rem;
+    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) 2.5rem;
+    font-size: 0.875rem;
   }
 }

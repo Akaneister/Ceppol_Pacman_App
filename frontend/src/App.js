@@ -3,11 +3,12 @@ import { AuthProvider } from './components/context/AuthContext';
 import PrivateRoute from './components/routes/PrivateRoutes.js';
 import AuthPage from './components/pages/AuthPage';
 import Documentation from './components/pages/Home';
-import Navbar from './components/layout/Navbar';
+import Navbar from './components/css/Navbar.js';
 import AjouterRapport from './components/pages/AjouterRapport'; // Importer la page "Ajouter un rapport"
 import ListeRapport from './components/pages/ListeRapport'; // Importer la page "Liste des rapports"
 import ModifierRapport from './components/pages/ModifierRapport'; // Import
 import Carte from './components/pages/carte.js'; // Importer la page "Carte"
+import Lien from './components/pages/Lien'; // Importer la page "Liens"
 import NotFound from './components/pages/NotFound'; // Importer la page "Not Found"
 import AdminDashboard from './components/pages/AdminDashboard'; // Importer le dashboard admin
 
@@ -70,6 +71,11 @@ const AppContent = () => {
             <Carte />
           </PrivateRoute>
         } /> 
+        <Route path="/liens" element={
+          <PrivateRoute>
+            <Lien />
+          </PrivateRoute>
+        } />
         {/*Erreur  */}
         <Route path="*" element={
           <PrivateRoute>

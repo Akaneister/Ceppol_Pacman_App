@@ -202,18 +202,41 @@
   font-family: 'Segoe UI', sans-serif;
 }
 
-.operators-title {
-  font-size: 1.4rem;
-  margin-bottom: 16px;
-  color: #0a1a2f;
-  border-bottom: 2px solid #D72638;
-  padding-bottom: 8px;
+.operators-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
 }
 
-.operators-list {
-  list-style: none;
-  padding: 0;
+.operators-title {
   margin: 0;
+  color: #001f3f;
+}
+
+.operator-btn-add {
+  background-color: #4CAF50 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.operator-btn-add:hover {
+  background-color: #45a049 !important;
+}
+
+.operator-btn-add:disabled {
+  background-color: #cccccc !important;
+  cursor: not-allowed;
 }
 
 .operator-item {
@@ -666,5 +689,132 @@ body.mobile-menu-open {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* Styles pour l'en-tête des opérateurs */
+.operators-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.operators-title {
+  margin: 0;
+  color: #001f3f;
+}
+
+.operator-btn-add {
+  background-color: #4CAF50 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.operator-btn-add:hover {
+  background-color: #45a049 !important;
+}
+
+.operator-btn-add:disabled {
+  background-color: #cccccc !important;
+  cursor: not-allowed;
+}
+
+/* Styles pour le formulaire d'ajout */
+.operator-add-form {
+  background-color: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.operator-add-form h3 {
+  margin: 0 0 12px 0;
+  color: #001f3f;
+  font-size: 16px;
+}
+
+.operator-add-inputs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.operator-add-inputs input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.operator-add-inputs input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.operator-add-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.operator-add-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.operator-add-actions .operator-btn-save {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.operator-add-actions .operator-btn-save:hover {
+  background-color: #45a049;
+}
+
+.operator-add-actions .operator-btn-cancel {
+  background-color: #757575;
+  color: white;
+}
+
+.operator-add-actions .operator-btn-cancel:hover {
+  background-color: #616161;
+}
+
+/* Responsive design pour les petits écrans */
+@media (max-width: 768px) {
+  .operators-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .operator-add-inputs {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .operator-add-actions {
+    flex-direction: column;
   }
 }

@@ -20,10 +20,22 @@ const getRessource = async (req, res) => {
     } catch (err) {
         res.status(500).json(err);
     }
+}
+
+
+const getLien = async (req, res) => {
+    try {
+        const [results] = await db.query('SELECT * FROM Lien');
+        res.json(results);  
     }
-    
+    catch (err) {
+        res.status(500).json(err);
+    }
+}
 
 
 module.exports = {
     getRessource,
+    getLien,
 }
+

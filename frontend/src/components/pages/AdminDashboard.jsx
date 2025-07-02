@@ -47,7 +47,8 @@ import {
     Trash2,
     Edit,
     Save,
-    X
+    X,
+    Plus
 } from 'lucide-react';
 
 import '../css/AdminDashboard.css';
@@ -276,6 +277,9 @@ const OperateursTab = ({ operateurs, onReload }) => {
     const [loading, setLoading] = useState(false); // État de chargement pour les opérations
     const [error, setError] = useState(''); // Messages d'erreur
     const [success, setSuccess] = useState(''); // Messages de succès
+    // États pour l'ajout d'un nouvel opérateur
+    const [showAddForm, setShowAddForm] = useState(false); // Affichage du formulaire d'ajout
+    const [newOperateur, setNewOperateur] = useState({ nom: '', prenom: '' }); // Données du nouvel opérateur
     const API = process.env.REACT_APP_API_URL;
 
     // Rechargement automatique des données au montage du composant
@@ -420,9 +424,155 @@ const OperateursTab = ({ operateurs, onReload }) => {
         }
     };
 
+    /**
+     * Gère l'ajout d'un nouvel opérateur
+     * Valide les données puis envoie la requête POST à l'API
+     */
+    const handleAddOperateur = async () => {
+        // Validation des champs obligatoires
+        if (!newOperateur.nom.trim() || !newOperateur.prenom.trim()) {
+            setError('Le nom et le prénom sont requis');
+            return;
+        }
+
+        setLoading(true);
+        clearMessages();
+
+        try {
+            const response = await fetch(`${API}/admin/operateurs`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nom: newOperateur.nom.trim(),
+                    prenom: newOperateur.prenom.trim()
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erreur lors de l\'ajout');
+            }
+
+            // Réinitialisation du formulaire et rechargement des données
+            setNewOperateur({ nom: '', prenom: '' });
+            setShowAddForm(false);
+            setSuccess('Opérateur ajouté avec succès');
+            onReload();
+            setTimeout(() => setSuccess(''), 3000);
+
+        } catch (err) {
+            setError(err.message || 'Erreur lors de l\'ajout');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /**
+     * Annule l'ajout d'un nouvel opérateur
+     * Ferme le formulaire et remet à zéro les données
+     */
+    const handleCancelAdd = () => {
+        setShowAddForm(false);
+        setNewOperateur({ nom: '', prenom: '' });
+        clearMessages();
+    };
+
     return (
         <div className="operators-section">
-            <h2 className="operators-title">Liste des opérateurs</h2>
+            <div className="operators-header">
+                <h2 className="operators-title">Liste des opérateurs</h2>
+                {/* Bouton pour ajouter un nouvel opérateur */}
+                <button
+                    className="operator-btn operator-btn-add"
+                    onClick={() => setShowAddForm(!showAddForm)}
+                    disabled={loading}
+                    style={{ 
+                        backgroundColor: '#4CAF50', 
+                        color: 'white', 
+                        border: 'none', 
+                        padding: '8px 16px', 
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}
+                >
+                    <Plus size={16} />
+                    {showAddForm ? 'Annuler' : 'Ajouter un opérateur'}
+                </button>
+            </div>
+
+            {/* Formulaire d'ajout d'opérateur */}
+            {showAddForm && (
+                <div className="operator-add-form" style={{
+                    backgroundColor: '#f5f5f5',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    border: '1px solid #ddd'
+                }}>
+                    <h3>Ajouter un nouvel opérateur</h3>
+                    <div className="operator-add-inputs" style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                        <input
+                            className="operator-edit-input"
+                            type="text"
+                            value={newOperateur.nom}
+                            onChange={e => setNewOperateur({ ...newOperateur, nom: e.target.value })}
+                            placeholder="Nom"
+                            disabled={loading}
+                            style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                        />
+                        <input
+                            className="operator-edit-input"
+                            type="text"
+                            value={newOperateur.prenom}
+                            onChange={e => setNewOperateur({ ...newOperateur, prenom: e.target.value })}
+                            placeholder="Prénom"
+                            disabled={loading}
+                            style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                        />
+                    </div>
+                    <div className="operator-add-actions" style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            className="operator-btn operator-btn-save"
+                            onClick={handleAddOperateur}
+                            disabled={loading}
+                            style={{ 
+                                backgroundColor: '#4CAF50', 
+                                color: 'white', 
+                                border: 'none', 
+                                padding: '8px 16px', 
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}
+                        >
+                            <Save size={16} /> Ajouter
+                        </button>
+                        <button
+                            className="operator-btn operator-btn-cancel"
+                            onClick={handleCancelAdd}
+                            disabled={loading}
+                            style={{ 
+                                backgroundColor: '#757575', 
+                                color: 'white', 
+                                border: 'none', 
+                                padding: '8px 16px', 
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}
+                        >
+                            <X size={16} /> Annuler
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Affichage des messages d'état */}
             {error && <div className="operator-error" style={{ color: 'red', marginBottom: '10px', padding: '10px', backgroundColor: '#ffebee', borderRadius: '4px' }}>{error}</div>}
             {success && <div className="operator-success" style={{ color: 'green', marginBottom: '10px', padding: '10px', backgroundColor: '#e8f5e8', borderRadius: '4px' }}>{success}</div>}

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : Marine:3306
--- Généré le : mar. 10 juin 2025 à 13:50
+-- Généré le : mer. 02 juil. 2025 à 08:47
 -- Version du serveur : 9.2.0
 -- Version de PHP : 8.2.27
 
@@ -40,27 +40,7 @@ CREATE TABLE `AccesRapport` (
 --
 
 INSERT INTO `AccesRapport` (`id_acces`, `id_rapport`, `id_operateur`, `peut_modifier`, `date_attribution`) VALUES
-(23, 35, 1, 1, '2025-05-14 08:56:52'),
-(24, 36, 1, 1, '2025-05-14 11:39:01'),
-(25, 37, 1, 1, '2025-05-14 11:41:12'),
-(26, 39, 1, 1, '2025-05-15 07:13:01'),
-(27, 43, 1, 1, '2025-05-15 08:18:33'),
-(28, 45, 1, 1, '2025-05-15 08:24:54'),
-(29, 46, 1, 1, '2025-05-15 08:29:14'),
-(31, 46, 5, 1, '2025-05-16 12:10:25'),
-(32, 43, 3, 1, '2025-05-20 08:00:38'),
-(33, 47, 1, 1, '2025-05-20 08:20:14'),
-(34, 47, 3, 1, '2025-05-28 07:38:49'),
-(35, 49, 1, 1, '2025-06-04 12:01:11'),
-(36, 51, 1, 1, '2025-06-05 12:21:18'),
-(37, 52, 1, 1, '2025-06-06 07:40:15'),
-(38, 52, 2, 1, '2025-06-06 11:46:34'),
-(39, 52, 5, 1, '2025-06-06 12:14:44'),
-(40, 52, 3, 1, '2025-06-06 12:19:12'),
-(41, 53, 3, 1, '2025-06-10 11:45:26'),
-(42, 54, 1, 1, '2025-06-10 12:37:06'),
-(43, 55, 3, 1, '2025-06-10 12:43:29'),
-(44, 56, 1, 1, '2025-06-10 12:46:03');
+(50, 59, 3, 1, '2025-06-26 08:00:53');
 
 -- --------------------------------------------------------
 
@@ -94,21 +74,7 @@ CREATE TABLE `Alerte` (
 --
 
 INSERT INTO `Alerte` (`id_alerte`, `id_rapport`, `cedre`, `cross_contact`, `smp`, `bsaa`, `delai_appareillage_bsaa`, `polrep`, `message_polrep`, `photo`, `derive_mothym`, `pne`, `sensible_proximite`, `moyen_proximite`, `moyen_depeche`, `moyen_marine_etat`, `risque_court_terme`, `risque_moyen_long_terme`) VALUES
-(22, 35, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL),
-(23, 36, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL),
-(24, 37, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL),
-(25, 39, 1, 1, 1, 1, '2025-05-15 09:13:00.000', 1, NULL, 1, 1, 1, 1, 'Total ', 'Total ', 'Total ', 'Total ', 'Total '),
-(26, 43, 0, 0, 0, 0, NULL, 0, '1', 0, 0, 0, 0, 'cible', 'cible', 'cible', 'cible', 'cible'),
-(27, 45, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL),
-(28, 46, 0, 0, 1, 0, NULL, 0, NULL, 0, 0, 0, 1, 'NordSecteur ', 'NordSecteur ', 'NordSecteur ', 'NordSecteur ', 'NordSecteur '),
-(29, 47, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL),
-(30, 49, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL),
-(31, 51, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL),
-(32, 52, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL),
-(33, 53, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL),
-(34, 54, 1, 1, 1, 1, '2025-06-06 17:36:00.000', 0, '1', 1, 1, 0, 1, '11', '11', '11', '11', '11'),
-(35, 55, 1, 1, 1, 1, '2025-06-07T17:43', 0, '1', 1, 1, 1, 1, 'Re', 'Re', 'Re', 'Re', 'Re'),
-(36, 56, 0, 0, 0, 0, NULL, 0, NULL, 0, 0, 1, 0, NULL, NULL, NULL, NULL, NULL);
+(39, 59, 1, 0, 0, 0, NULL, 0, NULL, 1, 0, 0, 0, 'Snsm', 'Navire', 'Marine', 'Aucun', 'Grosse pollution ');
 
 -- --------------------------------------------------------
 
@@ -132,21 +98,7 @@ CREATE TABLE `Cible` (
 --
 
 INSERT INTO `Cible` (`id_cible`, `id_rapport`, `nom`, `pavillon`, `immatriculation`, `TypeProduit`, `QuantiteProduit`, `id_type_cible`) VALUES
-(27, 35, '10LMza', '10LMza', '10LMza', '10LMza', '110T', 1),
-(28, 36, 'TestMaree', 'TestMaree', 'TestMaree', 'TestMaree', '100', 1),
-(29, 37, 'TestMaree2', 'TestMaree2', 'TestMaree2', 'TestMaree2', 'TestMaree2', 1),
-(31, 39, 'Total ', 'Total ', 'Total ', 'Total ', 'Total ', 1),
-(32, 43, 'cible', 'cible', 'cible', 'cible', 'cible', NULL),
-(33, 45, 'Type cible', NULL, NULL, NULL, NULL, NULL),
-(34, 46, 'NordSecteur ', 'NordSecteur ', 'NordSecteur ', 'NordSecteur ', 'NordSecteur ', 2),
-(35, 47, 'pOS', 'f', 'pOS', 'pOS', 'pOS', 3),
-(36, 49, 'fdd', 'dfdf', 'dfdf', 'dfdf', 'dfdf', 5),
-(37, 51, NULL, NULL, NULL, NULL, NULL, 7),
-(38, 52, 'e', NULL, NULL, NULL, NULL, 8),
-(39, 53, 'TestSup', 'TestSup', 'TestSup', 'TestSup', 'TestSup', 9),
-(40, 54, '3', '4', '5', '6', '7', 10),
-(41, 55, 'Re', 'Re', 'Re', 'Re', 'Re', 11),
-(42, 56, 'Meteo', 'Meteo', 'Meteo', 'MeteoMeteo', 'Meteo', 12);
+(45, 59, 'Amoco', 'Espagne', '200030FLL', 'Fioul Lourd', '1000000L', 15);
 
 -- --------------------------------------------------------
 
@@ -182,29 +134,29 @@ CREATE TABLE `Historique` (
 --
 
 INSERT INTO `Historique` (`id_historique`, `id_rapport`, `id_operateur`, `type_action`, `detail_action`, `date_action`) VALUES
-(26, 46, 1, 'zz', 'zz', '2025-05-15 13:09:33'),
-(27, 46, 1, 'Modification Rapport', 'Champs modifiés :\n- titre : \"NordSecteur \" → \"NordSecteurT\"', '2025-05-15 15:38:30'),
-(28, 46, 1, 'Modification Rapport', 'Aucune modification détectée', '2025-05-16 09:10:28'),
-(29, 46, 1, 'Modification Rapport', 'Aucune modification détectée', '2025-05-16 09:28:29'),
-(30, 46, 1, 'Modification Rapport', 'Aucune modification détectée', '2025-05-16 09:31:52'),
-(31, 46, 1, 'Modification Rapport', 'Champs modifiés :\n- description_globale : \"NordSecteur \" → \"NordSecteur S\"', '2025-05-16 09:33:24'),
-(32, 46, 1, 'Test Manuel', '[MANUEL] Bateau coule', '2025-05-16 10:01:22'),
-(33, 46, 2, 'AJOUT_D_ACCES', NULL, '2025-05-16 14:10:23'),
-(34, 46, 2, 'RETRAIT_D_ACCES', NULL, '2025-05-16 14:10:24'),
-(35, 46, 5, 'AJOUT_D_ACCES', NULL, '2025-05-16 14:10:26'),
-(36, 46, 1, 'Modification Rapport', 'Champs modifiés :\n- description_globale : \"NordSecteur S\" → \"NordSecteur S sb\"', '2025-05-19 14:44:21'),
-(37, 46, 1, 'Modification Rapport', 'Champs modifiés :\n- description_globale : \"NordSecteur S sb\" → \"NordSecteur S sbf\"', '2025-05-19 14:51:59'),
-(38, 46, 1, 'Modification Rapport', 'Aucune modification détectée', '2025-05-19 14:53:11'),
-(39, 43, 3, 'AJOUT_D_ACCES', NULL, '2025-05-20 10:00:38'),
-(40, 47, 3, 'AJOUT_D_ACCES', NULL, '2025-05-28 09:38:49'),
-(41, 47, 1, 'Modification Rapport', 'Champs modifiés :\n- titre : \"pOS\" → \"Test\"', '2025-05-28 09:40:25'),
-(42, 47, 1, 'Appel recu', 'On m\'a informé de ', '2025-05-28 09:40:46'),
-(43, 51, 1, 'appel du Cross', 'Test', '2025-06-06 10:06:00'),
-(44, 52, 2, 'AJOUT_D_ACCES', NULL, '2025-06-06 13:46:34'),
-(45, 52, 5, 'AJOUT_D_ACCES', NULL, '2025-06-06 14:14:45'),
-(46, 52, 3, 'AJOUT_D_ACCES', NULL, '2025-06-06 14:19:12'),
-(47, 52, 1, 'Modification Rapport', 'Champs modifiés :\n- titre : \"test\" → \"testf\"', '2025-06-06 14:38:54'),
-(48, 52, 3, 'Modification Rapport', 'Champs modifiés :\n- titre : \"testf\" → \"testfc\"', '2025-06-10 09:58:50');
+(53, 59, 3, 'Observqtion', 'Test', '2025-06-30 16:34:10'),
+(54, 59, 3, 'Test', 'TESTzjbfzjbfkezbefkjzbfbebzkkfez', '2025-06-30 16:35:44'),
+(55, 59, 3, NULL, 'ttrfttftrcc', '2025-06-30 16:36:46');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `Lien`
+--
+
+CREATE TABLE `Lien` (
+  `id_lien` int NOT NULL,
+  `titre` text,
+  `url` varchar(600) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Déchargement des données de la table `Lien`
+--
+
+INSERT INTO `Lien` (`id_lien`, `titre`, `url`) VALUES
+(1, 'Marine Traffic', 'https://www.marinetraffic.com/fr/ais/home/centerx:1.6/centery:49.1/zoom:9'),
+(2, 'Shom', 'https://data.shom.fr/');
 
 -- --------------------------------------------------------
 
@@ -226,21 +178,7 @@ CREATE TABLE `Lieu` (
 --
 
 INSERT INTO `Lieu` (`id_lieu`, `id_rapport`, `details_lieu`, `latitude`, `longitude`, `id_zone`) VALUES
-(27, 35, '10LMza', 43.40887600, 4.96682100, 2),
-(28, 36, 'TestMaree', 43.27852400, 5.07410400, 1),
-(29, 37, 'TestMaree2', 43.41473400, 5.37221200, 1),
-(31, 39, 'Total ', 43.39151400, 5.00113800, 2),
-(32, 43, 'cible', 43.33080900, 5.29763900, 2),
-(33, 45, NULL, NULL, NULL, 2),
-(34, 46, 'NordSecteur ', 43.38253200, 4.99564800, 2),
-(35, 47, 'pOS', 48.28931500, -5.22133000, 1),
-(36, 49, NULL, 48.65772500, -4.67138600, 2),
-(37, 51, NULL, NULL, NULL, 1),
-(38, 52, NULL, NULL, NULL, 1),
-(39, 53, 'TestSup', NULL, NULL, 2),
-(40, 54, '8', 48.51791200, -4.81194900, 2),
-(41, 55, 'Re', 48.51954900, -4.85041000, 2),
-(42, 56, 'Meteo', 48.52700800, -4.79958700, 2);
+(45, 59, 'Au dessus de Landunvez', 48.57516600, -4.70270200, 2);
 
 -- --------------------------------------------------------
 
@@ -263,21 +201,7 @@ CREATE TABLE `Meteo` (
 --
 
 INSERT INTO `Meteo` (`id_meteo`, `id_rapport`, `direction_vent`, `force_vent`, `etat_mer`, `nebulosite`, `maree`) VALUES
-(27, 35, 'NE', '5', '7', '1', NULL),
-(28, 36, 'NE', '7', '7', '2', NULL),
-(29, 37, 'NE', '4', '7', '1', 'basse'),
-(31, 39, 'NE', '2', '6', '2', 'basse'),
-(32, 43, 'NE', '3', '7', '2', 'basse'),
-(33, 45, NULL, NULL, NULL, NULL, NULL),
-(34, 46, 'NE', '7', '8', '4', 'basse'),
-(35, 47, NULL, NULL, NULL, NULL, NULL),
-(36, 49, NULL, NULL, NULL, NULL, NULL),
-(37, 51, NULL, NULL, NULL, NULL, NULL),
-(38, 52, 'E', '10', '3', '4', 'haute'),
-(39, 53, NULL, NULL, NULL, NULL, NULL),
-(40, 54, 'NE', '12', '8', '3', 'basse'),
-(41, 55, 'E', '10', '2', NULL, 'basse'),
-(42, 56, 'NE', '8', '1', '2', 'haute');
+(45, 59, 'N', '4', '1', '9', 'basse');
 
 -- --------------------------------------------------------
 
@@ -298,8 +222,8 @@ CREATE TABLE `MotDePasse` (
 --
 
 INSERT INTO `MotDePasse` (`id_motdepasse`, `mot_de_passe`, `date_creation`, `date_modification`, `info`) VALUES
-(1, 'supersecure123', '2025-04-23 07:44:40', '2025-05-19 13:47:35', 'Opérateur'),
-(2, 'test1234', '2025-05-19 13:47:55', '2025-05-19 13:47:55', 'Admin');
+(1, 'user', '2025-04-23 07:44:40', '2025-06-17 11:52:49', 'Opérateur'),
+(2, 'admin', '2025-05-19 13:47:55', '2025-06-17 11:51:02', 'Admin');
 
 -- --------------------------------------------------------
 
@@ -374,21 +298,7 @@ CREATE TABLE `Rapport` (
 --
 
 INSERT INTO `Rapport` (`id_rapport`, `titre`, `date_evenement`, `description_globale`, `id_operateur`, `id_type_evenement`, `id_sous_type_evenement`, `id_origine_evenement`, `date_creation`, `date_modification`, `archive`) VALUES
-(35, '10LMza', '2025-05-14 10:41:00', '10LMza', 1, 1, NULL, 3, '2025-05-14 08:56:52', '2025-05-14 08:56:52', 0),
-(36, 'TestMaree', '2025-05-14 13:32:00', 'TestMaree', 1, 2, 6, 3, '2025-05-14 11:39:01', '2025-05-14 11:39:01', 0),
-(37, 'TestMaree2', '2025-05-14 11:39:00', 'TestMaree2', 1, 2, 6, 3, '2025-05-14 11:41:12', '2025-05-14 11:41:12', 0),
-(39, 'Total ', '2025-05-15 09:08:00', 'Total ', 1, 2, 6, 3, '2025-05-15 07:13:01', '2025-05-15 07:13:01', 0),
-(43, 'cible', '2025-05-15 09:13:00', 'cible', 1, 2, 6, 3, '2025-05-15 08:18:33', '2025-05-15 08:18:33', 0),
-(45, 'Type cible', '2025-05-15 08:18:00', 'Type cible', 1, 2, 6, NULL, '2025-05-15 08:24:54', '2025-05-15 08:24:54', 0),
-(46, 'NordSecteurT', '2025-05-15 10:27:00', 'NordSecteur S sbf', 1, 2, 5, 3, '2025-05-15 08:29:14', '2025-05-19 12:53:11', 1),
-(47, 'Test', '2025-05-20 12:19:00', 'pOS', 1, 4, NULL, 3, '2025-05-20 08:20:14', '2025-05-28 07:40:25', 0),
-(49, 'Brest', '2025-06-04 16:00:00', 'dv', 1, 2, 6, 1, '2025-06-04 12:01:11', '2025-06-04 12:01:11', 0),
-(51, 'f', '2025-06-05 16:18:00', 'f', 1, 2, NULL, NULL, '2025-06-05 12:21:18', '2025-06-05 12:21:18', 0),
-(52, 'testfc', '2025-06-06 11:39:00', 'f', 1, 2, 5, 3, '2025-06-06 07:40:15', '2025-06-10 07:58:50', 0),
-(53, 'TestSup', '2025-06-10 15:45:00', 'TestSup', 3, 2, 6, 3, '2025-06-10 11:45:26', '2025-06-10 11:45:26', 0),
-(54, '1', '2025-06-10 16:36:00', '11', 1, 2, 6, 3, '2025-06-10 12:37:06', '2025-06-10 12:37:06', 0),
-(55, 'Re', '2025-06-10 16:42:00', 'Re', 3, 2, 6, 3, '2025-06-10 12:43:29', '2025-06-10 12:43:29', 0),
-(56, 'Meteo', '2025-06-10 16:45:00', 'Meteo', 1, 4, NULL, 3, '2025-06-10 12:46:03', '2025-06-10 12:46:03', 0);
+(59, 'Collisions Amoco', '2025-06-26 11:59:00', 'Probléme', 3, 1, 1, 1, '2025-06-26 08:00:53', '2025-06-26 08:00:53', 0);
 
 -- --------------------------------------------------------
 
@@ -409,7 +319,19 @@ CREATE TABLE `Ressource` (
 
 INSERT INTO `Ressource` (`id`, `nom`, `chemin`, `type`) VALUES
 (1, 'Numeros Importants', 'Numeros_Importants_Pollution_Marine.pdf', 'pdf'),
-(2, 'Canutec Guide des mesures d\'urgence', '2024-guide-de-mesures-durgence.pdf', 'pdf');
+(2, 'Canutec Guide des mesures d\'urgence', '2024-guide-de-mesures-durgence.pdf', 'pdf'),
+(3, '6.2.3. le CEPPOL', '6.2.3.__le_CEPPOL.doc', 'doc'),
+(4, 'Annuaire Urgence CEPPOL - Appli Web', 'Annuaire_Urgence_CEPPOL_-_Appli_Web.docx', 'docx'),
+(5, 'Calcul simple Quantité POLREP', 'Calcul_simple_Quantite_POLREP.xls', 'xls'),
+(6, 'CEPPOL - Missions Responsabilités', 'CEPPOL_-_Missions_Responsabilites.pptx', 'pptx'),
+(7, 'Code Apparence Accrods de Bonn', 'Code_Apparence_Accrods_de_Bonn.docx', 'docx'),
+(8, 'Correlation surface-irisation', 'Correlation_surface-irisation.jpg', 'jpg'),
+(9, 'Ecosystème CEPPOL', 'Ecosysteme_CEPPOL.png', 'png'),
+(10, 'Eléments de langage CEPPOL 2008', 'Elements_de_langage_CEPPOL_2008.pdf', 'pdf'),
+(11, 'Fiche initiale de suivi d\'incident maritime', 'Fiche_initiale_de_suivi_d\'incident_maritime.pdf', 'pdf'),
+(12, 'Limite Météo Matériels', 'Limite_Meteo_Materiels.pdf', 'pdf'),
+(13, 'Schéma Directeur METRO', 'Schema_Directeur_METRO.pdf', 'pdf'),
+(14, 'Schéma Directeur OME', 'Schema_Directeur_OME.pdf', 'pdf');
 
 -- --------------------------------------------------------
 
@@ -477,7 +399,10 @@ INSERT INTO `TypeCible` (`id_type_cible`, `libelle`) VALUES
 (9, 'TestSup'),
 (10, '2'),
 (11, 'Re'),
-(12, 'Meteo');
+(12, 'Meteo'),
+(13, 'TestNew'),
+(14, 'TestBuild'),
+(15, 'Petrolier');
 
 -- --------------------------------------------------------
 
@@ -567,6 +492,13 @@ ALTER TABLE `Historique`
   ADD PRIMARY KEY (`id_historique`),
   ADD KEY `id_rapport` (`id_rapport`),
   ADD KEY `id_operateur` (`id_operateur`);
+
+--
+-- Index pour la table `Lien`
+--
+ALTER TABLE `Lien`
+  ADD PRIMARY KEY (`id_lien`),
+  ADD UNIQUE KEY `Lien` (`url`);
 
 --
 -- Index pour la table `Lieu`
@@ -661,19 +593,19 @@ ALTER TABLE `ZoneGeographique`
 -- AUTO_INCREMENT pour la table `AccesRapport`
 --
 ALTER TABLE `AccesRapport`
-  MODIFY `id_acces` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id_acces` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT pour la table `Alerte`
 --
 ALTER TABLE `Alerte`
-  MODIFY `id_alerte` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id_alerte` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT pour la table `Cible`
 --
 ALTER TABLE `Cible`
-  MODIFY `id_cible` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id_cible` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT pour la table `Commentaire`
@@ -685,19 +617,25 @@ ALTER TABLE `Commentaire`
 -- AUTO_INCREMENT pour la table `Historique`
 --
 ALTER TABLE `Historique`
-  MODIFY `id_historique` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id_historique` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+
+--
+-- AUTO_INCREMENT pour la table `Lien`
+--
+ALTER TABLE `Lien`
+  MODIFY `id_lien` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT pour la table `Lieu`
 --
 ALTER TABLE `Lieu`
-  MODIFY `id_lieu` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id_lieu` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT pour la table `Meteo`
 --
 ALTER TABLE `Meteo`
-  MODIFY `id_meteo` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id_meteo` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT pour la table `MotDePasse`
@@ -721,13 +659,13 @@ ALTER TABLE `OrigineEvenement`
 -- AUTO_INCREMENT pour la table `Rapport`
 --
 ALTER TABLE `Rapport`
-  MODIFY `id_rapport` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id_rapport` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT pour la table `Ressource`
 --
 ALTER TABLE `Ressource`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT pour la table `Source`
@@ -745,7 +683,7 @@ ALTER TABLE `SousTypeEvenement`
 -- AUTO_INCREMENT pour la table `TypeCible`
 --
 ALTER TABLE `TypeCible`
-  MODIFY `id_type_cible` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id_type_cible` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT pour la table `TypeEvenement`

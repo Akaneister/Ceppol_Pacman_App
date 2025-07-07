@@ -1,0 +1,15 @@
+# Node.js dependencies
+node_modules/
+
+# Cache et build locaux
+frontend/node_modules/.cache/
+backend/node_modules/.cache/
+
+# Logs
+*.log
+
+# Env files
+.env
+
+# Docker volumes (optionnel)
+db_data/

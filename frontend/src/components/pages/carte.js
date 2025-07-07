@@ -63,7 +63,8 @@ L.Icon.Default.mergeOptions({
 
 // Configuration des URLs et couches SHOM
 const SHOM_PROXY_URL = `${process.env.REACT_APP_API_URL}/shom`; // URL du proxy backend Express
-const SHOM_LAYER = 'SCAN-LITTO_PYR-PNG_WLD_3857_WMTS'; // Nom de la couche WMTS SHOM
+const SHOM_LAYER = 'RASTER_MARINE_1M_3857_WMTS'; // Nom de la couche WMTS SHOM
+const SHOM_LAYER_50 = 'SCAN-LITTO_PYR-PNG_WLD_3857_WMTS'; // Nom de la couche WMTS SHOM 50
 
 // ==================================================================================
 //                               COMPOSANT PRINCIPAL
@@ -79,7 +80,8 @@ const Carte = () => {
   const [selectedWmsLayer, setSelectedWmsLayer] = useState(''); // Couche WMS sélectionnée
   const [layersVisible, setLayersVisible] = useState({ // État de visibilité des couches
     osm: true,
-    shom: true
+    shom: true,
+    shom50: true
   });
   
   // Références pour la gestion de la carte et des couches
@@ -87,6 +89,7 @@ const Carte = () => {
   const mapContainerRef = useRef(null); // Référence vers le conteneur DOM
   const osmLayerRef = useRef(null); // Référence vers la couche OpenStreetMap
   const shomLayerRef = useRef(null); // Référence vers la couche SHOM
+  const shom50LayerRef = useRef(null); // Référence vers la couche SHOM 50
   const markerRefs = useRef([]); // Tableau des marqueurs actifs
   const gifOverlayRef = useRef(null); // Référence vers l'overlay GIF
   
@@ -380,6 +383,29 @@ const Carte = () => {
         }
       ).addTo(mapRef.current);
 
+      // Couche SHOM 50 WMTS (cartes marines détaillées) - au premier plan
+      shom50LayerRef.current = L.tileLayer(
+        `${process.env.REACT_APP_API_URL}/shom/wmts/${SHOM_LAYER_50}/{z}/{x}/{y}.png`,
+        {
+          attribution: '&copy; <a href="https://www.shom.fr/">SHOM</a>',
+          maxZoom: 19,
+          minZoom: 0,
+          tileSize: 256,
+          keepBuffer: 8, // Cache étendu pour les performances
+          updateWhenIdle: false,
+          updateWhenZooming: false,
+          updateInterval: 200,
+          errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', // Pixel transparent en cas d'erreur
+          bounds: [[-90, -180], [90, 180]], // Limites mondiales
+          opacity: 0.9, // Transparence légèrement réduite pour le premier plan
+          zIndex: 3, // Au-dessus de SHOM et OSM
+          maxNativeZoom: 15,
+          crossOrigin: true,
+          detectRetina: false,
+          noWrap: true
+        }
+      ).addTo(mapRef.current);
+
       // Ajout d'une échelle métrique
       L.control.scale({
         metric: true,
@@ -456,6 +482,17 @@ const Carte = () => {
     } else {
       if (shomLayerRef.current && mapRef.current.hasLayer(shomLayerRef.current)) {
         mapRef.current.removeLayer(shomLayerRef.current);
+      }
+    }
+
+    // Gestion de la couche SHOM 50
+    if (layersVisible.shom50) {
+      if (shom50LayerRef.current && !mapRef.current.hasLayer(shom50LayerRef.current)) {
+        shom50LayerRef.current.addTo(mapRef.current);
+      }
+    } else {
+      if (shom50LayerRef.current && mapRef.current.hasLayer(shom50LayerRef.current)) {
+        mapRef.current.removeLayer(shom50LayerRef.current);
       }
     }
   }, [layersVisible]);
@@ -663,7 +700,16 @@ const Carte = () => {
               onChange={() => toggleLayer('shom')}
               style={{ marginRight: 5 }}
             />
-            SHOM Scan Littoral
+            SHOM 1M
+          </label>
+          <label style={{ marginLeft: 20, display: 'inline-flex', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={layersVisible.shom50}
+              onChange={() => toggleLayer('shom50')}
+              style={{ marginRight: 5 }}
+            />
+            SHOM Scan Litto
           </label>
         </div>
       </div>

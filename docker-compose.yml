@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: MarineServer
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: Marine
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./pacman.sql:/docker-entrypoint-initdb.d/pacman.sql
+
+
+  backend:
+    build: ./backend
+    container_name: backend-app
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root        
+      - DB_PASSWORD=rootpassword  
+      - DB_NAME=Marine
+    depends_on:
+      - mysql
+
+  frontend:
+    build: ./frontend
+    container_name: frontend-app
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

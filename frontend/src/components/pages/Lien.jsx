@@ -57,7 +57,6 @@ const Lien = () => {
         <div className="lien-container">
             <div className="lien-header">
                 <h1>Liens Utiles</h1>
-                <p>Découvrez nos liens de ressources importantes</p>
             </div>
 
             <div className="liens-grid">

@@ -7,7 +7,7 @@ RUN npm install
 
 COPY . .
 
-# Copier wait-for-it.sh
+# S'assurer que le script est exécutable (on suppose déjà converti en LF)
 COPY wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
 
